@@ -435,15 +435,6 @@ export function UsuariosAdmin() {
                       <div>
                         <Button
                           variant="contained"
-                          color="primary"
-                          size="small"
-                          onClick={() => { setEditando(u.id); setEditData({ usuario: u.nombre, contrasena: '', rol: u.rol }); }}
-                          sx={{ minWidth: 80, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          variant="contained"
                           color="error"
                           size="small"
                           onClick={() => borrarUsuario(u.id)}
@@ -1031,7 +1022,7 @@ export function TrabajosAdminPanel({ admin }) {
                               {admin && (
                                 <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
                                   <button onClick={() => eliminarTrabajo(t.id)} style={{ background: '#e74c3c', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', fontWeight: 'bold', cursor: 'pointer' }}><FaTrash /></button>
-                                  <button onClick={() => { setEditando(t.id); setEditData({ titulo: t.titulo, descripcion: t.descripcion, estado: t.estado, responsable_id: t.responsable_id, notas: t.notas }); }} style={{ background: '#43a047', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', fontWeight: 'bold', cursor: 'pointer' }}><FaEdit /></button>
+                                  <button onClick={() => { setEditData({ titulo: t.titulo, descripcion: t.descripcion, estado: t.estado, responsable_id: t.responsable_id, notas: t.notas }); }} style={{ background: '#43a047', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', fontWeight: 'bold', cursor: 'pointer' }}><FaEdit /></button>
                                 </div>
                               )}
                             </div>
