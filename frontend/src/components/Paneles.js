@@ -3,11 +3,9 @@ import { FaPlus, FaBell, FaMapMarkerAlt, FaTag, FaTrash, FaEdit, FaUserPlus } fr
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { DataGrid } from '@mui/x-data-grid';
 import { Button, Box, Tabs, Tab, Grid, Paper } from '@mui/material';
-import * as XLSX from 'xlsx';
 
 export function InventarioList({ admin, usuario }) {
   const [inventario, setInventario] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
   const [nuevoEquipo, setNuevoEquipo] = useState({ nombre: '', tipo: '', estado: 'Disponible', identificador: '' });
   const [asignaciones, setAsignaciones] = useState({});
   const [filtro, setFiltro] = useState({ tipo: '', estado: '' });
@@ -23,11 +21,6 @@ export function InventarioList({ admin, usuario }) {
           setInventario(data.filter(e => e.usuario_nombre === usuario));
         }
       });
-    if (admin) {
-      fetch('http://localhost:5000/usuarios')
-        .then(res => res.json())
-        .then(data => setUsuarios(data));
-    }
   }, [admin, usuario]);
 
   const agregarEquipo = () => {
@@ -46,19 +39,6 @@ export function InventarioList({ admin, usuario }) {
       .then(data => {
         setInventario([...inventario, data]);
         setNuevoEquipo({ nombre: '', tipo: '', estado: 'Disponible', identificador: '' });
-      });
-  };
-
-  const asignarEquipo = (equipoId, usuarioId) => {
-    fetch(`http://localhost:5000/inventario/${equipoId}/asignar/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario_id: usuarioId })
-    })
-      .then(res => res.json())
-      .then(data => {
-        setInventario(inventario.map(e => e.id === equipoId ? data : e));
-        setAsignaciones({ ...asignaciones, [equipoId]: { usuarioId } });
       });
   };
 
@@ -85,21 +65,6 @@ export function InventarioList({ admin, usuario }) {
     const url = `http://localhost:5000/inventario/exportar${params.length ? '?' + params.join('&') : ''}`;
     window.open(url, '_blank');
   };
-
-  // Datos para gráficos
-  const dataTipo = Object.entries(
-    inventarioFiltrado.reduce((acc, e) => {
-      acc[e.tipo] = (acc[e.tipo] || 0) + 1;
-      return acc;
-    }, {})
-  ).map(([tipo, count]) => ({ tipo, count }));
-
-  const dataEstado = Object.entries(
-    inventarioFiltrado.reduce((acc, e) => {
-      acc[e.estado] = (acc[e.estado] || 0) + 1;
-      return acc;
-    }, {})
-  ).map(([estado, count]) => ({ estado, count }));
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
@@ -201,7 +166,6 @@ export function InventarioList({ admin, usuario }) {
 export function TicketsList({ admin, usuario }) {
   const [tickets, setTickets] = useState([]);
   const [descripcion, setDescripcion] = useState('');
-  const [reemplazo, setReemplazo] = useState({});
 
   useEffect(() => {
     fetch('http://localhost:5000/tickets/')
@@ -388,7 +352,6 @@ export function Avisos({ admin }) {
 export function UsuariosAdmin() {
   const [usuarios, setUsuarios] = useState([]);
   const [nuevoUsuario, setNuevoUsuario] = useState({ usuario: '', contrasena: '', rol: 'usuario' });
-  const [editando, setEditando] = useState(null);
   const [editData, setEditData] = useState({ usuario: '', contrasena: '', rol: 'usuario' });
 
   useEffect(() => {
@@ -407,21 +370,6 @@ export function UsuariosAdmin() {
       .then(res => res.json())
       .then(() => {
         setNuevoUsuario({ usuario: '', contrasena: '', rol: 'usuario' });
-        fetch('http://localhost:5000/usuarios')
-          .then(res => res.json())
-          .then(data => setUsuarios(data));
-      });
-  };
-
-  const editarUsuario = (id) => {
-    fetch(`http://localhost:5000/usuarios/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editData)
-    })
-      .then(res => res.json())
-      .then(() => {
-        setEditando(null);
         fetch('http://localhost:5000/usuarios')
           .then(res => res.json())
           .then(data => setUsuarios(data));
