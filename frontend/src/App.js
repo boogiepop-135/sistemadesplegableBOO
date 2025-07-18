@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaLeaf, FaSignInAlt } from 'react-icons/fa';
+import { FaLeaf } from 'react-icons/fa';
 import './App.css';
 import { InventarioList, TicketsList, Avisos, UsuariosAdmin, DocumentosPanel, BitacorasPanel, DiaLabores, TrabajosAdminPanel } from './components/Paneles';
 

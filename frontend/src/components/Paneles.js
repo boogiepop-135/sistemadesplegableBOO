@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { FaClipboardList, FaTrash, FaEdit, FaPlus, FaUsers, FaBell, FaUserPlus, FaUserEdit, FaUserTimes, FaMapMarkerAlt, FaTag } from 'react-icons/fa';
+import { FaPlus, FaBell, FaMapMarkerAlt, FaTag, FaTrash, FaEdit, FaUserPlus } from 'react-icons/fa';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { DataGrid } from '@mui/x-data-grid';
 import { Button, Box, Tabs, Tab, Grid, Paper } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import * as XLSX from 'xlsx';
 
 export function InventarioList({ admin, usuario }) {
