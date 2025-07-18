@@ -1,0 +1,67 @@
+from flask import Blueprint, request, jsonify
+from app.models.usuario import Usuario
+from app import db
+from flask_cors import CORS
+
+usuarios_bp = Blueprint('usuarios', __name__)
+CORS(usuarios_bp, origins=["http://localhost:3000"], supports_credentials=True)
+
+@usuarios_bp.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        print('Datos recibidos en login:', data)
+        if not data:
+            return jsonify({'success': False, 'error': 'No se recibió JSON'}), 400
+        nombre = data.get('usuario')
+        contrasena = data.get('contrasena')
+        if not nombre or not contrasena:
+            return jsonify({'success': False, 'error': 'Faltan usuario o contraseña'}), 400
+        usuario = Usuario.query.filter_by(nombre=nombre, contrasena=contrasena).first()
+        if usuario:
+            return jsonify({'success': True, 'usuario': usuario.nombre, 'rol': usuario.rol})
+        return jsonify({'success': False, 'error': 'Credenciales incorrectas'}), 401
+    except Exception as e:
+        print('Error en login:', str(e))
+        return jsonify({'success': False, 'error': 'Error interno: ' + str(e)}), 500
+
+@usuarios_bp.route('/crear', methods=['POST'])
+def crear_usuario():
+    data = request.get_json()
+    nombre = data.get('usuario')
+    contrasena = data.get('contrasena')
+    rol = data.get('rol', 'usuario')
+    if not nombre or not contrasena:
+        return jsonify({'error': 'Faltan datos'}), 400
+    if Usuario.query.filter_by(nombre=nombre).first():
+        return jsonify({'error': 'Usuario ya existe'}), 400
+    nuevo = Usuario(nombre=nombre, contrasena=contrasena, rol=rol)
+    db.session.add(nuevo)
+    db.session.commit()
+    return jsonify({'success': True, 'usuario': nuevo.nombre})
+
+@usuarios_bp.route('/<int:usuario_id>', methods=['PUT'])
+def editar_usuario(usuario_id):
+    data = request.get_json()
+    usuario = Usuario.query.get(usuario_id)
+    if not usuario:
+        return jsonify({'error': 'Usuario no encontrado'}), 404
+    usuario.nombre = data.get('usuario', usuario.nombre)
+    usuario.contrasena = data.get('contrasena', usuario.contrasena)
+    usuario.rol = data.get('rol', usuario.rol)
+    db.session.commit()
+    return jsonify({'success': True, 'usuario': usuario.to_dict()})
+
+@usuarios_bp.route('/<int:usuario_id>', methods=['DELETE'])
+def eliminar_usuario(usuario_id):
+    usuario = Usuario.query.get(usuario_id)
+    if not usuario:
+        return jsonify({'error': 'Usuario no encontrado'}), 404
+    db.session.delete(usuario)
+    db.session.commit()
+    return jsonify({'success': True})
+
+@usuarios_bp.route('/', methods=['GET'])
+def listar_usuarios():
+    usuarios = Usuario.query.all()
+    return jsonify([u.to_dict() for u in usuarios])
