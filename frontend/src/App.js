@@ -95,7 +95,6 @@ function App() {
   const [usuarioLogueado, setUsuarioLogueado] = useState(() => localStorage.getItem('usuarioLogueado'));
   const [rol, setRol] = useState(() => localStorage.getItem('rol'));
   const [panel, setPanel] = useState('inventario');
-  const [lastActivity, setLastActivity] = useState(Date.now());
   const [showWelcome, setShowWelcome] = useState(() => {
     const flag = localStorage.getItem('showWelcome');
     return flag !== 'false';
@@ -107,7 +106,6 @@ function App() {
     setRol(rolUsuario);
     localStorage.setItem('usuarioLogueado', usuario);
     localStorage.setItem('rol', rolUsuario);
-    setLastActivity(Date.now());
   };
 
   // Limpiar sesión
@@ -123,7 +121,6 @@ function App() {
   // Actualizar actividad
   useEffect(() => {
     const updateActivity = () => {
-      setLastActivity(Date.now());
       localStorage.setItem('lastActivity', Date.now());
     };
     window.addEventListener('mousemove', updateActivity);
