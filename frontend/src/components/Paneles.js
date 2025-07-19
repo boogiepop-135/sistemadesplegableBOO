@@ -11,8 +11,9 @@ export function InventarioList({ admin, usuario }) {
   const [filtro, setFiltro] = useState({ tipo: '', estado: '' });
   const [tab, setTab] = useState(0);
 
+  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('http://localhost:5000/inventario/')
+    fetch('/inventario/')
       .then(res => res.json())
       .then(data => {
         if (admin) {
@@ -25,7 +26,7 @@ export function InventarioList({ admin, usuario }) {
 
   const agregarEquipo = () => {
     if (!nuevoEquipo.nombre || !nuevoEquipo.tipo || !nuevoEquipo.estado || !nuevoEquipo.identificador) return;
-    fetch('http://localhost:5000/inventario/', {
+    fetch('/inventario/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -62,7 +63,7 @@ export function InventarioList({ admin, usuario }) {
     const params = [];
     if (filtro.tipo) params.push(`tipo=${encodeURIComponent(filtro.tipo)}`);
     if (filtro.estado) params.push(`estado=${encodeURIComponent(filtro.estado)}`);
-    const url = `http://localhost:5000/inventario/exportar${params.length ? '?' + params.join('&') : ''}`;
+    const url = `/inventario/exportar${params.length ? '?' + params.join('&') : ''}`;
     window.open(url, '_blank');
   };
 
@@ -73,9 +74,9 @@ export function InventarioList({ admin, usuario }) {
         <Tab label="Gráficos" />
       </Tabs>
       {tab === 0 && (
-        <Grid container spacing={2} sx={{ mt: 2, width: '100vw', maxWidth: '100vw' }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, width: '100vw', maxWidth: '100vw' }}>
           {/* Filtros y formulario a la izquierda */}
-          <Grid item xs={12} md={4} lg={3} xl={2}>
+          <Box sx={{ flex: '0 0 320px', minWidth: 220, maxWidth: 400 }}>
             {admin && (
               <Paper sx={{ mb: 2, p: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
                 <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Agregar equipo</h3>
@@ -135,9 +136,9 @@ export function InventarioList({ admin, usuario }) {
               </select>
               <Button variant="contained" color="success" onClick={exportarExcel} sx={{ minWidth: 120, width: '100%' }}>Exportar a Excel</Button>
             </Paper>
-          </Grid>
+          </Box>
           {/* Tabla a la derecha */}
-          <Grid item xs={12} md={8} lg={9} xl={10}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Paper sx={{ p: 2, background: '#fff', borderRadius: 2, boxShadow: 2, width: '100%', minWidth: 0 }}>
               <div style={{ height: 500, width: '100%' }}>
                 <DataGrid
@@ -151,8 +152,8 @@ export function InventarioList({ admin, usuario }) {
                 />
               </div>
             </Paper>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       )}
       {tab === 1 && (
         <Box sx={{ mt: 4, display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
@@ -167,15 +168,16 @@ export function TicketsList({ admin, usuario }) {
   const [tickets, setTickets] = useState([]);
   const [descripcion, setDescripcion] = useState('');
 
+  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('http://localhost:5000/tickets/')
+    fetch('/tickets/')
       .then(res => res.json())
       .then(data => setTickets(data));
   }, []);
 
   const crearTicket = () => {
     if (!descripcion) return;
-    fetch('http://localhost:5000/tickets/', {
+    fetch('/tickets/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ descripcion, usuario_id: usuario.id || 1 }) // Usa el id real si está disponible
@@ -188,7 +190,7 @@ export function TicketsList({ admin, usuario }) {
   };
 
   const finalizarTicket = (id) => {
-    fetch(`http://localhost:5000/tickets/${id}/cerrar`, {
+    fetch(`/tickets/${id}/cerrar`, {
       method: 'POST'
     })
       .then(res => res.json())
@@ -199,7 +201,7 @@ export function TicketsList({ admin, usuario }) {
 
   // Agrega las funciones para pausar y descartar ticket
   const pausarTicket = (id) => {
-    fetch(`http://localhost:5000/tickets/${id}/pausar`, {
+    fetch(`/tickets/${id}/pausar`, {
       method: 'POST'
     })
       .then(res => res.json())
@@ -208,7 +210,7 @@ export function TicketsList({ admin, usuario }) {
       });
   };
   const descartarTicket = (id) => {
-    fetch(`http://localhost:5000/tickets/${id}/descartar`, {
+    fetch(`/tickets/${id}/descartar`, {
       method: 'POST'
     })
       .then(res => res.json())
@@ -292,15 +294,16 @@ export function Avisos({ admin }) {
   const [aviso, setAviso] = useState('');
   const [nuevoAviso, setNuevoAviso] = useState('');
 
+  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('http://localhost:5000/avisos')
+    fetch('/avisos')
       .then(res => res.json())
       .then(data => setAviso(data.mensaje));
   }, []);
 
   const fijarAviso = () => {
     if (!nuevoAviso) return;
-    fetch('http://localhost:5000/avisos/', {
+    fetch('/avisos/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mensaje: nuevoAviso })
@@ -354,15 +357,16 @@ export function UsuariosAdmin() {
   const [nuevoUsuario, setNuevoUsuario] = useState({ usuario: '', contrasena: '', rol: 'usuario' });
   const [editData, setEditData] = useState({ usuario: '', contrasena: '', rol: 'usuario' });
 
+  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('http://localhost:5000/usuarios')
+    fetch('/usuarios')
       .then(res => res.json())
       .then(data => setUsuarios(data));
   }, [usuarios.length]);
 
   const crearUsuario = () => {
     if (!nuevoUsuario.usuario || !nuevoUsuario.contrasena) return;
-    fetch('http://localhost:5000/usuarios/crear', {
+    fetch('/usuarios/crear', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevoUsuario)
@@ -370,19 +374,19 @@ export function UsuariosAdmin() {
       .then(res => res.json())
       .then(() => {
         setNuevoUsuario({ usuario: '', contrasena: '', rol: 'usuario' });
-        fetch('http://localhost:5000/usuarios')
+        fetch('/usuarios')
           .then(res => res.json())
           .then(data => setUsuarios(data));
       });
   };
 
   const borrarUsuario = (id) => {
-    fetch(`http://localhost:5000/usuarios/${id}`, {
+    fetch(`/usuarios/${id}`, {
       method: 'DELETE'
     })
       .then(res => res.json())
       .then(() => {
-        fetch('http://localhost:5000/usuarios')
+        fetch('/usuarios')
           .then(res => res.json())
           .then(data => setUsuarios(data));
       });
@@ -463,8 +467,9 @@ export function DocumentosPanel() {
   const [inventarioId, setInventarioId] = useState('');
   const [mensaje, setMensaje] = useState('');
 
+  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('http://localhost:5000/documentos/')
+    fetch('/documentos/')
       .then(res => res.json())
       .then(data => setDocumentos(data));
   }, []);
@@ -477,7 +482,7 @@ export function DocumentosPanel() {
     formData.append('descripcion', descripcion);
     if (ticketId) formData.append('ticket_id', ticketId);
     if (inventarioId) formData.append('inventario_id', inventarioId);
-    fetch('http://localhost:5000/documentos/subir', {
+    fetch('/documentos/subir', {
       method: 'POST',
       body: formData
     })
@@ -497,7 +502,7 @@ export function DocumentosPanel() {
   };
 
   const eliminarDocumento = (id) => {
-    fetch(`http://localhost:5000/documentos/${id}`, { method: 'DELETE' })
+    fetch(`/documentos/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -590,17 +595,18 @@ export function BitacorasPanel() {
   const [equipos, setEquipos] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
 
+  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('http://localhost:5000/bitacoras/')
+    fetch('/bitacoras/')
       .then(res => res.json())
       .then(data => setBitacoras(data));
-    fetch('http://localhost:5000/inventario')
+    fetch('/inventario')
       .then(res => res.json())
       .then(data => setEquipos(data));
-    fetch('http://localhost:5000/usuarios')
+    fetch('/usuarios')
       .then(res => res.json())
       .then(data => setUsuarios(data));
-    fetch('http://localhost:5000/tickets/')
+    fetch('/tickets/')
       .then(res => res.json())
       .then(data => setTickets(data));
   }, []);
@@ -611,7 +617,7 @@ export function BitacorasPanel() {
       setMensaje('Completa la descripción y selecciona un equipo');
       return;
     }
-    fetch('http://localhost:5000/bitacoras/', {
+    fetch('/bitacoras/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -637,7 +643,7 @@ export function BitacorasPanel() {
   };
 
   const eliminarBitacora = (id) => {
-    fetch(`http://localhost:5000/bitacoras/${id}`, { method: 'DELETE' })
+    fetch(`/bitacoras/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -756,8 +762,9 @@ export function BitacorasPanel() {
 export function DiaLabores() {
   const [mensaje, setMensaje] = useState('');
 
+  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('http://localhost:5000/avisos')
+    fetch('/avisos')
       .then(res => res.json())
       .then(data => {
         setMensaje(data.mensaje);
@@ -781,8 +788,9 @@ export function TableroFlujoTrabajo() {
   const [fechaFin, setFechaFin] = useState('');
   const [filtrados, setFiltrados] = useState([]);
 
+  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('http://localhost:5000/tickets')
+    fetch('/tickets')
       .then(res => res.json())
       .then(data => setTickets(data));
   }, []);
@@ -840,18 +848,19 @@ export function TrabajosAdminPanel({ admin }) {
   const [editData, setEditData] = useState({});
   const [detallesAbiertos, setDetallesAbiertos] = useState({});
 
+  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('http://localhost:5000/trabajos/')
+    fetch('/trabajos/')
       .then(res => res.json())
       .then(data => setTrabajos(data));
-    fetch('http://localhost:5000/usuarios')
+    fetch('/usuarios')
       .then(res => res.json())
       .then(data => setUsuarios(data));
   }, []);
 
   const crearTrabajo = () => {
     if (!nuevo.titulo) return;
-    fetch('http://localhost:5000/trabajos/', {
+    fetch('/trabajos/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevo)
@@ -864,7 +873,7 @@ export function TrabajosAdminPanel({ admin }) {
   };
 
   const eliminarTrabajo = (id) => {
-    fetch(`http://localhost:5000/trabajos/${id}`, { method: 'DELETE' })
+    fetch(`/trabajos/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(data => {
         if (data.success) setTrabajos(trabajos.filter(t => t.id !== id));
@@ -872,7 +881,7 @@ export function TrabajosAdminPanel({ admin }) {
   };
 
   const actualizarTrabajo = (id, campos) => {
-    fetch(`http://localhost:5000/trabajos/${id}`, {
+    fetch(`/trabajos/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(campos)
@@ -885,7 +894,7 @@ export function TrabajosAdminPanel({ admin }) {
   };
 
   const asociarEntidades = (id) => {
-    fetch(`http://localhost:5000/trabajos/${id}/asociar`, {
+    fetch(`/trabajos/${id}/asociar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ entidades: relaciones })
@@ -1077,11 +1086,12 @@ export function AdminConfigPanel() {
   const [editCategoria, setEditCategoria] = useState(null);
   const [editCategoriaData, setEditCategoriaData] = useState({ nombre: '' });
 
+  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('http://localhost:5000/ubicaciones/')
+    fetch('/ubicaciones/')
       .then(res => res.json())
       .then(data => setUbicaciones(data));
-    fetch('http://localhost:5000/categorias/')
+    fetch('/categorias/')
       .then(res => res.json())
       .then(data => setCategorias(data));
   }, []);
@@ -1089,7 +1099,7 @@ export function AdminConfigPanel() {
   // CRUD ubicaciones
   const crearUbicacion = () => {
     if (!nuevaUbicacion.nombre) return;
-    fetch('http://localhost:5000/ubicaciones/', {
+    fetch('/ubicaciones/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevaUbicacion)
@@ -1101,7 +1111,7 @@ export function AdminConfigPanel() {
       });
   };
   const actualizarUbicacion = (id) => {
-    fetch(`http://localhost:5000/ubicaciones/${id}`, {
+    fetch(`/ubicaciones/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editUbicacionData)
@@ -1114,7 +1124,7 @@ export function AdminConfigPanel() {
       });
   };
   const eliminarUbicacion = (id) => {
-    fetch(`http://localhost:5000/ubicaciones/${id}`, { method: 'DELETE' })
+    fetch(`/ubicaciones/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(() => setUbicaciones(ubicaciones.filter(u => u.id !== id)));
   };
@@ -1122,7 +1132,7 @@ export function AdminConfigPanel() {
   // CRUD categorías
   const crearCategoria = () => {
     if (!nuevaCategoria.nombre) return;
-    fetch('http://localhost:5000/categorias/', {
+    fetch('/categorias/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevaCategoria)
@@ -1134,7 +1144,7 @@ export function AdminConfigPanel() {
       });
   };
   const actualizarCategoria = (id) => {
-    fetch(`http://localhost:5000/categorias/${id}`, {
+    fetch(`/categorias/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editCategoriaData)
@@ -1147,7 +1157,7 @@ export function AdminConfigPanel() {
       });
   };
   const eliminarCategoria = (id) => {
-    fetch(`http://localhost:5000/categorias/${id}`, { method: 'DELETE' })
+    fetch(`/categorias/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(() => setCategorias(categorias.filter(c => c.id !== id)));
   };
