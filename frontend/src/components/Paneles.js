@@ -616,7 +616,7 @@ export function DocumentosPanel() {
                         <span style={{ fontSize: '0.9em', color: '#888' }}>Subido: {doc.fecha_subida} | Descripción: {doc.descripcion}</span>
                       </div>
                       <div>
-                        <a href={`http://localhost:5000/documentos/${doc.id}/descargar`} style={{ marginLeft: 16, color: '#43a047', fontWeight: 'bold' }} target="_blank" rel="noopener noreferrer">
+                        <a href={`https://sistemadesplegableboo-production.up.railway.app/documentos/${doc.id}/descargar`} style={{ marginLeft: 16, color: '#43a047', fontWeight: 'bold' }} target="_blank" rel="noopener noreferrer">
                           Descargar
                         </a>
                         <Button
@@ -798,7 +798,7 @@ export function BitacorasPanel() {
                           variant="contained"
                           color="primary"
                           size="small"
-                          onClick={() => window.open(`http://localhost:5000/bitacoras/${b.id}/pdf`, '_blank')}
+                          onClick={() => window.open(`https://sistemadesplegableboo-production.up.railway.app/bitacoras/${b.id}/pdf`, '_blank')}
                           sx={{ minWidth: 80, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}
                         >
                           PDF

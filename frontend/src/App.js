@@ -38,7 +38,7 @@ function Login({ onLogin }) {
       return;
     }
     try {
-      const res = await fetch('http://localhost:5000/usuarios/login', {
+      const res = await fetch('https://sistemadesplegableboo-production.up.railway.app/usuarios/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario, contrasena })
