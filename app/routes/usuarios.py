@@ -97,8 +97,10 @@ def eliminar_usuario(usuario_id):
     db.session.commit()
     return jsonify({'success': True})
 
-@usuarios_bp.route('/', methods=['GET'])
+@usuarios_bp.route('/', methods=['GET', 'OPTIONS'])
 def listar_usuarios():
+    if request.method == 'OPTIONS':
+        return '', 200
     usuarios = Usuario.query.all()
     return jsonify([u.to_dict() for u in usuarios])
 
