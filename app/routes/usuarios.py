@@ -8,8 +8,19 @@ from functools import wraps
 import sys
 import logging
 import traceback
+from flask_cors import CORS
 
 usuarios_bp = Blueprint('usuarios', __name__)
+
+CORS(usuarios_bp, origins=[
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "https://web-production-21f2a.up.railway.app",
+    "https://soporteches.online",
+    "https://sistemadesplegableboo-production.up.railway.app"
+], supports_credentials=True)
 
 def token_required(f):
     @wraps(f)
