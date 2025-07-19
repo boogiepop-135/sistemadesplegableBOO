@@ -50,6 +50,8 @@ def login():
             }
             secret = current_app.config.get('SECRET_KEY', 'supersecreto')
             token = jwt.encode(payload, secret, algorithm='HS256')
+            if isinstance(token, bytes):
+                token = token.decode('utf-8')
             return jsonify({'success': True, 'usuario': usuario.nombre, 'rol': usuario.rol, 'token': token})
         return jsonify({'success': False, 'error': 'Credenciales incorrectas'}), 401
     except Exception as e:
