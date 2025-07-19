@@ -3,6 +3,21 @@ import { FaPlus, FaBell, FaTrash, FaEdit } from 'react-icons/fa';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { DataGrid } from '@mui/x-data-grid';
 import { Button, Box, Tabs, Tab, Grid, Paper } from '@mui/material';
+import { getToken } from '../App';
+
+const API_URL = "https://sistemadesplegableboo-production.up.railway.app";
+
+// Helper para fetch con token
+function fetchWithAuth(url, options = {}) {
+  const token = getToken();
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: token ? `Bearer ${token}` : undefined,
+    },
+  });
+}
 
 export function InventarioList({ admin, usuario }) {
   const [inventario, setInventario] = useState([]);
@@ -15,7 +30,7 @@ export function InventarioList({ admin, usuario }) {
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('/inventario/')
+    fetchWithAuth(`${API_URL}/inventario/`)
       .then(res => res.json())
       .then(data => {
         if (admin) {
@@ -24,14 +39,14 @@ export function InventarioList({ admin, usuario }) {
           setInventario(data.filter(e => e.usuario_nombre === usuario));
         }
       });
-    fetch('/ubicaciones/').then(res => res.json()).then(setUbicaciones);
-    fetch('/categorias/').then(res => res.json()).then(setCategorias);
-    fetch('/usuarios').then(res => res.json()).then(setUsuarios);
+    fetchWithAuth(`${API_URL}/ubicaciones/`).then(res => res.json()).then(setUbicaciones);
+    fetchWithAuth(`${API_URL}/categorias/`).then(res => res.json()).then(setCategorias);
+    fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()).then(setUsuarios);
   }, [admin, usuario]);
 
   const agregarEquipo = () => {
     if (!nuevoEquipo.nombre || !nuevoEquipo.tipo || !nuevoEquipo.estado || !nuevoEquipo.identificador) return;
-    fetch('/inventario/', {
+    fetchWithAuth(`${API_URL}/inventario/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -194,14 +209,14 @@ export function TicketsList({ admin, usuario }) {
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('/tickets/')
+    fetchWithAuth(`${API_URL}/tickets/`)
       .then(res => res.json())
       .then(data => setTickets(data));
   }, []);
 
   const crearTicket = () => {
     if (!descripcion) return;
-    fetch('/tickets/', {
+    fetchWithAuth(`${API_URL}/tickets/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ descripcion, usuario_id: usuario.id || 1 }) // Usa el id real si está disponible
@@ -214,7 +229,7 @@ export function TicketsList({ admin, usuario }) {
   };
 
   const finalizarTicket = (id) => {
-    fetch(`/tickets/${id}/cerrar`, {
+    fetchWithAuth(`${API_URL}/tickets/${id}/cerrar`, {
       method: 'POST'
     })
       .then(res => res.json())
@@ -225,7 +240,7 @@ export function TicketsList({ admin, usuario }) {
 
   // Agrega las funciones para pausar y descartar ticket
   const pausarTicket = (id) => {
-    fetch(`/tickets/${id}/pausar`, {
+    fetchWithAuth(`${API_URL}/tickets/${id}/pausar`, {
       method: 'POST'
     })
       .then(res => res.json())
@@ -234,7 +249,7 @@ export function TicketsList({ admin, usuario }) {
       });
   };
   const descartarTicket = (id) => {
-    fetch(`/tickets/${id}/descartar`, {
+    fetchWithAuth(`${API_URL}/tickets/${id}/descartar`, {
       method: 'POST'
     })
       .then(res => res.json())
@@ -320,14 +335,14 @@ export function Avisos({ admin }) {
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('/avisos')
+    fetchWithAuth(`${API_URL}/avisos`)
       .then(res => res.json())
       .then(data => setAviso(data.mensaje));
   }, []);
 
   const fijarAviso = () => {
     if (!nuevoAviso) return;
-    fetch('/avisos/', {
+    fetchWithAuth(`${API_URL}/avisos/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mensaje: nuevoAviso })
@@ -388,15 +403,15 @@ export function AdminPanel() {
   const [nuevaCategoria, setNuevaCategoria] = useState({ nombre: '' });
 
   useEffect(() => {
-    fetch('/usuarios').then(res => res.json()).then(setUsuarios);
-    fetch('/ubicaciones/').then(res => res.json()).then(setUbicaciones);
-    fetch('/categorias/').then(res => res.json()).then(setCategorias);
+    fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()).then(setUsuarios);
+    fetchWithAuth(`${API_URL}/ubicaciones/`).then(res => res.json()).then(setUbicaciones);
+    fetchWithAuth(`${API_URL}/categorias/`).then(res => res.json()).then(setCategorias);
   }, []);
 
   // Usuarios
   const crearUsuario = () => {
     if (!nuevoUsuario.usuario || !nuevoUsuario.contrasena) return;
-    fetch('/usuarios/crear', {
+    fetchWithAuth(`${API_URL}/usuarios/crear`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevoUsuario)
@@ -404,19 +419,19 @@ export function AdminPanel() {
       .then(res => res.json())
       .then(() => {
         setNuevoUsuario({ usuario: '', contrasena: '', rol: 'usuario' });
-        fetch('/usuarios').then(res => res.json()).then(setUsuarios);
+        fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()).then(setUsuarios);
       });
   };
   const borrarUsuario = (id) => {
-    fetch(`/usuarios/${id}`, { method: 'DELETE' })
+    fetchWithAuth(`${API_URL}/usuarios/${id}`, { method: 'DELETE' })
       .then(res => res.json())
-      .then(() => fetch('/usuarios').then(res => res.json()).then(setUsuarios));
+      .then(() => fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()).then(setUsuarios));
   };
 
   // Ubicaciones
   const crearUbicacion = () => {
     if (!nuevaUbicacion.nombre) return;
-    fetch('/ubicaciones/', {
+    fetchWithAuth(`${API_URL}/ubicaciones/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevaUbicacion)
@@ -428,7 +443,7 @@ export function AdminPanel() {
       });
   };
   const eliminarUbicacion = (id) => {
-    fetch(`/ubicaciones/${id}`, { method: 'DELETE' })
+    fetchWithAuth(`${API_URL}/ubicaciones/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(() => setUbicaciones(ubicaciones.filter(u => u.id !== id)));
   };
@@ -436,7 +451,7 @@ export function AdminPanel() {
   // Categorías
   const crearCategoria = () => {
     if (!nuevaCategoria.nombre) return;
-    fetch('/categorias/', {
+    fetchWithAuth(`${API_URL}/categorias/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevaCategoria)
@@ -448,7 +463,7 @@ export function AdminPanel() {
       });
   };
   const eliminarCategoria = (id) => {
-    fetch(`/categorias/${id}`, { method: 'DELETE' })
+    fetchWithAuth(`${API_URL}/categorias/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(() => setCategorias(categorias.filter(c => c.id !== id)));
   };
@@ -526,7 +541,7 @@ export function DocumentosPanel() {
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('/documentos/')
+    fetchWithAuth(`${API_URL}/documentos/`)
       .then(res => res.json())
       .then(data => setDocumentos(data));
   }, []);
@@ -539,7 +554,7 @@ export function DocumentosPanel() {
     formData.append('descripcion', descripcion);
     if (ticketId) formData.append('ticket_id', ticketId);
     if (inventarioId) formData.append('inventario_id', inventarioId);
-    fetch('/documentos/subir', {
+    fetchWithAuth(`${API_URL}/documentos/subir`, {
       method: 'POST',
       body: formData
     })
@@ -654,16 +669,16 @@ export function BitacorasPanel() {
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('/bitacoras/')
+    fetchWithAuth(`${API_URL}/bitacoras/`)
       .then(res => res.json())
       .then(data => setBitacoras(data));
-    fetch('/inventario')
+    fetchWithAuth(`${API_URL}/inventario`)
       .then(res => res.json())
       .then(data => setEquipos(data));
-    fetch('/usuarios')
+    fetchWithAuth(`${API_URL}/usuarios`)
       .then(res => res.json())
       .then(data => setUsuarios(data));
-    fetch('/tickets/')
+    fetchWithAuth(`${API_URL}/tickets/`)
       .then(res => res.json())
       .then(data => setTickets(data));
   }, []);
@@ -674,7 +689,7 @@ export function BitacorasPanel() {
       setMensaje('Completa la descripción y selecciona un equipo');
       return;
     }
-    fetch('/bitacoras/', {
+    fetchWithAuth(`${API_URL}/bitacoras/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -821,7 +836,7 @@ export function DiaLabores() {
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('/avisos')
+    fetchWithAuth(`${API_URL}/avisos`)
       .then(res => res.json())
       .then(data => {
         setMensaje(data.mensaje);
@@ -847,7 +862,7 @@ export function TableroFlujoTrabajo() {
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('/tickets')
+    fetchWithAuth(`${API_URL}/tickets`)
       .then(res => res.json())
       .then(data => setTickets(data));
   }, []);
@@ -907,17 +922,17 @@ export function TrabajosAdminPanel({ admin }) {
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('/trabajos/')
+    fetchWithAuth(`${API_URL}/trabajos/`)
       .then(res => res.json())
       .then(data => setTrabajos(data));
-    fetch('/usuarios')
+    fetchWithAuth(`${API_URL}/usuarios`)
       .then(res => res.json())
       .then(data => setUsuarios(data));
   }, []);
 
   const crearTrabajo = () => {
     if (!nuevo.titulo) return;
-    fetch('/trabajos/', {
+    fetchWithAuth(`${API_URL}/trabajos/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevo)

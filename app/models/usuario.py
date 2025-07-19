@@ -1,4 +1,5 @@
 from app import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -15,3 +16,9 @@ class Usuario(db.Model):
             # Si quieres incluir los tickets, puedes agregar:
             # 'tickets': [t.id for t in self.tickets]
         }
+
+    def set_password(self, password):
+        self.contrasena = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.contrasena, password)

@@ -46,6 +46,7 @@ function Login({ onLogin }) {
       const data = await res.json();
       if (data.success) {
         onLogin(data.usuario, data.rol);
+        localStorage.setItem('token', data.token); // Guardar el token JWT
       } else {
         setError(data.error || 'Credenciales incorrectas');
       }
@@ -184,6 +185,11 @@ function App() {
       <Footer />
     </>
   );
+}
+
+// Añadir helper para obtener el token
+export function getToken() {
+  return localStorage.getItem('token');
 }
 
 export default App;
