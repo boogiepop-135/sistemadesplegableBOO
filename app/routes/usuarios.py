@@ -5,6 +5,7 @@ import jwt
 import datetime
 from flask import current_app
 from functools import wraps
+import sys
 
 usuarios_bp = Blueprint('usuarios', __name__)
 
@@ -48,7 +49,9 @@ def login():
             }
             secret = current_app.config.get('SECRET_KEY', 'supersecreto')
             token = jwt.encode(payload, secret, algorithm='HS256')
-            print('TOKEN TYPE:', type(token), token)
+            print('TOKEN TYPE:', type(token), token, file=sys.stderr)
+            if hasattr(token, 'decode'):
+                token = token.decode('utf-8')
             return jsonify({'success': True, 'usuario': usuario.nombre, 'rol': usuario.rol, 'token': token})
         return jsonify({'success': False, 'error': 'Credenciales incorrectas'}), 401
     except Exception as e:
