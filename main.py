@@ -18,9 +18,8 @@ CORS(app, resources={r"/*": {"origins": [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
     "https://web-production-21f2a.up.railway.app",
-    "https://TU_DOMINIO_NETLIFY",
-    "https://tusitio.netlify.app",
-    "https://soporteches.online"
+    "https://soporteches.online",
+    "https://sistemadesplegableboo-production.up.railway.app"
 ]}}, supports_credentials=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventario.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
