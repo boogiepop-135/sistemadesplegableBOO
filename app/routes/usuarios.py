@@ -6,6 +6,8 @@ import datetime
 from flask import current_app
 from functools import wraps
 import sys
+import logging
+import traceback
 
 usuarios_bp = Blueprint('usuarios', __name__)
 
@@ -49,13 +51,14 @@ def login():
             }
             secret = current_app.config.get('SECRET_KEY', 'supersecreto')
             token = jwt.encode(payload, secret, algorithm='HS256')
-            print('TOKEN TYPE:', type(token), token, file=sys.stderr)
+            logging.error(f'TOKEN TYPE: {type(token)} {token}')
             if hasattr(token, 'decode'):
                 token = token.decode('utf-8')
             return jsonify({'success': True, 'usuario': usuario.nombre, 'rol': usuario.rol, 'token': token})
         return jsonify({'success': False, 'error': 'Credenciales incorrectas'}), 401
     except Exception as e:
-        return jsonify({'success': False, 'error': 'Error interno: ' + str(e)}), 500
+        logging.error(traceback.format_exc())
+        return jsonify({'success': False, 'error': f'Error interno: {str(e)}', 'traceback': traceback.format_exc()}), 500
 
 @usuarios_bp.route('/crear', methods=['POST'])
 def crear_usuario():
