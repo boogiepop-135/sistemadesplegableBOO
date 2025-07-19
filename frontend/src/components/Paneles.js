@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaPlus, FaBell, FaMapMarkerAlt, FaTag, FaTrash, FaEdit, FaUserPlus } from 'react-icons/fa';
+import { FaPlus, FaBell, FaTrash, FaEdit } from 'react-icons/fa';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { DataGrid } from '@mui/x-data-grid';
 import { Button, Box, Tabs, Tab, Grid, Paper } from '@mui/material';
@@ -7,7 +7,6 @@ import { Button, Box, Tabs, Tab, Grid, Paper } from '@mui/material';
 export function InventarioList({ admin, usuario }) {
   const [inventario, setInventario] = useState([]);
   const [nuevoEquipo, setNuevoEquipo] = useState({ nombre: '', tipo: '', estado: 'Disponible', identificador: '' });
-  const [asignaciones, setAsignaciones] = useState({});
   const [filtro, setFiltro] = useState({ tipo: '', estado: '' });
   const [tab, setTab] = useState(0);
   const [ubicaciones, setUbicaciones] = useState([]);
