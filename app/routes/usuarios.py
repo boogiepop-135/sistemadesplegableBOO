@@ -1,14 +1,12 @@
 from flask import Blueprint, request, jsonify
 from app.models.usuario import Usuario
 from app import db
-from flask_cors import CORS
 import jwt
 import datetime
 from flask import current_app
 from functools import wraps
 
 usuarios_bp = Blueprint('usuarios', __name__)
-CORS(usuarios_bp, origins=["http://localhost:3000"], supports_credentials=True)
 
 def token_required(f):
     @wraps(f)
