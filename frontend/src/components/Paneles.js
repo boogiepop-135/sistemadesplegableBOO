@@ -10,6 +10,9 @@ export function InventarioList({ admin, usuario }) {
   const [asignaciones, setAsignaciones] = useState({});
   const [filtro, setFiltro] = useState({ tipo: '', estado: '' });
   const [tab, setTab] = useState(0);
+  const [ubicaciones, setUbicaciones] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
@@ -22,6 +25,9 @@ export function InventarioList({ admin, usuario }) {
           setInventario(data.filter(e => e.usuario_nombre === usuario));
         }
       });
+    fetch('/ubicaciones/').then(res => res.json()).then(setUbicaciones);
+    fetch('/categorias/').then(res => res.json()).then(setCategorias);
+    fetch('/usuarios').then(res => res.json()).then(setUsuarios);
   }, [admin, usuario]);
 
   const agregarEquipo = () => {
@@ -33,13 +39,14 @@ export function InventarioList({ admin, usuario }) {
         equipo: nuevoEquipo.nombre,
         tipo: nuevoEquipo.tipo,
         estado: nuevoEquipo.estado,
-        identificador: nuevoEquipo.identificador
+        identificador: nuevoEquipo.identificador,
+        ubicacion_id: nuevoEquipo.ubicacion_id || null
       })
     })
       .then(res => res.json())
       .then(data => {
         setInventario([...inventario, data]);
-        setNuevoEquipo({ nombre: '', tipo: '', estado: 'Disponible', identificador: '' });
+        setNuevoEquipo({ nombre: '', tipo: '', estado: 'Disponible', identificador: '', ubicacion_id: '' });
       });
   };
 
@@ -87,30 +94,48 @@ export function InventarioList({ admin, usuario }) {
                   placeholder="Nombre del equipo"
                   style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', minWidth: 160, marginBottom: 8, width: '100%' }}
                 />
-                <input
-                  type="text"
+                <select
                   value={nuevoEquipo.tipo}
                   onChange={e => setNuevoEquipo({ ...nuevoEquipo, tipo: e.target.value })}
-                  placeholder="Tipo/Categoría"
                   style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', minWidth: 160, marginBottom: 8, width: '100%' }}
-                />
+                >
+                  <option value="">Tipo/Categoría</option>
+                  {categorias.map(c => (
+                    <option key={c.id} value={c.nombre}>{c.nombre}</option>
+                  ))}
+                </select>
                 <select
                   value={nuevoEquipo.estado}
                   onChange={e => setNuevoEquipo({ ...nuevoEquipo, estado: e.target.value })}
                   style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', minWidth: 140, marginBottom: 8, width: '100%' }}
                 >
-                  <option value="Disponible">Disponible</option>
-                  <option value="Asignado">Asignado</option>
-                  <option value="En reparación">En reparación</option>
-                  <option value="Baja">Baja</option>
+                  <option value="">Estado</option>
+                  <option value="buen estado">Buen estado</option>
+                  <option value="marcas de uso">Marcas de uso</option>
+                  <option value="rayones">Rayones</option>
+                  <option value="daño serio">Daño serio</option>
+                  <option value="inservible">Inservible</option>
                 </select>
-                <input
-                  type="text"
-                  value={nuevoEquipo.identificador}
-                  onChange={e => setNuevoEquipo({ ...nuevoEquipo, identificador: e.target.value })}
-                  placeholder="Código Único"
-                  style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', minWidth: 160, marginBottom: 8, width: '100%' }}
-                />
+                <select
+                  value={nuevoEquipo.ubicacion_id || ''}
+                  onChange={e => setNuevoEquipo({ ...nuevoEquipo, ubicacion_id: e.target.value })}
+                  style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', minWidth: 140, marginBottom: 8, width: '100%' }}
+                >
+                  <option value="">Seleccionar Ubicación</option>
+                  {ubicaciones.map(u => (
+                    <option key={u.id} value={u.id}>{u.nombre}</option>
+                  ))}
+                </select>
+                <select
+                  value={nuevoEquipo.usuario_id || ''}
+                  onChange={e => setNuevoEquipo({ ...nuevoEquipo, usuario_id: e.target.value })}
+                  style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', minWidth: 140, marginBottom: 8, width: '100%' }}
+                >
+                  <option value="">Seleccionar Usuario</option>
+                  {usuarios.map(u => (
+                    <option key={u.id} value={u.id}>{u.nombre}</option>
+                  ))}
+                </select>
                 <Button variant="contained" color="success" onClick={agregarEquipo} sx={{ minWidth: 120, fontWeight: 'bold', fontSize: '1em', width: '100%' }}>
                   <FaPlus style={{ marginRight: 6 }} /> Agregar
                 </Button>
@@ -358,7 +383,7 @@ export function AdminPanel() {
   const [nuevoUsuario, setNuevoUsuario] = useState({ usuario: '', contrasena: '', rol: 'usuario' });
   // Ubicaciones
   const [ubicaciones, setUbicaciones] = useState([]);
-  const [nuevaUbicacion, setNuevaUbicacion] = useState({ nombre: '' });
+  const [nuevaUbicacion, setNuevaUbicacion] = useState({ nombre: '', descripcion: '' });
   // Categorías
   const [categorias, setCategorias] = useState([]);
   const [nuevaCategoria, setNuevaCategoria] = useState({ nombre: '' });
@@ -400,7 +425,7 @@ export function AdminPanel() {
       .then(res => res.json())
       .then(data => {
         setUbicaciones([...ubicaciones, data]);
-        setNuevaUbicacion({ nombre: '' });
+        setNuevaUbicacion({ nombre: '', descripcion: '' });
       });
   };
   const eliminarUbicacion = (id) => {
@@ -459,11 +484,12 @@ export function AdminPanel() {
           <Paper sx={{ p: 2, mb: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
             <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Ubicaciones</h3>
             <input type="text" placeholder="Nombre de ubicación" value={nuevaUbicacion.nombre} onChange={e => setNuevaUbicacion({ ...nuevaUbicacion, nombre: e.target.value })} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', minWidth: 180, width: '100%', marginBottom: 8 }} />
+            <input type="text" placeholder="Descripción (opcional)" value={nuevaUbicacion.descripcion} onChange={e => setNuevaUbicacion({ ...nuevaUbicacion, descripcion: e.target.value })} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', minWidth: 180, width: '100%', marginBottom: 8 }} />
             <Button variant="contained" color="success" onClick={crearUbicacion} sx={{ fontWeight: 'bold', width: '100%' }}>Crear</Button>
             <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0 0' }}>
               {ubicaciones.map(u => (
                 <li key={u.id} style={{ padding: '8px 0', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>{u.nombre}</span>
+                  <span>{u.nombre}{u.descripcion ? ` - ${u.descripcion}` : ''}</span>
                   <Button variant="contained" color="error" size="small" onClick={() => eliminarUbicacion(u.id)} sx={{ minWidth: 60, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}>Borrar</Button>
                 </li>
               ))}

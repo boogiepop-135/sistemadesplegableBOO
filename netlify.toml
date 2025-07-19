@@ -2,3 +2,63 @@
   base = "frontend"
   publish = "build"
   command = "npm run build"
+
+[[redirects]]
+  from = "/api/*"
+  to = "http://localhost:5000/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/inventario/*"
+  to = "http://localhost:5000/inventario/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/usuarios/*"
+  to = "http://localhost:5000/usuarios/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/tickets/*"
+  to = "http://localhost:5000/tickets/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/documentos/*"
+  to = "http://localhost:5000/documentos/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/bitacoras/*"
+  to = "http://localhost:5000/bitacoras/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/trabajos/*"
+  to = "http://localhost:5000/trabajos/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/ubicaciones/*"
+  to = "http://localhost:5000/ubicaciones/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/categorias/*"
+  to = "http://localhost:5000/categorias/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/avisos/*"
+  to = "http://localhost:5000/avisos/:splat"
+  status = 200
+  force = true
