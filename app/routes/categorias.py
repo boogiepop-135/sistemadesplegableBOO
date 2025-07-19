@@ -6,8 +6,10 @@ from flask_cors import CORS
 categorias_bp = Blueprint('categorias', __name__)
 CORS(categorias_bp, origins=["http://localhost:3000"], supports_credentials=True)
 
-@categorias_bp.route('/', methods=['GET'])
+@categorias_bp.route('/', methods=['GET', 'OPTIONS'])
 def listar_categorias():
+    if request.method == 'OPTIONS':
+        return '', 200
     categorias = Categoria.query.all()
     return jsonify([c.to_dict() for c in categorias])
 

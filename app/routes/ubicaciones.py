@@ -6,8 +6,10 @@ from flask_cors import CORS
 ubicaciones_bp = Blueprint('ubicaciones', __name__)
 CORS(ubicaciones_bp, origins=["http://localhost:3000"], supports_credentials=True)
 
-@ubicaciones_bp.route('/', methods=['GET'])
+@ubicaciones_bp.route('/', methods=['GET', 'OPTIONS'])
 def listar_ubicaciones():
+    if request.method == 'OPTIONS':
+        return '', 200
     ubicaciones = Ubicacion.query.all()
     return jsonify([u.to_dict() for u in ubicaciones])
 
