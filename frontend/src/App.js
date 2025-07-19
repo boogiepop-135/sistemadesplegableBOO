@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaLeaf } from 'react-icons/fa';
 import './App.css';
-import { InventarioList, TicketsList, Avisos, UsuariosAdmin, DocumentosPanel, BitacorasPanel, DiaLabores, TrabajosAdminPanel } from './components/Paneles';
+import { InventarioList, TicketsList, Avisos, AdminPanel, DocumentosPanel, BitacorasPanel, DiaLabores, TrabajosAdminPanel } from './components/Paneles';
 
 function Navbar({ onLogout, onSelect, selected, isAdmin, rol }) {
   return (
@@ -175,7 +175,7 @@ function App() {
           {panel === 'trabajos' && <TrabajosAdminPanel admin={rol === 'admin'} />}
           {panel === 'inventario' && <InventarioList admin={rol === 'admin'} usuario={usuarioLogueado} />}
           {panel === 'tickets' && <TicketsList admin={rol === 'admin'} usuario={usuarioLogueado} />}
-          {panel === 'usuarios' && <UsuariosAdmin admin={rol === 'admin'} />}
+          {panel === 'usuarios' && <AdminPanel admin={rol === 'admin'} />}
           {panel === 'avisos' && <Avisos admin={rol === 'admin'} />}
           {panel === 'documentos' && <DocumentosPanel admin={rol === 'admin'} />}
           {panel === 'bitacoras' && <BitacorasPanel admin={rol === 'admin'} />}

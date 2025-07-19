@@ -352,18 +352,24 @@ export function Avisos({ admin }) {
   );
 }
 
-export function UsuariosAdmin() {
+export function AdminPanel() {
+  // Usuarios
   const [usuarios, setUsuarios] = useState([]);
   const [nuevoUsuario, setNuevoUsuario] = useState({ usuario: '', contrasena: '', rol: 'usuario' });
-  const [editData, setEditData] = useState({ usuario: '', contrasena: '', rol: 'usuario' });
+  // Ubicaciones
+  const [ubicaciones, setUbicaciones] = useState([]);
+  const [nuevaUbicacion, setNuevaUbicacion] = useState({ nombre: '' });
+  // Categorías
+  const [categorias, setCategorias] = useState([]);
+  const [nuevaCategoria, setNuevaCategoria] = useState({ nombre: '' });
 
-  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetch('/usuarios')
-      .then(res => res.json())
-      .then(data => setUsuarios(data));
-  }, [usuarios.length]);
+    fetch('/usuarios').then(res => res.json()).then(setUsuarios);
+    fetch('/ubicaciones/').then(res => res.json()).then(setUbicaciones);
+    fetch('/categorias/').then(res => res.json()).then(setCategorias);
+  }, []);
 
+  // Usuarios
   const crearUsuario = () => {
     if (!nuevoUsuario.usuario || !nuevoUsuario.contrasena) return;
     fetch('/usuarios/crear', {
@@ -374,84 +380,110 @@ export function UsuariosAdmin() {
       .then(res => res.json())
       .then(() => {
         setNuevoUsuario({ usuario: '', contrasena: '', rol: 'usuario' });
-        fetch('/usuarios')
-          .then(res => res.json())
-          .then(data => setUsuarios(data));
+        fetch('/usuarios').then(res => res.json()).then(setUsuarios);
       });
   };
-
   const borrarUsuario = (id) => {
-    fetch(`/usuarios/${id}`, {
-      method: 'DELETE'
+    fetch(`/usuarios/${id}`, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(() => fetch('/usuarios').then(res => res.json()).then(setUsuarios));
+  };
+
+  // Ubicaciones
+  const crearUbicacion = () => {
+    if (!nuevaUbicacion.nombre) return;
+    fetch('/ubicaciones/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nuevaUbicacion)
     })
       .then(res => res.json())
-      .then(() => {
-        fetch('/usuarios')
-          .then(res => res.json())
-          .then(data => setUsuarios(data));
+      .then(data => {
+        setUbicaciones([...ubicaciones, data]);
+        setNuevaUbicacion({ nombre: '' });
       });
+  };
+  const eliminarUbicacion = (id) => {
+    fetch(`/ubicaciones/${id}`, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(() => setUbicaciones(ubicaciones.filter(u => u.id !== id)));
+  };
+
+  // Categorías
+  const crearCategoria = () => {
+    if (!nuevaCategoria.nombre) return;
+    fetch('/categorias/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nuevaCategoria)
+    })
+      .then(res => res.json())
+      .then(data => {
+        setCategorias([...categorias, data]);
+        setNuevaCategoria({ nombre: '' });
+      });
+  };
+  const eliminarCategoria = (id) => {
+    fetch(`/categorias/${id}`, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(() => setCategorias(categorias.filter(c => c.id !== id)));
   };
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={4} lg={3} xl={2}>
+      <h2 style={{ color: '#388e3c', marginBottom: 16 }}>Panel de Administración</h2>
+      <Grid container spacing={3}>
+        {/* Usuarios */}
+        <Grid item xs={12} md={4}>
           <Paper sx={{ p: 2, mb: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
-            <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Crear Usuario</h3>
-            <input
-              type="text"
-              placeholder="Usuario"
-              value={nuevoUsuario.usuario}
-              onChange={e => setNuevoUsuario({ ...nuevoUsuario, usuario: e.target.value })}
-              style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%', marginBottom: 8 }}
-            />
-            <input
-              type="password"
-              placeholder="Contraseña"
-              value={nuevoUsuario.contrasena}
-              onChange={e => setNuevoUsuario({ ...nuevoUsuario, contrasena: e.target.value })}
-              style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%', marginBottom: 8 }}
-            />
-            <select
-              value={nuevoUsuario.rol}
-              onChange={e => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })}
-              style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%', marginBottom: 8 }}
-            >
+            <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Usuarios</h3>
+            <input type="text" placeholder="Usuario" value={nuevoUsuario.usuario} onChange={e => setNuevoUsuario({ ...nuevoUsuario, usuario: e.target.value })} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%', marginBottom: 8 }} />
+            <input type="password" placeholder="Contraseña" value={nuevoUsuario.contrasena} onChange={e => setNuevoUsuario({ ...nuevoUsuario, contrasena: e.target.value })} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%', marginBottom: 8 }} />
+            <select value={nuevoUsuario.rol} onChange={e => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%', marginBottom: 8 }}>
               <option value="usuario">Usuario</option>
               <option value="admin">Admin</option>
             </select>
-            <Button variant="contained" color="success" onClick={crearUsuario} sx={{ minWidth: 120, fontWeight: 'bold', fontSize: '1em', width: '100%' }}>
-              <FaUserPlus style={{ marginRight: 6 }} /> Crear
-            </Button>
+            <Button variant="contained" color="success" onClick={crearUsuario} sx={{ minWidth: 120, fontWeight: 'bold', fontSize: '1em', width: '100%' }}>Crear</Button>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0 0' }}>
+              {usuarios.map(u => (
+                <li key={u.id} style={{ padding: '8px 0', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span><b>{u.nombre}</b> <span style={{ color: '#888', fontSize: '0.9em' }}>({u.rol})</span></span>
+                  <Button variant="contained" color="error" size="small" onClick={() => borrarUsuario(u.id)} sx={{ minWidth: 60, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}>Borrar</Button>
+                </li>
+              ))}
+            </ul>
           </Paper>
         </Grid>
-        <Grid item xs={12} md={8} lg={9} xl={10}>
-          <Paper sx={{ p: 2, background: '#fff', borderRadius: 2, boxShadow: 2, width: '100%', minWidth: 0 }}>
-            <div style={{ maxHeight: 500, overflowY: 'auto' }}>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {usuarios.map(u => (
-                  <li key={u.id} style={{ padding: '10px 0', borderBottom: '1px solid #e0e0e0' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <strong style={{ color: '#388e3c' }}>{u.nombre}</strong><br />
-                        <span style={{ fontSize: '0.9em', color: '#888' }}>Rol: {u.rol} | Usuario: {u.usuario}</span>
-                      </div>
-                      <div>
-                        <Button
-                          variant="contained"
-                          color="error"
-                          size="small"
-                          onClick={() => borrarUsuario(u.id)}
-                          sx={{ minWidth: 80, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}
-                        >
-                          Borrar
-                        </Button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        {/* Ubicaciones */}
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, mb: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
+            <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Ubicaciones</h3>
+            <input type="text" placeholder="Nombre de ubicación" value={nuevaUbicacion.nombre} onChange={e => setNuevaUbicacion({ ...nuevaUbicacion, nombre: e.target.value })} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', minWidth: 180, width: '100%', marginBottom: 8 }} />
+            <Button variant="contained" color="success" onClick={crearUbicacion} sx={{ fontWeight: 'bold', width: '100%' }}>Crear</Button>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0 0' }}>
+              {ubicaciones.map(u => (
+                <li key={u.id} style={{ padding: '8px 0', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>{u.nombre}</span>
+                  <Button variant="contained" color="error" size="small" onClick={() => eliminarUbicacion(u.id)} sx={{ minWidth: 60, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}>Borrar</Button>
+                </li>
+              ))}
+            </ul>
+          </Paper>
+        </Grid>
+        {/* Categorías */}
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, mb: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
+            <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Categorías</h3>
+            <input type="text" placeholder="Nombre de categoría" value={nuevaCategoria.nombre} onChange={e => setNuevaCategoria({ ...nuevaCategoria, nombre: e.target.value })} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', minWidth: 180, width: '100%', marginBottom: 8 }} />
+            <Button variant="contained" color="success" onClick={crearCategoria} sx={{ fontWeight: 'bold', width: '100%' }}>Crear</Button>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0 0' }}>
+              {categorias.map(c => (
+                <li key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>{c.nombre}</span>
+                  <Button variant="contained" color="error" size="small" onClick={() => eliminarCategoria(c.id)} sx={{ minWidth: 60, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}>Borrar</Button>
+                </li>
+              ))}
+            </ul>
           </Paper>
         </Grid>
       </Grid>
@@ -717,7 +749,7 @@ export function BitacorasPanel() {
           </Paper>
         </Grid>
         <Grid item xs={12} md={8} lg={9} xl={10}>
-          <Paper sx={{ p: 2, background: '#fff', borderRadius: 2, boxShadow: 2, width: '100%', minWidth: 0 }}>
+          <Paper sx={{ p: 2, background: '#fff', borderRadius: 2, boxShadow: 2, width: '100%', minWidth: 0, minHeight: 300 }}>
             <div style={{ maxHeight: 500, overflowY: 'auto' }}>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {bitacoras.map(b => (
@@ -1070,153 +1102,6 @@ export function TrabajosAdminPanel({ admin }) {
           ))}
         </div>
       </DragDropContext>
-    </div>
-  );
-}
-
-export function AdminConfigPanel() {
-  // Gestión de ubicaciones
-  const [ubicaciones, setUbicaciones] = useState([]);
-  const [nuevaUbicacion, setNuevaUbicacion] = useState({ nombre: '' });
-  const [editUbicacion, setEditUbicacion] = useState(null);
-  const [editUbicacionData, setEditUbicacionData] = useState({ nombre: '' });
-  // Gestión de categorías
-  const [categorias, setCategorias] = useState([]);
-  const [nuevaCategoria, setNuevaCategoria] = useState({ nombre: '' });
-  const [editCategoria, setEditCategoria] = useState(null);
-  const [editCategoriaData, setEditCategoriaData] = useState({ nombre: '' });
-
-  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
-  useEffect(() => {
-    fetch('/ubicaciones/')
-      .then(res => res.json())
-      .then(data => setUbicaciones(data));
-    fetch('/categorias/')
-      .then(res => res.json())
-      .then(data => setCategorias(data));
-  }, []);
-
-  // CRUD ubicaciones
-  const crearUbicacion = () => {
-    if (!nuevaUbicacion.nombre) return;
-    fetch('/ubicaciones/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(nuevaUbicacion)
-    })
-      .then(res => res.json())
-      .then(data => {
-        setUbicaciones([...ubicaciones, data]);
-        setNuevaUbicacion({ nombre: '' });
-      });
-  };
-  const actualizarUbicacion = (id) => {
-    fetch(`/ubicaciones/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editUbicacionData)
-    })
-      .then(res => res.json())
-      .then(data => {
-        setUbicaciones(ubicaciones.map(u => u.id === id ? data : u));
-        setEditUbicacion(null);
-        setEditUbicacionData({ nombre: '' });
-      });
-  };
-  const eliminarUbicacion = (id) => {
-    fetch(`/ubicaciones/${id}`, { method: 'DELETE' })
-      .then(res => res.json())
-      .then(() => setUbicaciones(ubicaciones.filter(u => u.id !== id)));
-  };
-
-  // CRUD categorías
-  const crearCategoria = () => {
-    if (!nuevaCategoria.nombre) return;
-    fetch('/categorias/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(nuevaCategoria)
-    })
-      .then(res => res.json())
-      .then(data => {
-        setCategorias([...categorias, data]);
-        setNuevaCategoria({ nombre: '' });
-      });
-  };
-  const actualizarCategoria = (id) => {
-    fetch(`/categorias/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editCategoriaData)
-    })
-      .then(res => res.json())
-      .then(data => {
-        setCategorias(categorias.map(c => c.id === id ? data : c));
-        setEditCategoria(null);
-        setEditCategoriaData({ nombre: '' });
-      });
-  };
-  const eliminarCategoria = (id) => {
-    fetch(`/categorias/${id}`, { method: 'DELETE' })
-      .then(res => res.json())
-      .then(() => setCategorias(categorias.filter(c => c.id !== id)));
-  };
-
-  return (
-    <div>
-      <h2>Configuración General</h2>
-      <Box sx={{ mb: 4, p: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
-        <h3 style={{ color: '#388e3c', marginBottom: 8 }}><FaMapMarkerAlt /> Ubicaciones</h3>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-          <input type="text" placeholder="Nombre de ubicación" value={nuevaUbicacion.nombre} onChange={e => setNuevaUbicacion({ ...nuevaUbicacion, nombre: e.target.value })} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', minWidth: 180 }} />
-          <Button variant="contained" color="success" onClick={crearUbicacion} sx={{ fontWeight: 'bold' }}><FaPlus /> Crear</Button>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          {ubicaciones.map(u => (
-            <Box key={u.id} sx={{ background: '#fff', borderRadius: 1, p: 1, boxShadow: 1, display: 'flex', alignItems: 'center', mb: 1, mr: 1 }}>
-              {editUbicacion === u.id ? (
-                <>
-                  <input type="text" value={editUbicacionData.nombre} onChange={e => setEditUbicacionData({ ...editUbicacionData, nombre: e.target.value })} style={{ padding: 6, borderRadius: 6, border: '1px solid #a5d6a7', minWidth: 120 }} />
-                  <Button onClick={() => actualizarUbicacion(u.id)} color="success" variant="contained" sx={{ ml: 1, fontWeight: 'bold' }}>Guardar</Button>
-                  <Button onClick={() => setEditUbicacion(null)} color="error" variant="contained" sx={{ ml: 1, fontWeight: 'bold' }}>Cancelar</Button>
-                </>
-              ) : (
-                <>
-                  <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>{u.nombre}</span>
-                  <Button onClick={() => { setEditUbicacion(u.id); setEditUbicacionData({ nombre: u.nombre }); }} color="primary" variant="contained" sx={{ ml: 1, fontWeight: 'bold' }}><FaEdit /></Button>
-                  <Button onClick={() => eliminarUbicacion(u.id)} color="error" variant="contained" sx={{ ml: 1, fontWeight: 'bold' }}><FaTrash /></Button>
-                </>
-              )}
-            </Box>
-          ))}
-        </Box>
-      </Box>
-      <Box sx={{ mb: 4, p: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
-        <h3 style={{ color: '#388e3c', marginBottom: 8 }}><FaTag /> Categorías</h3>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-          <input type="text" placeholder="Nombre de categoría" value={nuevaCategoria.nombre} onChange={e => setNuevaCategoria({ ...nuevaCategoria, nombre: e.target.value })} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', minWidth: 180 }} />
-          <Button variant="contained" color="success" onClick={crearCategoria} sx={{ fontWeight: 'bold' }}><FaPlus /> Crear</Button>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          {categorias.map(c => (
-            <Box key={c.id} sx={{ background: '#fff', borderRadius: 1, p: 1, boxShadow: 1, display: 'flex', alignItems: 'center', mb: 1, mr: 1 }}>
-              {editCategoria === c.id ? (
-                <>
-                  <input type="text" value={editCategoriaData.nombre} onChange={e => setEditCategoriaData({ ...editCategoriaData, nombre: e.target.value })} style={{ padding: 6, borderRadius: 6, border: '1px solid #a5d6a7', minWidth: 120 }} />
-                  <Button onClick={() => actualizarCategoria(c.id)} color="success" variant="contained" sx={{ ml: 1, fontWeight: 'bold' }}>Guardar</Button>
-                  <Button onClick={() => setEditCategoria(null)} color="error" variant="contained" sx={{ ml: 1, fontWeight: 'bold' }}>Cancelar</Button>
-                </>
-              ) : (
-                <>
-                  <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>{c.nombre}</span>
-                  <Button onClick={() => { setEditCategoria(c.id); setEditCategoriaData({ nombre: c.nombre }); }} color="primary" variant="contained" sx={{ ml: 1, fontWeight: 'bold' }}><FaEdit /></Button>
-                  <Button onClick={() => eliminarCategoria(c.id)} color="error" variant="contained" sx={{ ml: 1, fontWeight: 'bold' }}><FaTrash /></Button>
-                </>
-              )}
-            </Box>
-          ))}
-        </Box>
-      </Box>
     </div>
   );
 }

@@ -17,12 +17,16 @@ def listar_inventario():
 def agregar_equipo():
     data = request.get_json()
     equipo = data.get('equipo')
+    tipo = data.get('tipo')
     estado = data.get('estado', 'Disponible')
     ubicacion_id = data.get('ubicacion_id')
     usuario_id = data.get('usuario_id')
+    # Validación estricta de campos obligatorios
     if not equipo:
         return jsonify({'error': 'Falta el nombre del equipo'}), 400
-    nuevo = Inventario(equipo=equipo, estado=estado)
+    if not tipo:
+        return jsonify({'error': 'Falta el tipo/categoría del equipo'}), 400
+    nuevo = Inventario(equipo=equipo, tipo=tipo, estado=estado)
     if ubicacion_id:
         nuevo.ubicacion_id = ubicacion_id
     if usuario_id:
