@@ -27,21 +27,27 @@ export function InventarioList({ admin, usuario }) {
   const [ubicaciones, setUbicaciones] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
+  const [error, setError] = useState('');
 
-  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetchWithAuth(`${API_URL}/inventario/`)
-      .then(res => res.json())
-      .then(data => {
-        if (admin) {
-          setInventario(data);
-        } else {
-          setInventario(data.filter(e => e.usuario_nombre === usuario));
-        }
-      });
-    fetchWithAuth(`${API_URL}/ubicaciones/`).then(res => res.json()).then(setUbicaciones);
-    fetchWithAuth(`${API_URL}/categorias/`).then(res => res.json()).then(setCategorias);
-    fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()).then(setUsuarios);
+    setError('');
+    Promise.all([
+      fetchWithAuth(`${API_URL}/inventario/`).then(res => res.json()),
+      fetchWithAuth(`${API_URL}/ubicaciones/`).then(res => res.json()),
+      fetchWithAuth(`${API_URL}/categorias/`).then(res => res.json()),
+      fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json())
+    ]).then(([inv, ubi, cat, usu]) => {
+      if (admin) {
+        setInventario(inv);
+      } else {
+        setInventario(inv.filter(e => e.usuario_nombre === usuario));
+      }
+      setUbicaciones(ubi);
+      setCategorias(cat);
+      setUsuarios(usu);
+    }).catch(err => {
+      setError('Error de red o CORS al cargar datos.');
+    });
   }, [admin, usuario]);
 
   const agregarEquipo = () => {
@@ -90,6 +96,7 @@ export function InventarioList({ admin, usuario }) {
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
+      {error && <div style={{ color: 'red', marginBottom: 12, fontWeight: 'bold' }}>{error}</div>}
       <Tabs value={tab} onChange={(_, v) => setTab(v)} centered>
         <Tab label="Inventario" />
         <Tab label="Gráficos" />
