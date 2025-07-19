@@ -41,8 +41,10 @@ def token_required(f):
         return f(*args, **kwargs)
     return decorated
 
-@usuarios_bp.route('/login', methods=['POST'])
+@usuarios_bp.route('/login', methods=['POST', 'OPTIONS'])
 def login():
+    if request.method == 'OPTIONS':
+        return '', 200
     try:
         data = request.get_json()
         if not data:
@@ -71,8 +73,10 @@ def login():
         logging.error(traceback.format_exc())
         return jsonify({'success': False, 'error': f'Error interno: {str(e)}', 'traceback': traceback.format_exc()}), 500
 
-@usuarios_bp.route('/crear', methods=['POST'])
+@usuarios_bp.route('/crear', methods=['POST', 'OPTIONS'])
 def crear_usuario():
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.get_json()
     nombre = data.get('usuario')
     contrasena = data.get('contrasena')
@@ -87,8 +91,10 @@ def crear_usuario():
     db.session.commit()
     return jsonify({'success': True, 'usuario': nuevo.nombre})
 
-@usuarios_bp.route('/<int:usuario_id>', methods=['PUT'])
+@usuarios_bp.route('/<int:usuario_id>', methods=['PUT', 'OPTIONS'])
 def editar_usuario(usuario_id):
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.get_json()
     usuario = Usuario.query.get(usuario_id)
     if not usuario:
@@ -99,8 +105,10 @@ def editar_usuario(usuario_id):
     db.session.commit()
     return jsonify({'success': True, 'usuario': usuario.to_dict()})
 
-@usuarios_bp.route('/<int:usuario_id>', methods=['DELETE'])
+@usuarios_bp.route('/<int:usuario_id>', methods=['DELETE', 'OPTIONS'])
 def eliminar_usuario(usuario_id):
+    if request.method == 'OPTIONS':
+        return '', 200
     usuario = Usuario.query.get(usuario_id)
     if not usuario:
         return jsonify({'error': 'Usuario no encontrado'}), 404
