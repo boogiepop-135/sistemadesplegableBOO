@@ -12,16 +12,7 @@ from flask_cors import CORS
 
 usuarios_bp = Blueprint('usuarios', __name__)
 
-CORS(usuarios_bp, origins=[
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-    "https://web-production-21f2a.up.railway.app",
-    "https://soporteches.online",
-    "https://api.soporteches.online",
-    "https://sistemadesplegableboo-production.up.railway.app"
-], supports_credentials=True)
+# CORS configurado globalmente en main.py
 
 def token_required(f):
     @wraps(f)
@@ -65,7 +56,7 @@ def login():
             }
             secret = current_app.config.get('SECRET_KEY', 'supersecreto')
             token = jwt.encode(payload, secret, algorithm='HS256')
-            logging.error(f'TOKEN TYPE: {type(token)} {token}')
+            # logging.debug(f'TOKEN TYPE: {type(token)}')
             if hasattr(token, 'decode'):
                 token = token.decode('utf-8')
             return jsonify({'success': True, 'usuario': usuario.nombre, 'rol': usuario.rol, 'token': token})

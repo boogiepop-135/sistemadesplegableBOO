@@ -9,16 +9,7 @@ import io
 import os
 
 bitacoras_bp = Blueprint('bitacoras', __name__)
-CORS(bitacoras_bp, origins=[
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-    "https://web-production-21f2a.up.railway.app",
-    "https://soporteches.online",
-    "https://api.soporteches.online",
-    "https://sistemadesplegableboo-production.up.railway.app"
-], supports_credentials=True)
+# CORS configurado globalmente en main.py
 
 @bitacoras_bp.route('/', methods=['GET', 'OPTIONS'])
 def listar_bitacoras():

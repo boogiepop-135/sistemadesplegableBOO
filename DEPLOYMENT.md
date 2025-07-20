@@ -3,7 +3,7 @@
 ## Configuración Actual
 
 ### Frontend (Netlify)
-- **URL**: Tu dominio de Netlify
+- **URL**: `https://soporteches.online` (dominio personalizado)
 - **Configuración**: `netlify.toml` actualizado para redirigir a Railway
 - **API URL**: `https://sistemadesplegableboo-production.up.railway.app` (temporal)
 
@@ -11,7 +11,7 @@
 - **URL**: `https://sistemadesplegableboo-production.up.railway.app` (temporal)
 - **URL Futura**: `https://api.soporteches.online` (cuando se resuelva DNS)
 - **Archivo principal**: `main.py`
-- **CORS**: Configurado para permitir Netlify
+- **CORS**: Configurado globalmente para permitir todos los orígenes temporalmente
 
 ## ⚠️ Nota Importante sobre Dominios
 
@@ -27,8 +27,10 @@
 ## Cambios Realizados
 
 ### 1. Configuración CORS (main.py)
-- Agregados dominios de Netlify a los orígenes permitidos
-- Incluido `https://*.netlify.app` y `https://*.netlify.com`
+- **Simplificada**: Configuración global con `origins=["*"]` temporalmente
+- **Eliminadas**: Configuraciones CORS individuales en blueprints para evitar conflictos
+- **Métodos permitidos**: GET, POST, PUT, DELETE, OPTIONS
+- **Headers permitidos**: Content-Type, Authorization
 
 ### 2. Redirecciones Netlify (netlify.toml)
 - Actualizadas todas las redirecciones para apuntar al dominio temporal
@@ -42,6 +44,10 @@
 ### 4. Configuración Railway (render.yaml)
 - Corregido comando de inicio: `gunicorn main:app`
 
+### 5. Corrección de Errores
+- Eliminado log de debug en `usuarios.py` que causaba errores
+- Simplificada configuración CORS para evitar redirecciones
+
 ## Verificación de Funcionamiento
 
 ### 1. Verificar Backend
@@ -52,7 +58,7 @@ curl https://sistemadesplegableboo-production.up.railway.app/
 
 ### 2. Verificar CORS
 ```bash
-curl -H "Origin: https://tu-dominio.netlify.app" \
+curl -H "Origin: https://soporteches.online" \
      -H "Access-Control-Request-Method: GET" \
      -H "Access-Control-Request-Headers: Authorization" \
      -X OPTIONS https://sistemadesplegableboo-production.up.railway.app/usuarios
@@ -66,8 +72,8 @@ curl -H "Origin: https://tu-dominio.netlify.app" \
 ## Troubleshooting
 
 ### Error de CORS
-- Verificar que el dominio de Netlify esté en la lista de orígenes permitidos
-- Asegurar que Railway esté desplegado correctamente
+- **Causa**: Configuraciones CORS conflictivas o redirecciones
+- **Solución**: Configuración CORS simplificada y global
 
 ### Error de Conexión
 - Verificar que `https://sistemadesplegableboo-production.up.railway.app` esté funcionando
@@ -80,6 +86,10 @@ curl -H "Origin: https://tu-dominio.netlify.app" \
 ### Error de Certificado SSL
 - **Causa**: Dominio personalizado no configurado correctamente
 - **Solución**: Usar el dominio temporal de Railway hasta que se resuelva DNS
+
+### Error de Redirección en Preflight
+- **Causa**: Railway redirigiendo peticiones OPTIONS
+- **Solución**: Configuración CORS simplificada y manejo explícito de OPTIONS
 
 ## Variables de Entorno
 
@@ -97,7 +107,7 @@ curl -H "Origin: https://tu-dominio.netlify.app" \
 ```bash
 # En Railway, el despliegue es automático al hacer push
 git add .
-git commit -m "Actualizar configuración"
+git commit -m "Actualizar configuración CORS"
 git push
 ```
 
@@ -129,4 +139,21 @@ export const API_URL = "https://api.soporteches.online";
 
 2. Actualizar `netlify.toml` con las nuevas redirecciones
 3. Verificar que el certificado SSL esté funcionando
-4. Probar todas las funcionalidades 
+4. Probar todas las funcionalidades
+5. Restringir CORS a dominios específicos en producción
+
+## Configuración CORS para Producción
+
+Una vez que todo funcione, actualizar la configuración CORS en `main.py`:
+
+```python
+CORS(app, 
+     origins=[
+         "https://soporteches.online",
+         "https://api.soporteches.online",
+         "http://localhost:3000"  # Solo para desarrollo
+     ],
+     supports_credentials=True,
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"])
+``` 

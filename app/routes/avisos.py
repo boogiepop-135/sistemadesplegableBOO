@@ -5,16 +5,7 @@ from app import db
 from datetime import datetime
 
 avisos_bp = Blueprint('avisos', __name__)
-CORS(avisos_bp, origins=[
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-    "https://web-production-21f2a.up.railway.app",
-    "https://soporteches.online",
-    "https://api.soporteches.online",
-    "https://sistemadesplegableboo-production.up.railway.app"
-], supports_credentials=True)
+# CORS configurado globalmente en main.py
 
 # Variable global temporal para almacenar el aviso
 aviso_actual = {'mensaje': 'Mantenimiento programado el viernes a las 18:00 hrs.', 'fecha': datetime.now().isoformat()}

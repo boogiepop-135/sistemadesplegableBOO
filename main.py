@@ -14,21 +14,12 @@ from flask_cors import CORS
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecreto'  # Usa una clave fuerte en producción
 
-# Configuración CORS actualizada para incluir Netlify y el dominio temporal
-CORS(app, resources={r"/*": {"origins": [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-    "https://web-production-21f2a.up.railway.app",
-    "https://soporteches.online",
-    "https://api.soporteches.online",
-    "https://sistemadesplegableboo-production.up.railway.app",
-    # Agregar dominios de Netlify
-    "https://*.netlify.app",
-    "https://*.netlify.com",
-    # Si tienes un dominio personalizado en Netlify, agrégalo aquí
-]}}, supports_credentials=True)
+# Configuración CORS simplificada para desarrollo
+CORS(app, 
+     origins=["*"],  # Permitir todos los orígenes temporalmente
+     supports_credentials=True,
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"])
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventario.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
