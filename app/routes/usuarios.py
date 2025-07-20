@@ -19,6 +19,7 @@ CORS(usuarios_bp, origins=[
     "http://127.0.0.1:3001",
     "https://web-production-21f2a.up.railway.app",
     "https://soporteches.online",
+    "https://api.soporteches.online",
     "https://sistemadesplegableboo-production.up.railway.app"
 ], supports_credentials=True)
 
