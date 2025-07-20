@@ -9,6 +9,10 @@ import { API_URL } from '../config';
 // Helper para fetch con token
 function fetchWithAuth(url, options = {}) {
   const token = getToken();
+  console.log('fetchWithAuth - URL:', url);
+  console.log('fetchWithAuth - Options:', options);
+  console.log('fetchWithAuth - Token:', token ? 'Presente' : 'No presente');
+  
   return fetch(url, {
     ...options,
     headers: {
@@ -20,7 +24,7 @@ function fetchWithAuth(url, options = {}) {
 
 export function InventarioList({ admin, usuario }) {
   const [inventario, setInventario] = useState([]);
-  const [nuevoEquipo, setNuevoEquipo] = useState({ nombre: '', tipo: '', estado: 'Disponible', identificador: '' });
+  const [nuevoEquipo, setNuevoEquipo] = useState({ nombre: '', tipo: '', estado: 'Disponible', ubicacion_id: '', usuario_id: '' });
   const [filtro, setFiltro] = useState({ tipo: '', estado: '' });
   const [tab, setTab] = useState(0);
   const [ubicaciones, setUbicaciones] = useState([]);
@@ -50,23 +54,34 @@ export function InventarioList({ admin, usuario }) {
   }, [admin, usuario]);
 
     const agregarEquipo = () => {
+    console.log('Intentando agregar equipo:', nuevoEquipo);
     if (!nuevoEquipo.nombre || !nuevoEquipo.tipo || !nuevoEquipo.estado) {
       alert('Por favor completa todos los campos requeridos');
+      console.log('Validación fallida:', { nombre: nuevoEquipo.nombre, tipo: nuevoEquipo.tipo, estado: nuevoEquipo.estado });
       return;
     }
+    
+    const datosEnviar = {
+      equipo: nuevoEquipo.nombre,
+      tipo: nuevoEquipo.tipo,
+      estado: nuevoEquipo.estado,
+      ubicacion_id: nuevoEquipo.ubicacion_id || null,
+      usuario_id: nuevoEquipo.usuario_id || null
+    };
+    
+    console.log('Datos a enviar:', datosEnviar);
+    
     fetchWithAuth(`${API_URL}/inventario/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        equipo: nuevoEquipo.nombre,
-        tipo: nuevoEquipo.tipo,
-        estado: nuevoEquipo.estado,
-        ubicacion_id: nuevoEquipo.ubicacion_id || null,
-        usuario_id: nuevoEquipo.usuario_id || null
-      })
+      body: JSON.stringify(datosEnviar)
     })
-      .then(res => res.json())
+      .then(res => {
+        console.log('Respuesta del servidor:', res);
+        return res.json();
+      })
       .then(data => {
+        console.log('Datos recibidos:', data);
         if (data.id) {
           setInventario([...inventario, data]);
           setNuevoEquipo({ nombre: '', tipo: '', estado: 'Disponible', ubicacion_id: '', usuario_id: '' });
@@ -76,6 +91,7 @@ export function InventarioList({ admin, usuario }) {
         }
       })
       .catch(err => {
+        console.error('Error en fetch:', err);
         alert('Error al agregar equipo: ' + err.message);
       });
   };
@@ -167,8 +183,11 @@ export function InventarioList({ admin, usuario }) {
                     <option key={u.id} value={u.id}>{u.nombre}</option>
                   ))}
                 </select>
-                <Button variant="contained" color="success" onClick={agregarEquipo} sx={{ minWidth: 120, fontWeight: 'bold', fontSize: '1em', width: '100%' }}>
+                <Button variant="contained" color="success" onClick={agregarEquipo} sx={{ minWidth: 120, fontWeight: 'bold', fontSize: '1em', width: '100%', marginBottom: 1 }}>
                   <FaPlus style={{ marginRight: 6 }} /> Agregar
+                </Button>
+                <Button variant="outlined" color="info" onClick={() => console.log('Estado actual:', nuevoEquipo)} sx={{ minWidth: 120, fontSize: '0.8em', width: '100%' }}>
+                  Debug: Ver Estado
                 </Button>
               </Paper>
             )}
