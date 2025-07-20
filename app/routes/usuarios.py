@@ -117,6 +117,8 @@ def eliminar_usuario(usuario_id):
     db.session.commit()
     return jsonify({'success': True})
 
+# Permitir acceso tanto a /usuarios como a /usuarios/ para evitar redirecciones y problemas de CORS
+@usuarios_bp.route('', methods=['GET', 'OPTIONS'])
 @usuarios_bp.route('/', methods=['GET', 'OPTIONS'])
 def listar_usuarios():
     if request.method == 'OPTIONS':

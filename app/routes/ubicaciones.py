@@ -15,6 +15,8 @@ CORS(ubicaciones_bp, origins=[
     "https://sistemadesplegableboo-production.up.railway.app"
 ], supports_credentials=True)
 
+# Permitir acceso tanto a /ubicaciones como a /ubicaciones/ para evitar redirecciones y problemas de CORS
+@ubicaciones_bp.route('', methods=['GET', 'OPTIONS'])
 @ubicaciones_bp.route('/', methods=['GET', 'OPTIONS'])
 def listar_ubicaciones():
     if request.method == 'OPTIONS':
@@ -22,8 +24,11 @@ def listar_ubicaciones():
     ubicaciones = Ubicacion.query.all()
     return jsonify([u.to_dict() for u in ubicaciones])
 
-@ubicaciones_bp.route('/', methods=['POST'])
+@ubicaciones_bp.route('', methods=['POST', 'OPTIONS'])
+@ubicaciones_bp.route('/', methods=['POST', 'OPTIONS'])
 def crear_ubicacion():
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.get_json()
     nombre = data.get('nombre')
     descripcion = data.get('descripcion')
@@ -36,8 +41,10 @@ def crear_ubicacion():
     db.session.commit()
     return jsonify(nueva.to_dict()), 201
 
-@ubicaciones_bp.route('/<int:ubicacion_id>', methods=['PUT'])
+@ubicaciones_bp.route('/<int:ubicacion_id>', methods=['PUT', 'OPTIONS'])
 def editar_ubicacion(ubicacion_id):
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.get_json()
     ubicacion = Ubicacion.query.get(ubicacion_id)
     if not ubicacion:
@@ -47,8 +54,10 @@ def editar_ubicacion(ubicacion_id):
     db.session.commit()
     return jsonify(ubicacion.to_dict())
 
-@ubicaciones_bp.route('/<int:ubicacion_id>', methods=['DELETE'])
+@ubicaciones_bp.route('/<int:ubicacion_id>', methods=['DELETE', 'OPTIONS'])
 def eliminar_ubicacion(ubicacion_id):
+    if request.method == 'OPTIONS':
+        return '', 200
     ubicacion = Ubicacion.query.get(ubicacion_id)
     if not ubicacion:
         return jsonify({'error': 'Ubicación no encontrada'}), 404
