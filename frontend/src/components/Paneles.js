@@ -4,8 +4,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { DataGrid } from '@mui/x-data-grid';
 import { Button, Box, Tabs, Tab, Grid, Paper } from '@mui/material';
 import { getToken } from '../App';
-
-const API_URL = "https://sistemadesplegableboo-production.up.railway.app";
+import { API_URL } from '../config';
 
 // Helper para fetch con token
 function fetchWithAuth(url, options = {}) {
@@ -90,7 +89,7 @@ export function InventarioList({ admin, usuario }) {
     const params = [];
     if (filtro.tipo) params.push(`tipo=${encodeURIComponent(filtro.tipo)}`);
     if (filtro.estado) params.push(`estado=${encodeURIComponent(filtro.estado)}`);
-    const url = `/inventario/exportar${params.length ? '?' + params.join('&') : ''}`;
+    const url = `${API_URL}/inventario/exportar${params.length ? '?' + params.join('&') : ''}`;
     window.open(url, '_blank');
   };
 
@@ -581,7 +580,7 @@ export function DocumentosPanel() {
   };
 
   const eliminarDocumento = (id) => {
-    fetch(`/documentos/${id}`, { method: 'DELETE' })
+    fetchWithAuth(`${API_URL}/documentos/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -638,7 +637,7 @@ export function DocumentosPanel() {
                         <span style={{ fontSize: '0.9em', color: '#888' }}>Subido: {doc.fecha_subida} | Descripción: {doc.descripcion}</span>
                       </div>
                       <div>
-                        <a href={`https://sistemadesplegableboo-production.up.railway.app/documentos/${doc.id}/descargar`} style={{ marginLeft: 16, color: '#43a047', fontWeight: 'bold' }} target="_blank" rel="noopener noreferrer">
+                        <a href={`${API_URL}/documentos/${doc.id}/descargar`} style={{ marginLeft: 16, color: '#43a047', fontWeight: 'bold' }} target="_blank" rel="noopener noreferrer">
                           Descargar
                         </a>
                         <Button
@@ -722,7 +721,7 @@ export function BitacorasPanel() {
   };
 
   const eliminarBitacora = (id) => {
-    fetch(`/bitacoras/${id}`, { method: 'DELETE' })
+    fetchWithAuth(`${API_URL}/bitacoras/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -820,7 +819,7 @@ export function BitacorasPanel() {
                           variant="contained"
                           color="primary"
                           size="small"
-                          onClick={() => window.open(`https://sistemadesplegableboo-production.up.railway.app/bitacoras/${b.id}/pdf`, '_blank')}
+                          onClick={() => window.open(`${API_URL}/bitacoras/${b.id}/pdf`, '_blank')}
                           sx={{ minWidth: 80, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}
                         >
                           PDF
@@ -952,7 +951,7 @@ export function TrabajosAdminPanel({ admin }) {
   };
 
   const eliminarTrabajo = (id) => {
-    fetch(`/trabajos/${id}`, { method: 'DELETE' })
+    fetchWithAuth(`${API_URL}/trabajos/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(data => {
         if (data.success) setTrabajos(trabajos.filter(t => t.id !== id));
@@ -960,7 +959,7 @@ export function TrabajosAdminPanel({ admin }) {
   };
 
   const actualizarTrabajo = (id, campos) => {
-    fetch(`/trabajos/${id}`, {
+    fetchWithAuth(`${API_URL}/trabajos/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(campos)
@@ -973,7 +972,7 @@ export function TrabajosAdminPanel({ admin }) {
   };
 
   const asociarEntidades = (id) => {
-    fetch(`/trabajos/${id}/asociar`, {
+    fetchWithAuth(`${API_URL}/trabajos/${id}/asociar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ entidades: relaciones })

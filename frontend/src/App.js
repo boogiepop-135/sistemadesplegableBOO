@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaLeaf } from 'react-icons/fa';
 import './App.css';
 import { InventarioList, TicketsList, Avisos, AdminPanel, DocumentosPanel, BitacorasPanel, DiaLabores, TrabajosAdminPanel } from './components/Paneles';
+import { API_URL } from './config';
 
 function Navbar({ onLogout, onSelect, selected, isAdmin, rol }) {
   return (
@@ -38,7 +39,7 @@ function Login({ onLogin }) {
       return;
     }
     try {
-      const res = await fetch('https://sistemadesplegableboo-production.up.railway.app/usuarios/login', {
+      const res = await fetch(`${API_URL}/usuarios/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario, contrasena })

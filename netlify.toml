@@ -3,62 +3,63 @@
   publish = "build"
   command = "npm run build"
 
+# Redirecciones actualizadas para apuntar a Railway
 [[redirects]]
   from = "/api/*"
-  to = "http://localhost:5000/:splat"
+  to = "https://api.soporteches.online/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/inventario/*"
-  to = "http://localhost:5000/inventario/:splat"
+  to = "https://api.soporteches.online/inventario/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/usuarios/*"
-  to = "http://localhost:5000/usuarios/:splat"
+  to = "https://api.soporteches.online/usuarios/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/tickets/*"
-  to = "http://localhost:5000/tickets/:splat"
+  to = "https://api.soporteches.online/tickets/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/documentos/*"
-  to = "http://localhost:5000/documentos/:splat"
+  to = "https://api.soporteches.online/documentos/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/bitacoras/*"
-  to = "http://localhost:5000/bitacoras/:splat"
+  to = "https://api.soporteches.online/bitacoras/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/trabajos/*"
-  to = "http://localhost:5000/trabajos/:splat"
+  to = "https://api.soporteches.online/trabajos/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/ubicaciones/*"
-  to = "http://localhost:5000/ubicaciones/:splat"
+  to = "https://api.soporteches.online/ubicaciones/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/categorias/*"
-  to = "http://localhost:5000/categorias/:splat"
+  to = "https://api.soporteches.online/categorias/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/avisos/*"
-  to = "http://localhost:5000/avisos/:splat"
+  to = "https://api.soporteches.online/avisos/:splat"
   status = 200
   force = true
