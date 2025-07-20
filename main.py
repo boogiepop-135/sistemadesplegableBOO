@@ -14,7 +14,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecreto'  # Usa una clave fuerte en producción
 
-# Configuración CORS actualizada para incluir Netlify
+# Configuración CORS actualizada para incluir Netlify y el dominio temporal
 CORS(app, resources={r"/*": {"origins": [
     "http://localhost:3000",
     "http://localhost:3001",

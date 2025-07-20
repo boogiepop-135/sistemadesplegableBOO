@@ -5,12 +5,24 @@
 ### Frontend (Netlify)
 - **URL**: Tu dominio de Netlify
 - **Configuración**: `netlify.toml` actualizado para redirigir a Railway
-- **API URL**: `https://api.soporteches.online`
+- **API URL**: `https://sistemadesplegableboo-production.up.railway.app` (temporal)
 
 ### Backend (Railway)
-- **URL**: `https://api.soporteches.online`
+- **URL**: `https://sistemadesplegableboo-production.up.railway.app` (temporal)
+- **URL Futura**: `https://api.soporteches.online` (cuando se resuelva DNS)
 - **Archivo principal**: `main.py`
 - **CORS**: Configurado para permitir Netlify
+
+## ⚠️ Nota Importante sobre Dominios
+
+**Problema actual**: El dominio `soporteches.online` está en estado "Waiting for DNS update" en Railway, lo que causa errores de certificado SSL.
+
+**Solución temporal**: Usando `sistemadesplegableboo-production.up.railway.app` que sí funciona correctamente.
+
+**Para resolver el dominio personalizado**:
+1. En Railway, haz clic en "Show instructions" junto a `soporteches.online`
+2. Configura los registros DNS según las instrucciones
+3. Una vez que el DNS esté propagado, actualiza las URLs en `config.js`
 
 ## Cambios Realizados
 
@@ -19,7 +31,7 @@
 - Incluido `https://*.netlify.app` y `https://*.netlify.com`
 
 ### 2. Redirecciones Netlify (netlify.toml)
-- Actualizadas todas las redirecciones para apuntar a `https://api.soporteches.online`
+- Actualizadas todas las redirecciones para apuntar al dominio temporal
 - Eliminadas referencias a `localhost:5000`
 
 ### 3. URLs del Frontend
@@ -34,7 +46,7 @@
 
 ### 1. Verificar Backend
 ```bash
-curl https://api.soporteches.online/
+curl https://sistemadesplegableboo-production.up.railway.app/
 # Debe devolver: "Sistema de Inventario IT - Backend Flask funcionando"
 ```
 
@@ -43,7 +55,7 @@ curl https://api.soporteches.online/
 curl -H "Origin: https://tu-dominio.netlify.app" \
      -H "Access-Control-Request-Method: GET" \
      -H "Access-Control-Request-Headers: Authorization" \
-     -X OPTIONS https://api.soporteches.online/usuarios
+     -X OPTIONS https://sistemadesplegableboo-production.up.railway.app/usuarios
 ```
 
 ### 3. Verificar Login
@@ -58,12 +70,16 @@ curl -H "Origin: https://tu-dominio.netlify.app" \
 - Asegurar que Railway esté desplegado correctamente
 
 ### Error de Conexión
-- Verificar que `https://api.soporteches.online` esté funcionando
+- Verificar que `https://sistemadesplegableboo-production.up.railway.app` esté funcionando
 - Revisar logs de Railway para errores
 
 ### Error de Autenticación
 - Verificar que el token se esté enviando correctamente
 - Revisar que el endpoint de login funcione
+
+### Error de Certificado SSL
+- **Causa**: Dominio personalizado no configurado correctamente
+- **Solución**: Usar el dominio temporal de Railway hasta que se resuelva DNS
 
 ## Variables de Entorno
 
@@ -100,4 +116,17 @@ python main.py
 # Frontend
 cd frontend
 npm start
-``` 
+```
+
+## Migración Futura a Dominio Personalizado
+
+Cuando `soporteches.online` esté funcionando correctamente:
+
+1. Actualizar `frontend/src/config.js`:
+```javascript
+export const API_URL = "https://api.soporteches.online";
+```
+
+2. Actualizar `netlify.toml` con las nuevas redirecciones
+3. Verificar que el certificado SSL esté funcionando
+4. Probar todas las funcionalidades 

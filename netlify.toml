@@ -3,63 +3,63 @@
   publish = "build"
   command = "npm run build"
 
-# Redirecciones actualizadas para apuntar a Railway
+# Redirecciones actualizadas para apuntar a Railway (dominio temporal)
 [[redirects]]
   from = "/api/*"
-  to = "https://api.soporteches.online/:splat"
+  to = "https://sistemadesplegableboo-production.up.railway.app/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/inventario/*"
-  to = "https://api.soporteches.online/inventario/:splat"
+  to = "https://sistemadesplegableboo-production.up.railway.app/inventario/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/usuarios/*"
-  to = "https://api.soporteches.online/usuarios/:splat"
+  to = "https://sistemadesplegableboo-production.up.railway.app/usuarios/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/tickets/*"
-  to = "https://api.soporteches.online/tickets/:splat"
+  to = "https://sistemadesplegableboo-production.up.railway.app/tickets/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/documentos/*"
-  to = "https://api.soporteches.online/documentos/:splat"
+  to = "https://sistemadesplegableboo-production.up.railway.app/documentos/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/bitacoras/*"
-  to = "https://api.soporteches.online/bitacoras/:splat"
+  to = "https://sistemadesplegableboo-production.up.railway.app/bitacoras/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/trabajos/*"
-  to = "https://api.soporteches.online/trabajos/:splat"
+  to = "https://sistemadesplegableboo-production.up.railway.app/trabajos/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/ubicaciones/*"
-  to = "https://api.soporteches.online/ubicaciones/:splat"
+  to = "https://sistemadesplegableboo-production.up.railway.app/ubicaciones/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/categorias/*"
-  to = "https://api.soporteches.online/categorias/:splat"
+  to = "https://sistemadesplegableboo-production.up.railway.app/categorias/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/avisos/*"
-  to = "https://api.soporteches.online/avisos/:splat"
+  to = "https://sistemadesplegableboo-production.up.railway.app/avisos/:splat"
   status = 200
   force = true
