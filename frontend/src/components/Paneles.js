@@ -54,10 +54,18 @@ export function InventarioList({ admin, usuario }) {
   }, [admin, usuario]);
 
     const agregarEquipo = () => {
-    console.log('Intentando agregar equipo:', nuevoEquipo);
+    console.log('=== DEBUG AGREGAR EQUIPO ===');
+    console.log('Estado actual de nuevoEquipo:', nuevoEquipo);
+    console.log('API_URL:', API_URL);
+    
     if (!nuevoEquipo.nombre || !nuevoEquipo.tipo || !nuevoEquipo.estado) {
-      alert('Por favor completa todos los campos requeridos');
-      console.log('Validación fallida:', { nombre: nuevoEquipo.nombre, tipo: nuevoEquipo.tipo, estado: nuevoEquipo.estado });
+      const errorMsg = 'Por favor completa todos los campos requeridos';
+      console.log('❌ Validación fallida:', { 
+        nombre: nuevoEquipo.nombre, 
+        tipo: nuevoEquipo.tipo, 
+        estado: nuevoEquipo.estado 
+      });
+      alert(errorMsg);
       return;
     }
     
@@ -69,7 +77,8 @@ export function InventarioList({ admin, usuario }) {
       usuario_id: nuevoEquipo.usuario_id || null
     };
     
-    console.log('Datos a enviar:', datosEnviar);
+    console.log('✅ Datos a enviar:', datosEnviar);
+    console.log('URL de la petición:', `${API_URL}/inventario/`);
     
     fetchWithAuth(`${API_URL}/inventario/`, {
       method: 'POST',
@@ -77,21 +86,31 @@ export function InventarioList({ admin, usuario }) {
       body: JSON.stringify(datosEnviar)
     })
       .then(res => {
-        console.log('Respuesta del servidor:', res);
+        console.log('📡 Respuesta del servidor - Status:', res.status);
+        console.log('📡 Respuesta del servidor - Headers:', res.headers);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
         return res.json();
       })
       .then(data => {
-        console.log('Datos recibidos:', data);
+        console.log('📦 Datos recibidos:', data);
         if (data.id) {
-          setInventario([...inventario, data]);
+          console.log('✅ Equipo agregado exitosamente con ID:', data.id);
+          setInventario(prevInventario => {
+            const nuevoInventario = [...prevInventario, data];
+            console.log('📊 Inventario actualizado:', nuevoInventario.length, 'elementos');
+            return nuevoInventario;
+          });
           setNuevoEquipo({ nombre: '', tipo: '', estado: 'Disponible', ubicacion_id: '', usuario_id: '' });
           alert('Equipo agregado correctamente');
         } else {
+          console.log('❌ Error en respuesta:', data);
           alert('Error al agregar equipo: ' + (data.error || 'Error desconocido'));
         }
       })
       .catch(err => {
-        console.error('Error en fetch:', err);
+        console.error('💥 Error en fetch:', err);
         alert('Error al agregar equipo: ' + err.message);
       });
   };
