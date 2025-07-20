@@ -49,8 +49,11 @@ export function InventarioList({ admin, usuario }) {
     });
   }, [admin, usuario]);
 
-  const agregarEquipo = () => {
-    if (!nuevoEquipo.nombre || !nuevoEquipo.tipo || !nuevoEquipo.estado || !nuevoEquipo.identificador) return;
+    const agregarEquipo = () => {
+    if (!nuevoEquipo.nombre || !nuevoEquipo.tipo || !nuevoEquipo.estado) {
+      alert('Por favor completa todos los campos requeridos');
+      return;
+    }
     fetchWithAuth(`${API_URL}/inventario/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -58,14 +61,22 @@ export function InventarioList({ admin, usuario }) {
         equipo: nuevoEquipo.nombre,
         tipo: nuevoEquipo.tipo,
         estado: nuevoEquipo.estado,
-        identificador: nuevoEquipo.identificador,
-        ubicacion_id: nuevoEquipo.ubicacion_id || null
+        ubicacion_id: nuevoEquipo.ubicacion_id || null,
+        usuario_id: nuevoEquipo.usuario_id || null
       })
     })
       .then(res => res.json())
       .then(data => {
-        setInventario([...inventario, data]);
-        setNuevoEquipo({ nombre: '', tipo: '', estado: 'Disponible', identificador: '', ubicacion_id: '' });
+        if (data.id) {
+          setInventario([...inventario, data]);
+          setNuevoEquipo({ nombre: '', tipo: '', estado: 'Disponible', ubicacion_id: '', usuario_id: '' });
+          alert('Equipo agregado correctamente');
+        } else {
+          alert('Error al agregar equipo: ' + (data.error || 'Error desconocido'));
+        }
+      })
+      .catch(err => {
+        alert('Error al agregar equipo: ' + err.message);
       });
   };
 
@@ -665,22 +676,17 @@ export function DocumentosPanel() {
 export function BitacorasPanel() {
   const [bitacoras, setBitacoras] = useState([]);
   const [descripcion, setDescripcion] = useState('');
-  const [inventarioId, setInventarioId] = useState('');
   const [usuarioId, setUsuarioId] = useState('');
   const [tickets, setTickets] = useState([]);
   const [ticketsSeleccionados, setTicketsSeleccionados] = useState([]);
   const [mensaje, setMensaje] = useState('');
-  const [equipos, setEquipos] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
 
-  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
+  // Cargar datos necesarios
   useEffect(() => {
     fetchWithAuth(`${API_URL}/bitacoras/`)
       .then(res => res.json())
       .then(data => setBitacoras(data));
-    fetchWithAuth(`${API_URL}/inventario`)
-      .then(res => res.json())
-      .then(data => setEquipos(data));
     fetchWithAuth(`${API_URL}/usuarios`)
       .then(res => res.json())
       .then(data => setUsuarios(data));
@@ -691,8 +697,8 @@ export function BitacorasPanel() {
 
   const crearBitacora = (e) => {
     e.preventDefault();
-    if (!descripcion || !inventarioId) {
-      setMensaje('Completa la descripción y selecciona un equipo');
+    if (!descripcion || ticketsSeleccionados.length === 0) {
+      setMensaje('Completa la descripción y selecciona al menos un ticket');
       return;
     }
     fetchWithAuth(`${API_URL}/bitacoras/`, {
@@ -700,7 +706,6 @@ export function BitacorasPanel() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         descripcion,
-        inventario_id: inventarioId,
         usuario_id: usuarioId || null,
         tickets_codigos: ticketsSeleccionados
       })
@@ -710,7 +715,6 @@ export function BitacorasPanel() {
         if (data.id) {
           setBitacoras([...bitacoras, data]);
           setDescripcion('');
-          setInventarioId('');
           setUsuarioId('');
           setTicketsSeleccionados([]);
           setMensaje('Bitácora registrada');
@@ -753,16 +757,6 @@ export function BitacorasPanel() {
                 style={{ marginBottom: 8, padding: 10, borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%' }}
               />
               <select
-                value={inventarioId}
-                onChange={e => setInventarioId(e.target.value)}
-                style={{ marginBottom: 8, padding: 10, borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%' }}
-              >
-                <option value="">Seleccionar Equipo</option>
-                {equipos.map(eq => (
-                  <option key={eq.id} value={eq.id}>{eq.equipo}</option>
-                ))}
-              </select>
-              <select
                 value={usuarioId}
                 onChange={e => setUsuarioId(e.target.value)}
                 style={{ marginBottom: 8, padding: 10, borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%' }}
@@ -773,7 +767,7 @@ export function BitacorasPanel() {
                 ))}
               </select>
               <div style={{ margin: '10px 0' }}>
-                <b>Asociar tickets:</b>
+                <b>Seleccionar tickets (requerido):</b>
                 <div style={{ maxHeight: 120, overflowY: 'auto', border: '1px solid #a5d6a7', borderRadius: 6, padding: 6, background: '#f8fff8' }}>
                   {tickets.map(t => (
                     <label key={t.codigo_unico} style={{ display: 'block', fontSize: '0.95em', marginBottom: 2 }}>
@@ -803,7 +797,7 @@ export function BitacorasPanel() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <strong style={{ color: '#388e3c' }}>{b.descripcion}</strong><br />
-                        <span style={{ fontSize: '0.9em', color: '#888' }}>Equipo: {equipos.find(eq => eq.id === b.inventario_id)?.equipo || b.inventario_id} | Fecha: {b.fecha}</span>
+                        <span style={{ fontSize: '0.9em', color: '#888' }}>Tickets: {b.tickets_codigos?.length || 0} | Fecha: {b.fecha}</span>
                       </div>
                       <div>
                         <Button
