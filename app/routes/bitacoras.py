@@ -11,10 +11,8 @@ import os
 bitacoras_bp = Blueprint('bitacoras', __name__)
 # CORS configurado globalmente en main.py
 
-@bitacoras_bp.route('/', methods=['GET', 'OPTIONS'])
+@bitacoras_bp.route('/', methods=['GET'])
 def listar_bitacoras():
-    if request.method == 'OPTIONS':
-        return '', 200
     bitacoras = BitacoraMantenimiento.query.all()
     return jsonify([b.to_dict() for b in bitacoras])
 

@@ -10,10 +10,8 @@ avisos_bp = Blueprint('avisos', __name__)
 # Variable global temporal para almacenar el aviso
 aviso_actual = {'mensaje': 'Mantenimiento programado el viernes a las 18:00 hrs.', 'fecha': datetime.now().isoformat()}
 
-@avisos_bp.route('/', methods=['GET', 'OPTIONS'])
+@avisos_bp.route('/', methods=['GET'])
 def obtener_aviso():
-    if request.method == 'OPTIONS':
-        return '', 200
     # Mensaje enfocado en tareas pendientes
     mensaje = aviso_actual.get('mensaje') or 'Tienes tareas pendientes por revisar.'
     fecha = aviso_actual.get('fecha')

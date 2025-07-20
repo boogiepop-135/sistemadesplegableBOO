@@ -1,5 +1,5 @@
 from app import db
-from flask import Flask
+from flask import Flask, request, jsonify
 from app.routes.usuarios import usuarios_bp
 from app.routes.inventario import inventario_bp
 from app.routes.avisos import avisos_bp
@@ -20,6 +20,17 @@ CORS(app,
      supports_credentials=True,
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      allow_headers=["Content-Type", "Authorization"])
+
+# Middleware para manejar peticiones OPTIONS globalmente
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response, 200
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventario.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

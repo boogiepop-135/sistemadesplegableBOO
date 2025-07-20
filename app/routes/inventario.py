@@ -8,10 +8,8 @@ import pandas as pd
 inventario_bp = Blueprint('inventario', __name__)
 # CORS configurado globalmente en main.py
 
-@inventario_bp.route('/', methods=['GET', 'OPTIONS'])
+@inventario_bp.route('/', methods=['GET'])
 def listar_inventario():
-    if request.method == 'OPTIONS':
-        return '', 200
     inventario = Inventario.query.all()
     return jsonify([e.to_dict() for e in inventario])
 

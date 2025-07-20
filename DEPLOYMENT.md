@@ -11,7 +11,7 @@
 - **URL**: `https://sistemadesplegableboo-production.up.railway.app` (temporal)
 - **URL Futura**: `https://api.soporteches.online` (cuando se resuelva DNS)
 - **Archivo principal**: `main.py`
-- **CORS**: Configurado globalmente para permitir todos los orígenes temporalmente
+- **CORS**: Configurado globalmente con middleware personalizado
 
 ## ⚠️ Nota Importante sobre Dominios
 
@@ -27,10 +27,10 @@
 ## Cambios Realizados
 
 ### 1. Configuración CORS (main.py)
-- **Simplificada**: Configuración global con `origins=["*"]` temporalmente
-- **Eliminadas**: Configuraciones CORS individuales en blueprints para evitar conflictos
-- **Métodos permitidos**: GET, POST, PUT, DELETE, OPTIONS
-- **Headers permitidos**: Content-Type, Authorization
+- **Middleware personalizado**: Manejo global de peticiones OPTIONS
+- **Configuración simplificada**: `origins=["*"]` temporalmente
+- **Eliminadas**: Configuraciones CORS individuales en blueprints
+- **Eliminados**: Manejadores OPTIONS individuales para evitar conflictos
 
 ### 2. Redirecciones Netlify (netlify.toml)
 - Actualizadas todas las redirecciones para apuntar al dominio temporal
@@ -41,12 +41,15 @@
 - Corregidas todas las URLs hardcodeadas
 - Actualizada función `exportarExcel` para usar API_URL
 
-### 4. Configuración Railway (render.yaml)
-- Corregido comando de inicio: `gunicorn main:app`
+### 4. Configuración Railway
+- **railway.json**: Configuración específica para Railway
+- **render.yaml**: Configuración actualizada para Render
+- **Comando de inicio**: `gunicorn main:app --bind 0.0.0.0:$PORT --timeout 120`
 
 ### 5. Corrección de Errores
 - Eliminado log de debug en `usuarios.py` que causaba errores
-- Simplificada configuración CORS para evitar redirecciones
+- Middleware personalizado para manejar preflight requests
+- Eliminación de redirecciones en peticiones OPTIONS
 
 ## Verificación de Funcionamiento
 
@@ -56,12 +59,13 @@ curl https://sistemadesplegableboo-production.up.railway.app/
 # Debe devolver: "Sistema de Inventario IT - Backend Flask funcionando"
 ```
 
-### 2. Verificar CORS
+### 2. Verificar CORS Preflight
 ```bash
 curl -H "Origin: https://soporteches.online" \
      -H "Access-Control-Request-Method: GET" \
      -H "Access-Control-Request-Headers: Authorization" \
      -X OPTIONS https://sistemadesplegableboo-production.up.railway.app/usuarios
+# Debe devolver: {"status": "ok"} con headers CORS apropiados
 ```
 
 ### 3. Verificar Login
@@ -71,9 +75,9 @@ curl -H "Origin: https://soporteches.online" \
 
 ## Troubleshooting
 
-### Error de CORS
-- **Causa**: Configuraciones CORS conflictivas o redirecciones
-- **Solución**: Configuración CORS simplificada y global
+### Error de CORS con Redirección
+- **Causa**: Railway redirigiendo peticiones OPTIONS automáticamente
+- **Solución**: Middleware personalizado que intercepta OPTIONS antes de redirecciones
 
 ### Error de Conexión
 - Verificar que `https://sistemadesplegableboo-production.up.railway.app` esté funcionando
@@ -87,15 +91,16 @@ curl -H "Origin: https://soporteches.online" \
 - **Causa**: Dominio personalizado no configurado correctamente
 - **Solución**: Usar el dominio temporal de Railway hasta que se resuelva DNS
 
-### Error de Redirección en Preflight
-- **Causa**: Railway redirigiendo peticiones OPTIONS
-- **Solución**: Configuración CORS simplificada y manejo explícito de OPTIONS
+### Error de Timeout
+- **Causa**: Peticiones que tardan demasiado
+- **Solución**: Timeout configurado a 120 segundos en gunicorn
 
 ## Variables de Entorno
 
 ### Railway
 - `FLASK_ENV`: production
 - `DATABASE_URL`: (configurar según tu base de datos)
+- `PORT`: Puerto automático asignado por Railway
 
 ### Netlify
 - No requiere variables de entorno específicas
@@ -107,7 +112,7 @@ curl -H "Origin: https://soporteches.online" \
 ```bash
 # En Railway, el despliegue es automático al hacer push
 git add .
-git commit -m "Actualizar configuración CORS"
+git commit -m "Corregir CORS con middleware personalizado"
 git push
 ```
 
@@ -147,12 +152,20 @@ export const API_URL = "https://api.soporteches.online";
 Una vez que todo funcione, actualizar la configuración CORS en `main.py`:
 
 ```python
+# Reemplazar el middleware actual con:
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', 'https://soporteches.online')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response, 200
+
+# Y actualizar CORS:
 CORS(app, 
-     origins=[
-         "https://soporteches.online",
-         "https://api.soporteches.online",
-         "http://localhost:3000"  # Solo para desarrollo
-     ],
+     origins=["https://soporteches.online"],
      supports_credentials=True,
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      allow_headers=["Content-Type", "Authorization"])

@@ -6,10 +6,8 @@ from flask_cors import CORS
 trabajos_bp = Blueprint('trabajos', __name__)
 # CORS configurado globalmente en main.py
 
-@trabajos_bp.route('/', methods=['GET', 'OPTIONS'])
+@trabajos_bp.route('/', methods=['GET'])
 def listar_trabajos():
-    if request.method == 'OPTIONS':
-        return '', 200
     trabajos = Trabajo.query.all()
     return jsonify([t.to_dict() for t in trabajos])
 

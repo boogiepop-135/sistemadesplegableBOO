@@ -33,10 +33,8 @@ def token_required(f):
         return f(*args, **kwargs)
     return decorated
 
-@usuarios_bp.route('/login', methods=['POST', 'OPTIONS'])
+@usuarios_bp.route('/login', methods=['POST'])
 def login():
-    if request.method == 'OPTIONS':
-        return '', 200
     try:
         data = request.get_json()
         if not data:
@@ -65,10 +63,8 @@ def login():
         logging.error(traceback.format_exc())
         return jsonify({'success': False, 'error': f'Error interno: {str(e)}', 'traceback': traceback.format_exc()}), 500
 
-@usuarios_bp.route('/crear', methods=['POST', 'OPTIONS'])
+@usuarios_bp.route('/crear', methods=['POST'])
 def crear_usuario():
-    if request.method == 'OPTIONS':
-        return '', 200
     data = request.get_json()
     nombre = data.get('usuario')
     contrasena = data.get('contrasena')
@@ -83,10 +79,8 @@ def crear_usuario():
     db.session.commit()
     return jsonify({'success': True, 'usuario': nuevo.nombre})
 
-@usuarios_bp.route('/<int:usuario_id>', methods=['PUT', 'OPTIONS'])
+@usuarios_bp.route('/<int:usuario_id>', methods=['PUT'])
 def editar_usuario(usuario_id):
-    if request.method == 'OPTIONS':
-        return '', 200
     data = request.get_json()
     usuario = Usuario.query.get(usuario_id)
     if not usuario:
@@ -97,10 +91,8 @@ def editar_usuario(usuario_id):
     db.session.commit()
     return jsonify({'success': True, 'usuario': usuario.to_dict()})
 
-@usuarios_bp.route('/<int:usuario_id>', methods=['DELETE', 'OPTIONS'])
+@usuarios_bp.route('/<int:usuario_id>', methods=['DELETE'])
 def eliminar_usuario(usuario_id):
-    if request.method == 'OPTIONS':
-        return '', 200
     usuario = Usuario.query.get(usuario_id)
     if not usuario:
         return jsonify({'error': 'Usuario no encontrado'}), 404
@@ -109,11 +101,9 @@ def eliminar_usuario(usuario_id):
     return jsonify({'success': True})
 
 # Permitir acceso tanto a /usuarios como a /usuarios/ para evitar redirecciones y problemas de CORS
-@usuarios_bp.route('', methods=['GET', 'OPTIONS'])
-@usuarios_bp.route('/', methods=['GET', 'OPTIONS'])
+@usuarios_bp.route('', methods=['GET'])
+@usuarios_bp.route('/', methods=['GET'])
 def listar_usuarios():
-    if request.method == 'OPTIONS':
-        return '', 200
     usuarios = Usuario.query.all()
     return jsonify([u.to_dict() for u in usuarios])
 

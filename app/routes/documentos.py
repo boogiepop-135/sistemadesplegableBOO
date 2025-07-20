@@ -45,10 +45,8 @@ def subir_documento():
     return jsonify({'error': 'Tipo de archivo no permitido'}), 400
 
 # Endpoint para listar documentos
-@documentos_bp.route('/', methods=['GET', 'OPTIONS'])
+@documentos_bp.route('/', methods=['GET'])
 def listar_documentos():
-    if request.method == 'OPTIONS':
-        return '', 200
     docs = Documento.query.all()
     return jsonify([d.to_dict() for d in docs])
 

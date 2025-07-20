@@ -8,10 +8,8 @@ from flask_cors import CORS
 tickets_bp = Blueprint('tickets', __name__)
 # CORS configurado globalmente en main.py
 
-@tickets_bp.route('/', methods=['GET', 'OPTIONS'])
+@tickets_bp.route('/', methods=['GET'])
 def listar_tickets():
-    if request.method == 'OPTIONS':
-        return '', 200
     tickets = Ticket.query.all()
     return jsonify([t.to_dict() for t in tickets])
 
