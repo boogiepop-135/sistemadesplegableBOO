@@ -9,7 +9,15 @@ DOCUMENTOS_UPLOAD_FOLDER = os.path.join(os.getcwd(), 'instance', 'uploads')
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'txt'}
 
 documentos_bp = Blueprint('documentos', __name__)
-CORS(documentos_bp, origins=["http://localhost:3000"], supports_credentials=True)
+CORS(documentos_bp, origins=[
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "https://web-production-21f2a.up.railway.app",
+    "https://soporteches.online",
+    "https://sistemadesplegableboo-production.up.railway.app"
+], supports_credentials=True)
 
 # Helper para validar extensiones
 def allowed_file(filename):
