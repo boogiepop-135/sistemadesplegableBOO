@@ -6,6 +6,7 @@
 - **URL**: `https://soporteches.online` (dominio personalizado)
 - **Configuración**: `netlify.toml` actualizado para redirigir a Railway
 - **API URL**: `https://sistemadesplegableboo-production.up.railway.app` (temporal)
+- **HTTPS**: Forzado para evitar Mixed Content
 
 ### Backend (Railway)
 - **URL**: `https://sistemadesplegableboo-production.up.railway.app` (temporal)
@@ -35,11 +36,13 @@
 ### 2. Redirecciones Netlify (netlify.toml)
 - Actualizadas todas las redirecciones para apuntar al dominio temporal
 - Eliminadas referencias a `localhost:5000`
+- **Headers de seguridad**: Agregados para forzar HTTPS
 
 ### 3. URLs del Frontend
 - Creado archivo `config.js` para centralizar URLs
 - Corregidas todas las URLs hardcodeadas
 - Actualizada función `exportarExcel` para usar API_URL
+- **HTTPS forzado**: Todas las URLs usan HTTPS
 
 ### 4. Configuración Railway
 - **railway.json**: Configuración específica para Railway
@@ -50,6 +53,12 @@
 - Eliminado log de debug en `usuarios.py` que causaba errores
 - Middleware personalizado para manejar preflight requests
 - Eliminación de redirecciones en peticiones OPTIONS
+- **Mixed Content**: Corregido proxy HTTP en package.json
+
+### 6. Seguridad HTTPS
+- **package.json**: Proxy actualizado a HTTPS
+- **index.html**: Meta tag para forzar HTTPS
+- **netlify.toml**: Headers de seguridad agregados
 
 ## Verificación de Funcionamiento
 
@@ -73,7 +82,15 @@ curl -H "Origin: https://soporteches.online" \
 - Verificar que el token se guarde correctamente
 - Verificar que las peticiones incluyan el header Authorization
 
+### 4. Verificar HTTPS
+- Verificar que no haya errores de Mixed Content en la consola
+- Verificar que todas las peticiones usen HTTPS
+
 ## Troubleshooting
+
+### Error de Mixed Content
+- **Causa**: Peticiones HTTP desde página HTTPS
+- **Solución**: Proxy actualizado a HTTPS y meta tag de seguridad
 
 ### Error de CORS con Redirección
 - **Causa**: Railway redirigiendo peticiones OPTIONS automáticamente
@@ -112,7 +129,7 @@ curl -H "Origin: https://soporteches.online" \
 ```bash
 # En Railway, el despliegue es automático al hacer push
 git add .
-git commit -m "Corregir CORS con middleware personalizado"
+git commit -m "Corregir Mixed Content y CORS"
 git push
 ```
 
