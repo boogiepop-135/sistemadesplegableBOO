@@ -66,30 +66,33 @@ def login():
 @usuarios_bp.route('/crear', methods=['POST'])
 def crear_usuario():
     data = request.get_json()
-    nombre = data.get('usuario')
+    usuario = data.get('usuario')
     contrasena = data.get('contrasena')
     rol = data.get('rol', 'usuario')
-    if not nombre or not contrasena:
+    nombre_perfil = data.get('nombre_perfil')
+    if not usuario or not contrasena:
         return jsonify({'error': 'Faltan datos'}), 400
-    if Usuario.query.filter_by(nombre=nombre).first():
-        return jsonify({'error': 'Usuario ya existe'}), 400
-    nuevo = Usuario(nombre=nombre, rol=rol)
+    from app.models.usuario import Usuario
+    nuevo = Usuario(nombre=usuario, rol=rol, nombre_perfil=nombre_perfil)
     nuevo.set_password(contrasena)
     db.session.add(nuevo)
     db.session.commit()
-    return jsonify({'success': True, 'usuario': nuevo.nombre})
+    return jsonify(nuevo.to_dict()), 201
 
 @usuarios_bp.route('/<int:usuario_id>', methods=['PUT'])
 def editar_usuario(usuario_id):
-    data = request.get_json()
+    from app.models.usuario import Usuario
     usuario = Usuario.query.get(usuario_id)
     if not usuario:
         return jsonify({'error': 'Usuario no encontrado'}), 404
+    data = request.get_json()
     usuario.nombre = data.get('usuario', usuario.nombre)
-    usuario.contrasena = data.get('contrasena', usuario.contrasena)
     usuario.rol = data.get('rol', usuario.rol)
+    usuario.nombre_perfil = data.get('nombre_perfil', usuario.nombre_perfil)
+    if data.get('contrasena'):
+        usuario.set_password(data['contrasena'])
     db.session.commit()
-    return jsonify({'success': True, 'usuario': usuario.to_dict()})
+    return jsonify(usuario.to_dict())
 
 @usuarios_bp.route('/<int:usuario_id>', methods=['DELETE'])
 def eliminar_usuario(usuario_id):

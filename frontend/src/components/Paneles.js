@@ -5,7 +5,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Button, Box, Tabs, Tab, Grid, Paper } from '@mui/material';
 import { getToken } from '../App';
 import { API_URL } from '../config';
-import { BarChart, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Bar } from 'recharts';
+import { BarChart, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Bar, ResponsiveContainer, Cell } from 'recharts';
 
 // Helper para fetch con token
 function fetchWithAuth(url, options = {}) {
@@ -32,6 +32,9 @@ export function InventarioList({ admin, usuario }) {
   const [categorias, setCategorias] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [error, setError] = useState('');
+  // NUEVO: Estado para gráficos avanzados
+  const [graficoTipo, setGraficoTipo] = useState('barras'); // 'barras' o 'pastel'
+  const [campoAnalizar, setCampoAnalizar] = useState('tipo'); // 'tipo', 'estado', 'sucursal', 'responsable'
 
   useEffect(() => {
     setError('');
@@ -161,7 +164,10 @@ export function InventarioList({ admin, usuario }) {
     })
       .then(res => res.json())
       .then(data => {
-        setInventario(prev => prev.map(e => e.id === editando ? data : e));
+        // Recargar inventario completo para asegurar datos frescos
+        fetchWithAuth(`${API_URL}/inventario/`)
+          .then(res => res.json())
+          .then(inv => setInventario(inv));
         setEditando(null);
         setModalAbierto(false);
       });
@@ -190,6 +196,35 @@ export function InventarioList({ admin, usuario }) {
     const url = `${API_URL}/inventario/exportar${params.length ? '?' + params.join('&') : ''}`;
     window.open(url, '_blank');
   };
+
+  // Helper para obtener sucursal y responsable
+  const getSucursal = (inv) => {
+    if (!inv.ubicacion_nombre) return 'Sin sucursal';
+    return inv.ubicacion_nombre;
+  };
+  const getResponsable = (inv) => {
+    if (!inv.usuario_nombre) return 'Sin responsable';
+    return inv.usuario_nombre;
+  };
+
+  // Generar datos dinámicos según campo seleccionado
+  const getDatosGrafico = () => {
+    let key = campoAnalizar;
+    let label = '';
+    let data = {};
+    inventarioFiltrado.forEach(e => {
+      let valor = '';
+      if (key === 'tipo') valor = e.tipo || 'Sin tipo';
+      else if (key === 'estado') valor = e.estado || 'Sin estado';
+      else if (key === 'sucursal') valor = getSucursal(e);
+      else if (key === 'responsable') valor = getResponsable(e);
+      else valor = 'Otro';
+      data[valor] = (data[valor] || 0) + 1;
+    });
+    return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
+  };
+  const datosGrafico = getDatosGrafico();
+  const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
@@ -302,20 +337,48 @@ export function InventarioList({ admin, usuario }) {
         </Box>
       )}
       {tab === 1 && (
-        <Box sx={{ mt: 4, display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
-          {/* Gráficos aquí */}
-          <BarChart width={400} height={300} data={Object.entries(inventario.reduce((acc, e) => { acc[e.tipo] = (acc[e.tipo] || 0) + 1; return acc; }, {})).map(([tipo, count]) => ({ tipo, count }))}>
-            <XAxis dataKey="tipo" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="count" fill="#43a047" />
-          </BarChart>
-          <PieChart width={400} height={300}>
-            <Pie data={Object.entries(inventario.reduce((acc, e) => { acc[e.estado] = (acc[e.estado] || 0) + 1; return acc; }, {})).map(([estado, value]) => ({ name: estado, value }))} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#1976d2" label />
-            <Tooltip />
-            <Legend />
-          </PieChart>
+        <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', justifyContent: 'center' }}>
+          {/* Panel de control de gráficos */}
+          <Paper sx={{ p: 2, mb: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1, minWidth: 320, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>Analizar por:</span>
+            <select value={campoAnalizar} onChange={e => setCampoAnalizar(e.target.value)} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', marginRight: 12 }}>
+              <option value="tipo">Tipo de equipo</option>
+              <option value="estado">Estado</option>
+              <option value="sucursal">Sucursal</option>
+              <option value="responsable">Responsable</option>
+            </select>
+            <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>Gráfico:</span>
+            <select value={graficoTipo} onChange={e => setGraficoTipo(e.target.value)} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }}>
+              <option value="barras">Barras</option>
+              <option value="pastel">Pastel</option>
+            </select>
+          </Paper>
+          {/* Renderizado dinámico del gráfico */}
+          <ResponsiveContainer width={500} height={350}>
+            {graficoTipo === 'barras' ? (
+              <BarChart data={datosGrafico} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                <XAxis dataKey="name" tick={{ fontSize: 14 }} />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#43a047">
+                  {datosGrafico.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            ) : (
+              <PieChart>
+                <Pie data={datosGrafico} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} label>
+                  {datosGrafico.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            )}
+          </ResponsiveContainer>
         </Box>
       )}
       {/* MODAL DE EDICIÓN */}
@@ -690,6 +753,8 @@ export function DocumentosPanel() {
   const [ticketId, setTicketId] = useState('');
   const [inventarioId, setInventarioId] = useState('');
   const [mensaje, setMensaje] = useState('');
+  // NUEVO: Estado para vista previa PDF
+  const [pdfPreview, setPdfPreview] = useState(null);
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
@@ -783,6 +848,17 @@ export function DocumentosPanel() {
                         <span style={{ fontSize: '0.9em', color: '#888' }}>Subido: {doc.fecha_subida} | Descripción: {doc.descripcion}</span>
                       </div>
                       <div>
+                        {doc.nombre_archivo.toLowerCase().endsWith('.pdf') && (
+                          <Button
+                            variant="outlined"
+                            color="info"
+                            size="small"
+                            onClick={() => setPdfPreview(`${API_URL}/documentos/${doc.id}/descargar`)}
+                            sx={{ minWidth: 80, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}
+                          >
+                            Vista previa
+                          </Button>
+                        )}
                         <a href={`${API_URL}/documentos/${doc.id}/descargar`} style={{ marginLeft: 16, color: '#43a047', fontWeight: 'bold' }} target="_blank" rel="noopener noreferrer">
                           Descargar
                         </a>
@@ -804,6 +880,16 @@ export function DocumentosPanel() {
           </Paper>
         </Grid>
       </Grid>
+      {/* MODAL VISTA PREVIA PDF */}
+      {pdfPreview && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', padding: 16, borderRadius: 12, minWidth: 320, maxWidth: 900, maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Vista previa PDF</h3>
+            <iframe src={pdfPreview} style={{ width: 700, height: 500, border: '1px solid #a5d6a7', borderRadius: 8 }} title="Vista previa PDF" />
+            <Button variant="contained" color="error" onClick={() => setPdfPreview(null)} sx={{ mt: 2 }}>Cerrar</Button>
+          </div>
+        </div>
+      )}
     </Box>
   );
 }
@@ -1297,6 +1383,9 @@ export function MantenimientosPanel({ admin }) {
     descripcion: ''
   });
   const [mensaje, setMensaje] = useState('');
+  // NUEVO: Estado para gráficos avanzados
+  const [graficoTipo, setGraficoTipo] = useState('barras'); // 'barras' o 'pastel'
+  const [campoAnalizar, setCampoAnalizar] = useState('tipo_mantenimiento'); // 'tipo_mantenimiento', 'sucursal', 'responsable', 'mes'
 
   useEffect(() => {
     setLoading(true);
@@ -1333,6 +1422,11 @@ export function MantenimientosPanel({ admin }) {
   const getResponsable = (id) => {
     const usu = usuarios.find(u => u.id === id);
     return usu ? usu.nombre : '';
+  };
+  const getMes = (m) => {
+    if (!m.fecha) return 'Sin fecha';
+    const d = new Date(m.fecha);
+    return d.toLocaleString('es-MX', { month: 'short', year: 'numeric' });
   };
 
   const handleCrear = (e) => {
@@ -1393,11 +1487,32 @@ export function MantenimientosPanel({ admin }) {
     })
       .then(res => res.json())
       .then(data => {
-        setMantenimientos(prev => prev.map(m => m.id === editando ? data : m));
+        // Recargar inventario completo para asegurar datos frescos
+        fetchWithAuth(`${API_URL}/inventario/`)
+          .then(res => res.json())
+          .then(inv => setInventario(inv));
         setEditando(null);
         setModalAbierto(false);
       });
   };
+
+  // Generar datos dinámicos según campo seleccionado
+  const getDatosGrafico = () => {
+    let key = campoAnalizar;
+    let data = {};
+    mantenimientos.forEach(m => {
+      let valor = '';
+      if (key === 'tipo_mantenimiento') valor = m.tipo_mantenimiento || 'Sin tipo';
+      else if (key === 'sucursal') valor = getSucursal(m);
+      else if (key === 'responsable') valor = getResponsable(m);
+      else if (key === 'mes') valor = getMes(m);
+      else valor = 'Otro';
+      data[valor] = (data[valor] || 0) + 1;
+    });
+    return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
+  };
+  const datosGrafico = getDatosGrafico();
+  const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
@@ -1490,6 +1605,47 @@ export function MantenimientosPanel({ admin }) {
           </div>
         </div>
       )}
+      {/* Panel de control de gráficos */}
+      <Paper sx={{ p: 2, mb: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1, minWidth: 320, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>Analizar por:</span>
+        <select value={campoAnalizar} onChange={e => setCampoAnalizar(e.target.value)} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', marginRight: 12 }}>
+          <option value="tipo_mantenimiento">Tipo de mantenimiento</option>
+          <option value="sucursal">Sucursal</option>
+          <option value="responsable">Responsable</option>
+          <option value="mes">Mes</option>
+        </select>
+        <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>Gráfico:</span>
+        <select value={graficoTipo} onChange={e => setGraficoTipo(e.target.value)} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }}>
+          <option value="barras">Barras</option>
+          <option value="pastel">Pastel</option>
+        </select>
+      </Paper>
+      {/* Renderizado dinámico del gráfico */}
+      <ResponsiveContainer width={500} height={350}>
+        {graficoTipo === 'barras' ? (
+          <BarChart data={datosGrafico} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+            <XAxis dataKey="name" tick={{ fontSize: 14 }} />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="value" fill="#43a047">
+              {datosGrafico.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        ) : (
+          <PieChart>
+            <Pie data={datosGrafico} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} label>
+              {datosGrafico.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
+        )}
+      </ResponsiveContainer>
     </Box>
   );
 }

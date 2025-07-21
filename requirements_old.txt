@@ -1,0 +1,8 @@
+Flask==2.3.2
+Flask-SQLAlchemy
+Flask-Cors
+reportlab
+pandas
+gunicorn==23.0.0
+PyJWT
+werkzeug
