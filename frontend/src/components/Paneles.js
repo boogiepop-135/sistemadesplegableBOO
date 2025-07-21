@@ -8,6 +8,9 @@ import { API_URL } from '../config';
 import { BarChart, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Bar, ResponsiveContainer, Cell } from 'recharts';
 import * as XLSX from 'xlsx';
 
+// Paleta de colores global para gráficas
+const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
+
 // Helper para fetch con token
 function fetchWithAuth(url, options = {}) {
   const token = getToken();
@@ -1676,25 +1679,6 @@ export function MantenimientosPanel({ admin }) {
     return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
   };
   // const datosGrafico = getDatosGrafico();
-  const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
-
-  // const handleGraficaChange = (idx, key, value) => {
-  //   setGraficas(g => g.map((graf, i) => i === idx ? { ...graf, [key]: value } : graf));
-  // };
-
-  // const getDatosGraficoCustom = (campo) => {
-  //   let data = {};
-  //   inventario.forEach(e => {
-  //     let valor = '';
-  //     if (campo === 'tipo') valor = e.tipo || 'Sin tipo';
-  //     else if (campo === 'estado') valor = e.estado || 'Sin estado';
-  //     else if (campo === 'sucursal') valor = getSucursal(e);
-  //     else if (campo === 'responsable') valor = getResponsable(e);
-  //     else valor = 'Otro';
-  //     data[valor] = (data[valor] || 0) + 1;
-  //   });
-  //   return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
-  // };
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
