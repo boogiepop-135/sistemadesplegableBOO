@@ -227,23 +227,7 @@ export function InventarioList({ admin, usuario }) {
   };
 
   // Generar datos dinámicos según campo seleccionado
-  const getDatosGrafico = () => {
-    let key = campoAnalizar;
-    let data = {};
-    inventarioFiltrado.forEach(e => {
-      let valor = '';
-      if (key === 'tipo') valor = e.tipo || 'Sin tipo';
-      else if (key === 'estado') valor = e.estado || 'Sin estado';
-      else if (key === 'sucursal') valor = getSucursal(e);
-      else if (key === 'responsable') valor = getResponsable(e);
-      else valor = 'Otro';
-      data[valor] = (data[valor] || 0) + 1;
-    });
-    return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
-  };
-  // const datosGrafico = getDatosGrafico();
-  const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
-
+ //asdasd
   // NUEVO: Importar desde Excel con resumen de resultados
   const [importResumen, setImportResumen] = useState([]);
   const [mostrarResumen, setMostrarResumen] = useState(false);
@@ -1683,8 +1667,8 @@ export function MantenimientosPanel({ admin }) {
     mantenimientos.forEach(m => {
       let valor = '';
       if (key === 'tipo_mantenimiento') valor = m.tipo_mantenimiento || 'Sin tipo';
-      else if (key === 'sucursal') valor = getSucursal(m);
-      else if (key === 'responsable') valor = getResponsable(m);
+      else if (key === 'sucursal') valor = getSucursal(m.inventario_id);
+      else if (key === 'responsable') valor = getResponsable(m.usuario_id);
       else if (key === 'mes') valor = getMes(m);
       else valor = 'Otro';
       data[valor] = (data[valor] || 0) + 1;
