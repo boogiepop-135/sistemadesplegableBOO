@@ -125,7 +125,17 @@ export function InventarioList({ admin, usuario }) {
     { field: 'equipo', headerName: 'Equipo', flex: 1 },
     { field: 'tipo', headerName: 'Tipo', flex: 1 },
     { field: 'estado', headerName: 'Estado', flex: 1 },
-    { field: 'usuario_nombre', headerName: 'Usuario', flex: 1 },
+    {
+      field: 'usuario_nombre',
+      headerName: 'Usuario',
+      flex: 1,
+      valueGetter: (params) => params.row.usuario_nombre_perfil || params.row.usuario_nombre || '',
+      renderCell: (params) => (
+        <span style={{ color: params.row.usuario_nombre_perfil ? '#1976d2' : '#333', fontWeight: params.row.usuario_nombre_perfil ? 'bold' : 'normal' }}>
+          {params.row.usuario_nombre_perfil || params.row.usuario_nombre || ''}
+        </span>
+      )
+    },
     { field: 'codigo_unico', headerName: 'Código Único', flex: 1 },
     admin && {
       field: 'acciones',
@@ -226,7 +236,9 @@ export function InventarioList({ admin, usuario }) {
   const datosGrafico = getDatosGrafico();
   const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
 
-  // NUEVO: Importar desde Excel
+  // NUEVO: Importar desde Excel con resumen de resultados
+  const [importResumen, setImportResumen] = useState([]);
+  const [mostrarResumen, setMostrarResumen] = useState(false);
   const handleImportExcel = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -236,9 +248,10 @@ export function InventarioList({ admin, usuario }) {
       const workbook = XLSX.read(data, { type: 'array' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-      // Enviar cada artículo al backend (puedes optimizar para enviar en lote si tienes endpoint)
-      json.forEach(row => {
-        // Normalizar campos
+      let resultados = [];
+      let procesados = 0;
+      setMostrarResumen(true);
+      json.forEach((row, idx) => {
         const datosEnviar = {
           equipo: row.equipo || row.Equipo || '',
           tipo: row.tipo || row.Tipo || '',
@@ -247,7 +260,6 @@ export function InventarioList({ admin, usuario }) {
           usuario_id: row.usuario_id || '',
           codigo_unico: row.codigo_unico || row['Código Único'] || undefined
         };
-        // Si hay código_unico, intenta actualizar, si no, agrega nuevo
         const url = datosEnviar.codigo_unico
           ? `${API_URL}/inventario/${datosEnviar.codigo_unico}`
           : `${API_URL}/inventario/`;
@@ -259,8 +271,24 @@ export function InventarioList({ admin, usuario }) {
         })
           .then(res => res.json())
           .then(data => {
-            // Recargar inventario después de la última fila
-            if (row === json[json.length - 1]) {
+            procesados++;
+            if (data.error) {
+              resultados[idx] = { fila: idx + 2, estado: 'error', mensaje: data.error, datos: datosEnviar };
+            } else {
+              resultados[idx] = { fila: idx + 2, estado: 'ok', mensaje: 'Importado correctamente', datos: datosEnviar };
+            }
+            if (procesados === json.length) {
+              setImportResumen([...resultados]);
+              fetchWithAuth(`${API_URL}/inventario/`)
+                .then(res => res.json())
+                .then(inv => setInventario(inv));
+            }
+          })
+          .catch(err => {
+            procesados++;
+            resultados[idx] = { fila: idx + 2, estado: 'error', mensaje: err.message, datos: datosEnviar };
+            if (procesados === json.length) {
+              setImportResumen([...resultados]);
               fetchWithAuth(`${API_URL}/inventario/`)
                 .then(res => res.json())
                 .then(inv => setInventario(inv));
@@ -353,6 +381,22 @@ export function InventarioList({ admin, usuario }) {
                 >
                   Descargar plantilla Excel
                 </a>
+                {/* NUEVO: Resumen de importación */}
+                {mostrarResumen && importResumen.length > 0 && (
+                  <Paper sx={{ mt: 2, p: 2, background: '#fffde7', borderRadius: 2, boxShadow: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <b style={{ color: '#388e3c' }}>Resumen de importación</b>
+                      <Button size="small" color="error" onClick={() => { setMostrarResumen(false); setImportResumen([]); }}>Cerrar</Button>
+                    </div>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginTop: 8 }}>
+                      {importResumen.map((r, i) => (
+                        <li key={i} style={{ color: r.estado === 'ok' ? '#388e3c' : '#e74c3c', fontWeight: r.estado === 'ok' ? 'bold' : 'bold', marginBottom: 4 }}>
+                          Fila {r.fila}: {r.estado === 'ok' ? '✔' : '✗'} {r.mensaje}
+                        </li>
+                      ))}
+                    </ul>
+                  </Paper>
+                )}
               </Paper>
             )}
             <Paper sx={{ p: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
@@ -396,79 +440,84 @@ export function InventarioList({ admin, usuario }) {
       )}
       {tab === 1 && (
         <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', justifyContent: 'center' }}>
-          {/* Panel de control de gráficos */}
+          {/* Panel de control de cantidad de gráficas */}
           <Paper sx={{ p: 2, mb: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1, minWidth: 320, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>Analizar por:</span>
-            <select value={campoAnalizar} onChange={e => setCampoAnalizar(e.target.value)} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', marginRight: 12 }}>
-              <option value="tipo">Tipo de equipo</option>
-              <option value="estado">Estado</option>
-              <option value="sucursal">Sucursal</option>
-              <option value="responsable">Responsable</option>
-            </select>
-            <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>Gráfico:</span>
-            <select value={graficoTipo} onChange={e => setGraficoTipo(e.target.value)} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }}>
-              <option value="barras">Barras</option>
-              <option value="pastel">Pastel</option>
+            <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>Cantidad de gráficas:</span>
+            <select value={numGraficas} onChange={e => setNumGraficas(Number(e.target.value))} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', marginRight: 12 }}>
+              {[1,2,3].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           </Paper>
-          {/* Renderizado dinámico del gráfico */}
-          <ResponsiveContainer width={500} height={350}>
-            {graficoTipo === 'barras' ? (
-              <BarChart data={datosGrafico} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-                <XAxis dataKey="name" tick={{ fontSize: 14 }} />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="value" fill="#43a047">
-                  {datosGrafico.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            ) : (
-              <PieChart>
-                <Pie data={datosGrafico} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} label>
-                  {datosGrafico.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            )}
-          </ResponsiveContainer>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center', width: '100%' }}>
+            {[...Array(numGraficas)].map((_, idx) => (
+              <Paper key={idx} sx={{ p: 2, background: '#fff', borderRadius: 2, boxShadow: 2, minWidth: 340, maxWidth: 520, flex: 1 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontWeight: 'bold', color: '#388e3c' }}>Analizar por:</span>
+                  <select value={graficas[idx].campo} onChange={e => handleGraficaChange(idx, 'campo', e.target.value)} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', marginRight: 8 }}>
+                    <option value="tipo">Tipo de equipo</option>
+                    <option value="estado">Estado</option>
+                    <option value="sucursal">Sucursal</option>
+                    <option value="responsable">Responsable</option>
+                  </select>
+                  <span style={{ fontWeight: 'bold', color: '#388e3c' }}>Gráfico:</span>
+                  <select value={graficas[idx].tipo} onChange={e => handleGraficaChange(idx, 'tipo', e.target.value)} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }}>
+                    <option value="barras">Barras</option>
+                    <option value="pastel">Pastel</option>
+                  </select>
+                </div>
+                <ResponsiveContainer width={400} height={300}>
+                  {graficas[idx].tipo === 'barras' ? (
+                    <BarChart data={getDatosGraficoCustom(graficas[idx].campo)} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                      <XAxis dataKey="name" tick={{ fontSize: 14 }} />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="value" fill="#43a047">
+                        {getDatosGraficoCustom(graficas[idx].campo).map((entry, i) => (
+                          <Cell key={`cell-${i}`} fill={colores[i % colores.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  ) : (
+                    <PieChart>
+                      <Pie data={getDatosGraficoCustom(graficas[idx].campo)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                        {getDatosGraficoCustom(graficas[idx].campo).map((entry, i) => (
+                          <Cell key={`cell-${i}`} fill={colores[i % colores.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  )}
+                </ResponsiveContainer>
+              </Paper>
+            ))}
+          </Box>
         </Box>
       )}
       {/* MODAL DE EDICIÓN */}
       {modalAbierto && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320 }}>
-            <h3>Editar equipo</h3>
-            <input type="text" value={editData.equipo} onChange={e => setEditData({ ...editData, equipo: e.target.value })} placeholder="Nombre del equipo" style={{ width: '100%', marginBottom: 8 }} />
-            <select value={editData.tipo} onChange={e => setEditData({ ...editData, tipo: e.target.value })} style={{ width: '100%', marginBottom: 8 }}>
-              <option value="">Tipo/Categoría</option>
-              {categorias.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
-            </select>
-            <select value={editData.estado} onChange={e => setEditData({ ...editData, estado: e.target.value })} style={{ width: '100%', marginBottom: 8 }}>
-              <option value="">Estado</option>
-              <option value="buen estado">Buen estado</option>
-              <option value="marcas de uso">Marcas de uso</option>
-              <option value="rayones">Rayones</option>
-              <option value="daño serio">Daño serio</option>
-              <option value="inservible">Inservible</option>
-            </select>
-            <select value={editData.ubicacion_id} onChange={e => setEditData({ ...editData, ubicacion_id: e.target.value })} style={{ width: '100%', marginBottom: 8 }}>
-              <option value="">Seleccionar Ubicación</option>
-              {ubicaciones.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
-            </select>
-            <select value={editData.usuario_id} onChange={e => setEditData({ ...editData, usuario_id: e.target.value })} style={{ width: '100%', marginBottom: 8 }}>
-              <option value="">Seleccionar Usuario</option>
-              {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
-            </select>
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <Button variant="contained" color="success" onClick={handleGuardarEdicion}>Guardar</Button>
-              <Button variant="outlined" color="error" onClick={() => setModalAbierto(false)}>Cancelar</Button>
-            </div>
+          <div style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320, maxWidth: 500 }}>
+            <h3>Editar Mantenimiento</h3>
+            <form onSubmit={e => { e.preventDefault(); handleGuardarEdicion(); }}>
+              <select value={editData.inventario_id} onChange={e => setEditData({ ...editData, inventario_id: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required>
+                <option value="">Seleccionar Equipo</option>
+                {inventario.map(eq => <option key={eq.id} value={eq.id}>{getSucursal(eq.id)} - {eq.equipo}</option>)}
+              </select>
+              <input type="text" value={editData.tipo_mantenimiento} onChange={e => setEditData({ ...editData, tipo_mantenimiento: e.target.value })} placeholder="Tipo de mantenimiento" style={{ width: '100%', marginBottom: 8 }} required />
+              <input type="date" value={editData.fecha} onChange={e => setEditData({ ...editData, fecha: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required />
+              <select value={editData.usuario_id} onChange={e => setEditData({ ...editData, usuario_id: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required>
+                <option value="">Responsable</option>
+                {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+              </select>
+              <input type="date" value={editData.fecha_termino} onChange={e => setEditData({ ...editData, fecha_termino: e.target.value })} placeholder="Fecha de término" style={{ width: '100%', marginBottom: 8 }} />
+              <input type="text" value={editData.firma} onChange={e => setEditData({ ...editData, firma: e.target.value })} placeholder="Firma" style={{ width: '100%', marginBottom: 8 }} />
+              <input type="text" value={editData.descripcion} onChange={e => setEditData({ ...editData, descripcion: e.target.value })} placeholder="Descripción (opcional)" style={{ width: '100%', marginBottom: 8 }} />
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <Button variant="contained" color="success" type="submit">Guardar</Button>
+                <Button variant="outlined" color="error" onClick={() => setModalAbierto(false)}>Cancelar</Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -667,7 +716,9 @@ export function Avisos({ admin }) {
 export function AdminPanel() {
   // Usuarios
   const [usuarios, setUsuarios] = useState([]);
-  const [nuevoUsuario, setNuevoUsuario] = useState({ usuario: '', contrasena: '', rol: 'usuario' });
+  const [nuevoUsuario, setNuevoUsuario] = useState({ usuario: '', contrasena: '', rol: 'usuario', nombre_perfil: '' });
+  const [editandoUsuario, setEditandoUsuario] = useState(null);
+  const [editUsuarioData, setEditUsuarioData] = useState({ usuario: '', contrasena: '', rol: 'usuario', nombre_perfil: '' });
   // Ubicaciones
   const [ubicaciones, setUbicaciones] = useState([]);
   const [nuevaUbicacion, setNuevaUbicacion] = useState({ nombre: '', descripcion: '' });
@@ -691,7 +742,7 @@ export function AdminPanel() {
     })
       .then(res => res.json())
       .then(() => {
-        setNuevoUsuario({ usuario: '', contrasena: '', rol: 'usuario' });
+        setNuevoUsuario({ usuario: '', contrasena: '', rol: 'usuario', nombre_perfil: '' });
         fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()).then(setUsuarios);
       });
   };
@@ -699,6 +750,23 @@ export function AdminPanel() {
     fetchWithAuth(`${API_URL}/usuarios/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(() => fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()).then(setUsuarios));
+  };
+  const handleEditarUsuario = (u) => {
+    setEditandoUsuario(u.id);
+    setEditUsuarioData({ usuario: u.nombre, contrasena: '', rol: u.rol, nombre_perfil: u.nombre_perfil || '' });
+  };
+  const handleGuardarUsuario = () => {
+    fetchWithAuth(`${API_URL}/usuarios/${editandoUsuario}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editUsuarioData)
+    })
+      .then(res => res.json())
+      .then(() => {
+        setEditandoUsuario(null);
+        setEditUsuarioData({ usuario: '', contrasena: '', rol: 'usuario', nombre_perfil: '' });
+        fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()).then(setUsuarios);
+      });
   };
 
   // Ubicaciones
@@ -751,6 +819,7 @@ export function AdminPanel() {
             <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Usuarios</h3>
             <input type="text" placeholder="Usuario" value={nuevoUsuario.usuario} onChange={e => setNuevoUsuario({ ...nuevoUsuario, usuario: e.target.value })} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%', marginBottom: 8 }} />
             <input type="password" placeholder="Contraseña" value={nuevoUsuario.contrasena} onChange={e => setNuevoUsuario({ ...nuevoUsuario, contrasena: e.target.value })} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%', marginBottom: 8 }} />
+            <input type="text" placeholder="Nombre de perfil" value={nuevoUsuario.nombre_perfil} onChange={e => setNuevoUsuario({ ...nuevoUsuario, nombre_perfil: e.target.value })} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%', marginBottom: 8 }} />
             <select value={nuevoUsuario.rol} onChange={e => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%', marginBottom: 8 }}>
               <option value="usuario">Usuario</option>
               <option value="admin">Admin</option>
@@ -759,8 +828,29 @@ export function AdminPanel() {
             <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0 0' }}>
               {usuarios.map(u => (
                 <li key={u.id} style={{ padding: '8px 0', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span><b>{u.nombre}</b> <span style={{ color: '#888', fontSize: '0.9em' }}>({u.rol})</span></span>
-                  <Button variant="contained" color="error" size="small" onClick={() => borrarUsuario(u.id)} sx={{ minWidth: 60, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}>Borrar</Button>
+                  {editandoUsuario === u.id ? (
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <input type="text" placeholder="Usuario" value={editUsuarioData.usuario} onChange={e => setEditUsuarioData({ ...editUsuarioData, usuario: e.target.value })} style={{ padding: '8px', borderRadius: 6, border: '1px solid #a5d6a7', marginBottom: 4 }} />
+                      <input type="password" placeholder="Contraseña (dejar vacío para no cambiar)" value={editUsuarioData.contrasena} onChange={e => setEditUsuarioData({ ...editUsuarioData, contrasena: e.target.value })} style={{ padding: '8px', borderRadius: 6, border: '1px solid #a5d6a7', marginBottom: 4 }} />
+                      <input type="text" placeholder="Nombre de perfil" value={editUsuarioData.nombre_perfil} onChange={e => setEditUsuarioData({ ...editUsuarioData, nombre_perfil: e.target.value })} style={{ padding: '8px', borderRadius: 6, border: '1px solid #a5d6a7', marginBottom: 4 }} />
+                      <select value={editUsuarioData.rol} onChange={e => setEditUsuarioData({ ...editUsuarioData, rol: e.target.value })} style={{ padding: '8px', borderRadius: 6, border: '1px solid #a5d6a7', marginBottom: 4 }}>
+                        <option value="usuario">Usuario</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <Button size="small" color="success" onClick={handleGuardarUsuario}>Guardar</Button>
+                        <Button size="small" color="error" onClick={() => setEditandoUsuario(null)}>Cancelar</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <span><b>{u.nombre}</b> <span style={{ color: '#888', fontSize: '0.9em' }}>({u.rol})</span> <span style={{ color: '#1976d2', fontSize: '0.95em', marginLeft: 8 }}>{u.nombre_perfil ? `[${u.nombre_perfil}]` : ''}</span></span>
+                      <div>
+                        <Button variant="contained" color="info" size="small" onClick={() => handleEditarUsuario(u)} sx={{ minWidth: 60, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}>Editar</Button>
+                        <Button variant="contained" color="error" size="small" onClick={() => borrarUsuario(u.id)} sx={{ minWidth: 60, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}>Borrar</Button>
+                      </div>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>
@@ -1444,6 +1534,13 @@ export function MantenimientosPanel({ admin }) {
   // NUEVO: Estado para gráficos avanzados
   const [graficoTipo, setGraficoTipo] = useState('barras'); // 'barras' o 'pastel'
   const [campoAnalizar, setCampoAnalizar] = useState('tipo_mantenimiento'); // 'tipo_mantenimiento', 'sucursal', 'responsable', 'mes'
+  // NUEVO: Estado para múltiples gráficas
+  const [numGraficas, setNumGraficas] = useState(1);
+  const [graficas, setGraficas] = useState([
+    { campo: 'tipo', tipo: 'barras' },
+    { campo: 'estado', tipo: 'pastel' },
+    { campo: 'sucursal', tipo: 'barras' }
+  ]);
 
   useEffect(() => {
     setLoading(true);
@@ -1571,6 +1668,24 @@ export function MantenimientosPanel({ admin }) {
   };
   const datosGrafico = getDatosGrafico();
   const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
+
+  const handleGraficaChange = (idx, key, value) => {
+    setGraficas(g => g.map((graf, i) => i === idx ? { ...graf, [key]: value } : graf));
+  };
+
+  const getDatosGraficoCustom = (campo) => {
+    let data = {};
+    inventarioFiltrado.forEach(e => {
+      let valor = '';
+      if (campo === 'tipo') valor = e.tipo || 'Sin tipo';
+      else if (campo === 'estado') valor = e.estado || 'Sin estado';
+      else if (campo === 'sucursal') valor = getSucursal(e);
+      else if (campo === 'responsable') valor = getResponsable(e);
+      else valor = 'Otro';
+      data[valor] = (data[valor] || 0) + 1;
+    });
+    return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
+  };
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
