@@ -19,6 +19,7 @@ def listar_bitacoras():
 @bitacoras_bp.route('/', methods=['POST'])
 def crear_bitacora():
     data = request.get_json()
+    print('DEBUG - Datos recibidos en /bitacoras/:', data)
     descripcion = data.get('descripcion')
     inventario_id = data.get('inventario_id')
     usuario_id = data.get('usuario_id')
@@ -26,8 +27,14 @@ def crear_bitacora():
     fecha_termino = data.get('fecha_termino')
     firma = data.get('firma')
     tickets_codigos = data.get('tickets_codigos', [])  # lista de códigos únicos
-    if not descripcion or not inventario_id:
-        return jsonify({'error': 'Faltan datos'}), 400
+    # Validación robusta
+    if not descripcion:
+        return jsonify({'error': 'Falta el campo descripcion'}), 400
+    if not inventario_id:
+        return jsonify({'error': 'Falta el campo inventario_id'}), 400
+    # usuario_id puede ser opcional, pero si lo quieres obligatorio, descomenta:
+    # if not usuario_id:
+    #     return jsonify({'error': 'Falta el campo usuario_id'}), 400
     bitacora = BitacoraMantenimiento(
         descripcion=descripcion,
         inventario_id=inventario_id,
@@ -42,7 +49,12 @@ def crear_bitacora():
         tickets = Ticket.query.filter(Ticket.codigo_unico.in_(tickets_codigos)).all()
         bitacora.tickets = tickets
     db.session.add(bitacora)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print('ERROR al crear bitácora:', e)
+        return jsonify({'error': str(e)}), 500
     return jsonify(bitacora.to_dict()), 201
 
 @bitacoras_bp.route('/<int:bitacora_id>', methods=['DELETE'])
