@@ -1699,7 +1699,7 @@ export function MantenimientosPanel({ admin }) {
 
   const getDatosGraficoCustom = (campo) => {
     let data = {};
-    inventarioFiltrado.forEach(e => {
+    inventario.forEach(e => {
       let valor = '';
       if (campo === 'tipo') valor = e.tipo || 'Sin tipo';
       else if (campo === 'estado') valor = e.estado || 'Sin estado';
