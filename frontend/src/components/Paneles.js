@@ -43,7 +43,7 @@ export function InventarioList({ admin, usuario }) {
     { campo: 'estado', tipo: 'pastel' },
     { campo: 'sucursal', tipo: 'barras' }
   ]);
-  const [campoAnalizar, setCampoAnalizar] = useState('tipo');
+  const [campoAnalizar] = useState('tipo');
 
   useEffect(() => {
     setError('');
