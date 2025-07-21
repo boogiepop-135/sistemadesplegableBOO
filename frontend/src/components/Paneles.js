@@ -37,12 +37,12 @@ export function InventarioList({ admin, usuario }) {
   // const [graficoTipo, setGraficoTipo] = useState('barras'); // 'barras' o 'pastel'
   // const [campoAnalizar, setCampoAnalizar] = useState('tipo'); // 'tipo', 'estado', 'sucursal', 'responsable'
   // Estado para múltiples gráficas
-  // const [numGraficas, setNumGraficas] = useState(1);
-  // const [graficas, setGraficas] = useState([
-  //   { campo: 'tipo', tipo: 'barras' },
-  //   { campo: 'estado', tipo: 'pastel' },
-  //   { campo: 'sucursal', tipo: 'barras' }
-  // ]);
+  const [numGraficas, setNumGraficas] = useState(1);
+  const [graficas, setGraficas] = useState([
+    { campo: 'tipo', tipo: 'barras' },
+    { campo: 'estado', tipo: 'pastel' },
+    { campo: 'sucursal', tipo: 'barras' }
+  ]);
 
   useEffect(() => {
     setError('');
@@ -306,23 +306,23 @@ export function InventarioList({ admin, usuario }) {
     reader.readAsArrayBuffer(file);
   };
 
-  // const handleGraficaChange = (idx, key, value) => {
-  //   setGraficas(g => g.map((graf, i) => i === idx ? { ...graf, [key]: value } : graf));
-  // };
+  const handleGraficaChange = (idx, key, value) => {
+    setGraficas(g => g.map((graf, i) => i === idx ? { ...graf, [key]: value } : graf));
+  };
 
-  // const getDatosGraficoCustom = (campo) => {
-  //   let data = {};
-  //   inventarioFiltrado.forEach(e => {
-  //     let valor = '';
-  //     if (campo === 'tipo') valor = e.tipo || 'Sin tipo';
-  //     else if (campo === 'estado') valor = e.estado || 'Sin estado';
-  //     else if (campo === 'sucursal') valor = getSucursal(e);
-  //     else if (campo === 'responsable') valor = getResponsable(e);
-  //     else valor = 'Otro';
-  //     data[valor] = (data[valor] || 0) + 1;
-  //   });
-  //   return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
-  // };
+  const getDatosGraficoCustom = (campo) => {
+    let data = {};
+    inventarioFiltrado.forEach(e => {
+      let valor = '';
+      if (campo === 'tipo') valor = e.tipo || 'Sin tipo';
+      else if (campo === 'estado') valor = e.estado || 'Sin estado';
+      else if (campo === 'sucursal') valor = getSucursal(e);
+      else if (campo === 'responsable') valor = getResponsable(e);
+      else valor = 'Otro';
+      data[valor] = (data[valor] || 0) + 1;
+    });
+    return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
+  };
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
@@ -1556,7 +1556,7 @@ export function MantenimientosPanel({ admin }) {
   });
   const [mensaje, setMensaje] = useState('');
   // NUEVO: Estado para gráficos avanzados
-  // const [graficoTipo, setGraficoTipo] = useState('barras'); // 'barras' o 'pastel'
+  const [graficoTipo, setGraficoTipo] = useState('barras'); // Solo si el render lo usa
   const [campoAnalizar, setCampoAnalizar] = useState('tipo_mantenimiento'); // 'tipo_mantenimiento', 'sucursal', 'responsable', 'mes'
   // NUEVO: Estado para múltiples gráficas
   // const [numGraficas, setNumGraficas] = useState(1);
