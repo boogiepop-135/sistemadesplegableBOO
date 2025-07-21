@@ -1,0 +1,4 @@
+equipo	tipo	estado	ubicacion_id	usuario_id	codigo_unico
+Laptop	Computadora	Disponible	1	1	
+Monitor	Monitor	Disponible	2	2	
+Impresora	Impresora	En reparación	3	3	

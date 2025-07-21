@@ -6,6 +6,7 @@ import { Button, Box, Tabs, Tab, Grid, Paper } from '@mui/material';
 import { getToken } from '../App';
 import { API_URL } from '../config';
 import { BarChart, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Bar, ResponsiveContainer, Cell } from 'recharts';
+import * as XLSX from 'xlsx';
 
 // Helper para fetch con token
 function fetchWithAuth(url, options = {}) {
@@ -225,6 +226,51 @@ export function InventarioList({ admin, usuario }) {
   const datosGrafico = getDatosGrafico();
   const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
 
+  // NUEVO: Importar desde Excel
+  const handleImportExcel = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      // Enviar cada artículo al backend (puedes optimizar para enviar en lote si tienes endpoint)
+      json.forEach(row => {
+        // Normalizar campos
+        const datosEnviar = {
+          equipo: row.equipo || row.Equipo || '',
+          tipo: row.tipo || row.Tipo || '',
+          estado: row.estado || row.Estado || 'Disponible',
+          ubicacion_id: row.ubicacion_id || '',
+          usuario_id: row.usuario_id || '',
+          codigo_unico: row.codigo_unico || row['Código Único'] || undefined
+        };
+        // Si hay código_unico, intenta actualizar, si no, agrega nuevo
+        const url = datosEnviar.codigo_unico
+          ? `${API_URL}/inventario/${datosEnviar.codigo_unico}`
+          : `${API_URL}/inventario/`;
+        const method = datosEnviar.codigo_unico ? 'PUT' : 'POST';
+        fetchWithAuth(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datosEnviar)
+        })
+          .then(res => res.json())
+          .then(data => {
+            // Recargar inventario después de la última fila
+            if (row === json[json.length - 1]) {
+              fetchWithAuth(`${API_URL}/inventario/`)
+                .then(res => res.json())
+                .then(inv => setInventario(inv));
+            }
+          });
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
       {error && <div style={{ color: 'red', marginBottom: 12, fontWeight: 'bold' }}>{error}</div>}
@@ -294,6 +340,19 @@ export function InventarioList({ admin, usuario }) {
                 <Button variant="outlined" color="info" onClick={() => console.log('Estado actual:', nuevoEquipo)} sx={{ minWidth: 120, fontSize: '0.8em', width: '100%' }}>
                   Debug: Ver Estado
                 </Button>
+                {/* NUEVO: Botón para importar Excel */}
+                <label style={{ display: 'block', marginTop: 12 }}>
+                  <span style={{ color: '#1976d2', fontWeight: 'bold', marginRight: 8 }}>Importar desde Excel:</span>
+                  <input type="file" accept=".xlsx,.xls" onChange={handleImportExcel} style={{ display: 'inline-block', marginTop: 6 }} />
+                </label>
+                {/* NUEVO: Botón para descargar plantilla */}
+                <a
+                  href={require('./PlantillaInventario.xlsx')}
+                  download="PlantillaInventario.xlsx"
+                  style={{ display: 'inline-block', marginTop: 8, color: '#388e3c', fontWeight: 'bold', textDecoration: 'underline', fontSize: '0.98em' }}
+                >
+                  Descargar plantilla Excel
+                </a>
               </Paper>
             )}
             <Paper sx={{ p: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
