@@ -7,6 +7,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 import io
 import os
+from datetime import datetime
 
 bitacoras_bp = Blueprint('bitacoras', __name__)
 # CORS configurado globalmente en main.py
@@ -32,9 +33,16 @@ def crear_bitacora():
         return jsonify({'error': 'Falta el campo descripcion'}), 400
     if not inventario_id:
         return jsonify({'error': 'Falta el campo inventario_id'}), 400
-    # usuario_id puede ser opcional, pero si lo quieres obligatorio, descomenta:
-    # if not usuario_id:
-    #     return jsonify({'error': 'Falta el campo usuario_id'}), 400
+    # Parsear fecha_termino si viene como string
+    if fecha_termino:
+        try:
+            if len(fecha_termino) == 10:
+                fecha_termino = datetime.strptime(fecha_termino, '%Y-%m-%d')
+            else:
+                fecha_termino = datetime.fromisoformat(fecha_termino)
+        except Exception as e:
+            print('ERROR al parsear fecha_termino:', e)
+            return jsonify({'error': 'Formato de fecha_termino inválido, usa YYYY-MM-DD'}), 400
     bitacora = BitacoraMantenimiento(
         descripcion=descripcion,
         inventario_id=inventario_id,
