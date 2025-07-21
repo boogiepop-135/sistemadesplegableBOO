@@ -36,6 +36,13 @@ export function InventarioList({ admin, usuario }) {
   // NUEVO: Estado para gráficos avanzados
   const [graficoTipo, setGraficoTipo] = useState('barras'); // 'barras' o 'pastel'
   const [campoAnalizar, setCampoAnalizar] = useState('tipo'); // 'tipo', 'estado', 'sucursal', 'responsable'
+  // Estado para múltiples gráficas
+  const [numGraficas, setNumGraficas] = useState(1);
+  const [graficas, setGraficas] = useState([
+    { campo: 'tipo', tipo: 'barras' },
+    { campo: 'estado', tipo: 'pastel' },
+    { campo: 'sucursal', tipo: 'barras' }
+  ]);
 
   useEffect(() => {
     setError('');
@@ -299,6 +306,24 @@ export function InventarioList({ admin, usuario }) {
     reader.readAsArrayBuffer(file);
   };
 
+  const handleGraficaChange = (idx, key, value) => {
+    setGraficas(g => g.map((graf, i) => i === idx ? { ...graf, [key]: value } : graf));
+  };
+
+  const getDatosGraficoCustom = (campo) => {
+    let data = {};
+    inventarioFiltrado.forEach(e => {
+      let valor = '';
+      if (campo === 'tipo') valor = e.tipo || 'Sin tipo';
+      else if (campo === 'estado') valor = e.estado || 'Sin estado';
+      else if (campo === 'sucursal') valor = getSucursal(e);
+      else if (campo === 'responsable') valor = getResponsable(e);
+      else valor = 'Otro';
+      data[valor] = (data[valor] || 0) + 1;
+    });
+    return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
+  };
+
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
       {error && <div style={{ color: 'red', marginBottom: 12, fontWeight: 'bold' }}>{error}</div>}
@@ -440,7 +465,6 @@ export function InventarioList({ admin, usuario }) {
       )}
       {tab === 1 && (
         <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', justifyContent: 'center' }}>
-          {/* Panel de control de cantidad de gráficas */}
           <Paper sx={{ p: 2, mb: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1, minWidth: 320, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>Cantidad de gráficas:</span>
             <select value={numGraficas} onChange={e => setNumGraficas(Number(e.target.value))} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', marginRight: 12 }}>
