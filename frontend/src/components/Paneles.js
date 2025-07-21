@@ -34,15 +34,15 @@ export function InventarioList({ admin, usuario }) {
   const [usuarios, setUsuarios] = useState([]);
   const [error, setError] = useState('');
   // NUEVO: Estado para gráficos avanzados
-  const [graficoTipo, setGraficoTipo] = useState('barras'); // 'barras' o 'pastel'
-  const [campoAnalizar, setCampoAnalizar] = useState('tipo'); // 'tipo', 'estado', 'sucursal', 'responsable'
+  // const [graficoTipo, setGraficoTipo] = useState('barras'); // 'barras' o 'pastel'
+  // const [campoAnalizar, setCampoAnalizar] = useState('tipo'); // 'tipo', 'estado', 'sucursal', 'responsable'
   // Estado para múltiples gráficas
-  const [numGraficas, setNumGraficas] = useState(1);
-  const [graficas, setGraficas] = useState([
-    { campo: 'tipo', tipo: 'barras' },
-    { campo: 'estado', tipo: 'pastel' },
-    { campo: 'sucursal', tipo: 'barras' }
-  ]);
+  // const [numGraficas, setNumGraficas] = useState(1);
+  // const [graficas, setGraficas] = useState([
+  //   { campo: 'tipo', tipo: 'barras' },
+  //   { campo: 'estado', tipo: 'pastel' },
+  //   { campo: 'sucursal', tipo: 'barras' }
+  // ]);
 
   useEffect(() => {
     setError('');
@@ -240,7 +240,7 @@ export function InventarioList({ admin, usuario }) {
     });
     return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
   };
-  const datosGrafico = getDatosGrafico();
+  // const datosGrafico = getDatosGrafico();
   const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
 
   // NUEVO: Importar desde Excel con resumen de resultados
@@ -306,23 +306,23 @@ export function InventarioList({ admin, usuario }) {
     reader.readAsArrayBuffer(file);
   };
 
-  const handleGraficaChange = (idx, key, value) => {
-    setGraficas(g => g.map((graf, i) => i === idx ? { ...graf, [key]: value } : graf));
-  };
+  // const handleGraficaChange = (idx, key, value) => {
+  //   setGraficas(g => g.map((graf, i) => i === idx ? { ...graf, [key]: value } : graf));
+  // };
 
-  const getDatosGraficoCustom = (campo) => {
-    let data = {};
-    inventarioFiltrado.forEach(e => {
-      let valor = '';
-      if (campo === 'tipo') valor = e.tipo || 'Sin tipo';
-      else if (campo === 'estado') valor = e.estado || 'Sin estado';
-      else if (campo === 'sucursal') valor = getSucursal(e);
-      else if (campo === 'responsable') valor = getResponsable(e);
-      else valor = 'Otro';
-      data[valor] = (data[valor] || 0) + 1;
-    });
-    return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
-  };
+  // const getDatosGraficoCustom = (campo) => {
+  //   let data = {};
+  //   inventarioFiltrado.forEach(e => {
+  //     let valor = '';
+  //     if (campo === 'tipo') valor = e.tipo || 'Sin tipo';
+  //     else if (campo === 'estado') valor = e.estado || 'Sin estado';
+  //     else if (campo === 'sucursal') valor = getSucursal(e);
+  //     else if (campo === 'responsable') valor = getResponsable(e);
+  //     else valor = 'Otro';
+  //     data[valor] = (data[valor] || 0) + 1;
+  //   });
+  //   return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
+  // };
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
@@ -1556,15 +1556,15 @@ export function MantenimientosPanel({ admin }) {
   });
   const [mensaje, setMensaje] = useState('');
   // NUEVO: Estado para gráficos avanzados
-  const [graficoTipo, setGraficoTipo] = useState('barras'); // 'barras' o 'pastel'
+  // const [graficoTipo, setGraficoTipo] = useState('barras'); // 'barras' o 'pastel'
   const [campoAnalizar, setCampoAnalizar] = useState('tipo_mantenimiento'); // 'tipo_mantenimiento', 'sucursal', 'responsable', 'mes'
   // NUEVO: Estado para múltiples gráficas
-  const [numGraficas, setNumGraficas] = useState(1);
-  const [graficas, setGraficas] = useState([
-    { campo: 'tipo', tipo: 'barras' },
-    { campo: 'estado', tipo: 'pastel' },
-    { campo: 'sucursal', tipo: 'barras' }
-  ]);
+  // const [numGraficas, setNumGraficas] = useState(1);
+  // const [graficas, setGraficas] = useState([
+  //   { campo: 'tipo', tipo: 'barras' },
+  //   { campo: 'estado', tipo: 'pastel' },
+  //   { campo: 'sucursal', tipo: 'barras' }
+  // ]);
 
   useEffect(() => {
     setLoading(true);
@@ -1690,26 +1690,26 @@ export function MantenimientosPanel({ admin }) {
     });
     return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
   };
-  const datosGrafico = getDatosGrafico();
+  // const datosGrafico = getDatosGrafico();
   const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
 
-  const handleGraficaChange = (idx, key, value) => {
-    setGraficas(g => g.map((graf, i) => i === idx ? { ...graf, [key]: value } : graf));
-  };
+  // const handleGraficaChange = (idx, key, value) => {
+  //   setGraficas(g => g.map((graf, i) => i === idx ? { ...graf, [key]: value } : graf));
+  // };
 
-  const getDatosGraficoCustom = (campo) => {
-    let data = {};
-    inventario.forEach(e => {
-      let valor = '';
-      if (campo === 'tipo') valor = e.tipo || 'Sin tipo';
-      else if (campo === 'estado') valor = e.estado || 'Sin estado';
-      else if (campo === 'sucursal') valor = getSucursal(e);
-      else if (campo === 'responsable') valor = getResponsable(e);
-      else valor = 'Otro';
-      data[valor] = (data[valor] || 0) + 1;
-    });
-    return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
-  };
+  // const getDatosGraficoCustom = (campo) => {
+  //   let data = {};
+  //   inventario.forEach(e => {
+  //     let valor = '';
+  //     if (campo === 'tipo') valor = e.tipo || 'Sin tipo';
+  //     else if (campo === 'estado') valor = e.estado || 'Sin estado';
+  //     else if (campo === 'sucursal') valor = getSucursal(e);
+  //     else if (campo === 'responsable') valor = getResponsable(e);
+  //     else valor = 'Otro';
+  //     data[valor] = (data[valor] || 0) + 1;
+  //   });
+  //   return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
+  // };
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
@@ -1820,21 +1820,21 @@ export function MantenimientosPanel({ admin }) {
       {/* Renderizado dinámico del gráfico */}
       <ResponsiveContainer width={500} height={350}>
         {graficoTipo === 'barras' ? (
-          <BarChart data={datosGrafico} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+          <BarChart data={getDatosGrafico()} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
             <XAxis dataKey="name" tick={{ fontSize: 14 }} />
             <YAxis allowDecimals={false} />
             <Tooltip />
             <Legend />
             <Bar dataKey="value" fill="#43a047">
-              {datosGrafico.map((entry, index) => (
+              {getDatosGrafico().map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
               ))}
             </Bar>
           </BarChart>
         ) : (
           <PieChart>
-            <Pie data={datosGrafico} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} label>
-              {datosGrafico.map((entry, index) => (
+            <Pie data={getDatosGrafico()} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} label>
+              {getDatosGrafico().map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
               ))}
             </Pie>
