@@ -22,13 +22,19 @@ def crear_bitacora():
     descripcion = data.get('descripcion')
     inventario_id = data.get('inventario_id')
     usuario_id = data.get('usuario_id')
+    tipo_mantenimiento = data.get('tipo_mantenimiento')
+    fecha_termino = data.get('fecha_termino')
+    firma = data.get('firma')
     tickets_codigos = data.get('tickets_codigos', [])  # lista de códigos únicos
     if not descripcion or not inventario_id:
         return jsonify({'error': 'Faltan datos'}), 400
     bitacora = BitacoraMantenimiento(
         descripcion=descripcion,
         inventario_id=inventario_id,
-        usuario_id=usuario_id
+        usuario_id=usuario_id,
+        tipo_mantenimiento=tipo_mantenimiento,
+        fecha_termino=fecha_termino,
+        firma=firma
     )
     # Asociar tickets por código único
     if tickets_codigos:

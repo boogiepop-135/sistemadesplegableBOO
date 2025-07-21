@@ -1280,3 +1280,151 @@ export function TrabajosAdminPanel({ admin }) {
     </div>
   );
 }
+
+export function MantenimientosPanel({ admin }) {
+  const [mantenimientos, setMantenimientos] = useState([]);
+  const [inventario, setInventario] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [ubicaciones, setUbicaciones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [nuevo, setNuevo] = useState({
+    inventario_id: '',
+    tipo_mantenimiento: '',
+    fecha: '',
+    usuario_id: '',
+    fecha_termino: '',
+    firma: '',
+    descripcion: ''
+  });
+  const [mensaje, setMensaje] = useState('');
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetchWithAuth(`${API_URL}/bitacoras/`).then(res => res.json()),
+      fetchWithAuth(`${API_URL}/inventario/`).then(res => res.json()),
+      fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()),
+      fetchWithAuth(`${API_URL}/ubicaciones/`).then(res => res.json())
+    ]).then(([bitacoras, inv, usu, ubi]) => {
+      setMantenimientos(bitacoras);
+      setInventario(inv);
+      setUsuarios(usu);
+      setUbicaciones(ubi);
+      setLoading(false);
+    });
+  }, []);
+
+  const getEquipo = (id) => {
+    const eq = inventario.find(e => e.id === id);
+    return eq ? eq.equipo : '';
+  };
+  const getSucursal = (id) => {
+    const eq = inventario.find(e => e.id === id);
+    if (!eq) return '';
+    const ubi = ubicaciones.find(u => u.id === eq.ubicacion_id);
+    return ubi ? ubi.nombre : '';
+  };
+  const getAsignadoA = (id) => {
+    const eq = inventario.find(e => e.id === id);
+    if (!eq) return '';
+    const usu = usuarios.find(u => u.id === eq.usuario_id);
+    return usu ? usu.nombre : '';
+  };
+  const getResponsable = (id) => {
+    const usu = usuarios.find(u => u.id === id);
+    return usu ? usu.nombre : '';
+  };
+
+  const handleCrear = (e) => {
+    e.preventDefault();
+    setMensaje('');
+    if (!nuevo.inventario_id || !nuevo.tipo_mantenimiento || !nuevo.fecha || !nuevo.usuario_id) {
+      setMensaje('Completa todos los campos obligatorios');
+      return;
+    }
+    fetchWithAuth(`${API_URL}/bitacoras/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        inventario_id: nuevo.inventario_id,
+        tipo_mantenimiento: nuevo.tipo_mantenimiento,
+        fecha: nuevo.fecha,
+        usuario_id: nuevo.usuario_id,
+        fecha_termino: nuevo.fecha_termino,
+        firma: nuevo.firma,
+        descripcion: nuevo.descripcion
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.id) {
+          setMantenimientos(prev => [...prev, data]);
+          setNuevo({ inventario_id: '', tipo_mantenimiento: '', fecha: '', usuario_id: '', fecha_termino: '', firma: '', descripcion: '' });
+          setMensaje('Mantenimiento registrado correctamente');
+        } else {
+          setMensaje(data.error || 'Error al registrar');
+        }
+      });
+  };
+
+  return (
+    <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
+      <h2 style={{ color: '#388e3c', marginBottom: 16 }}>Mantenimientos Programados</h2>
+      {admin && (
+        <Paper sx={{ mb: 3, p: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1, maxWidth: 700, margin: '0 auto' }}>
+          <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Registrar Mantenimiento</h3>
+          <form onSubmit={handleCrear} style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            <select value={nuevo.inventario_id} onChange={e => setNuevo({ ...nuevo, inventario_id: e.target.value })} style={{ flex: '1 1 180px', padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }} required>
+              <option value="">Seleccionar Equipo</option>
+              {inventario.map(eq => <option key={eq.id} value={eq.id}>{getSucursal(eq.id)} - {eq.equipo}</option>)}
+            </select>
+            <input type="text" value={nuevo.tipo_mantenimiento} onChange={e => setNuevo({ ...nuevo, tipo_mantenimiento: e.target.value })} placeholder="Tipo de mantenimiento" style={{ flex: '1 1 180px', padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }} required />
+            <input type="date" value={nuevo.fecha} onChange={e => setNuevo({ ...nuevo, fecha: e.target.value })} style={{ flex: '1 1 140px', padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }} required />
+            <select value={nuevo.usuario_id} onChange={e => setNuevo({ ...nuevo, usuario_id: e.target.value })} style={{ flex: '1 1 180px', padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }} required>
+              <option value="">Responsable</option>
+              {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+            </select>
+            <input type="date" value={nuevo.fecha_termino} onChange={e => setNuevo({ ...nuevo, fecha_termino: e.target.value })} placeholder="Fecha de término" style={{ flex: '1 1 140px', padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }} />
+            <input type="text" value={nuevo.firma} onChange={e => setNuevo({ ...nuevo, firma: e.target.value })} placeholder="Firma" style={{ flex: '1 1 140px', padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }} />
+            <input type="text" value={nuevo.descripcion} onChange={e => setNuevo({ ...nuevo, descripcion: e.target.value })} placeholder="Descripción (opcional)" style={{ flex: '2 1 300px', padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }} />
+            <Button type="submit" variant="contained" color="success" sx={{ minWidth: 120, fontWeight: 'bold', fontSize: '1em' }}>Registrar</Button>
+          </form>
+          {mensaje && <div style={{ color: '#388e3c', marginTop: 10 }}>{mensaje}</div>}
+        </Paper>
+      )}
+      {loading ? <div>Cargando...</div> : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #c8e6c9' }}>
+            <thead>
+              <tr style={{ background: '#e8f5e9', color: '#388e3c' }}>
+                <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>SUCURSAL</th>
+                <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>EQUIPO</th>
+                <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>ASIGNADO A</th>
+                <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>TIPO DE MANTENIMIENTO</th>
+                <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>FECHA</th>
+                <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>RESPONSABLE</th>
+                <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>FECHA DE TERMINO</th>
+                <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>FIRMA</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mantenimientos.map(m => (
+                <tr key={m.id}>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getSucursal(m.inventario_id)}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getEquipo(m.inventario_id)}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getAsignadoA(m.inventario_id)}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.tipo_mantenimiento || ''}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.fecha}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getResponsable(m.usuario_id)}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.fecha_termino || ''}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.firma || ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {mantenimientos.length === 0 && <div style={{ marginTop: 24, color: '#888' }}>No hay mantenimientos programados.</div>}
+        </div>
+      )}
+    </Box>
+  );
+}

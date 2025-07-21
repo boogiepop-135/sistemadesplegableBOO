@@ -14,6 +14,7 @@ function Navbar({ onLogout, onSelect, selected, isAdmin, rol }) {
       {isAdmin && <a href="#trabajos" onClick={() => onSelect('trabajos')} style={{ color: selected === 'trabajos' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Trabajos</a>}
       {!isAdmin && <a href="#trabajos" onClick={() => onSelect('trabajos')} style={{ color: selected === 'trabajos' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Trabajos (solo vista)</a>}
       <a href="#inventario" onClick={() => onSelect('inventario')} style={{ color: selected === 'inventario' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Inventario</a>
+      <a href="#mantenimientos" onClick={() => onSelect('mantenimientos')} style={{ color: selected === 'mantenimientos' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Mantenimientos</a>
       <a href="#tickets" onClick={() => onSelect('tickets')} style={{ color: selected === 'tickets' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Tickets</a>
       {isAdmin && <a href="#usuarios" onClick={() => onSelect('usuarios')} style={{ color: selected === 'usuarios' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Usuarios</a>}
       {isAdmin && <a href="#avisos" onClick={() => onSelect('avisos')} style={{ color: selected === 'avisos' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Avisos</a>}
@@ -181,6 +182,7 @@ function App() {
           {panel === 'avisos' && <Avisos admin={rol === 'admin'} />}
           {panel === 'documentos' && <DocumentosPanel admin={rol === 'admin'} />}
           {panel === 'bitacoras' && <BitacorasPanel admin={rol === 'admin'} />}
+          {panel === 'mantenimientos' && <MantenimientosPanel admin={rol === 'admin'} />}
         </div>
       )}
       <Footer />

@@ -14,6 +14,9 @@ class BitacoraMantenimiento(db.Model):
     inventario_id = db.Column(db.Integer, db.ForeignKey('inventario.id'), nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
     codigo_unico = db.Column(db.String(36), unique=True, default=lambda: str(uuid.uuid4()))
+    tipo_mantenimiento = db.Column(db.String(100), nullable=True)
+    fecha_termino = db.Column(db.DateTime, nullable=True)
+    firma = db.Column(db.String(100), nullable=True)
 
     inventario = db.relationship('Inventario', backref='bitacoras')
     usuario = db.relationship('Usuario', backref='bitacoras')
@@ -27,6 +30,9 @@ class BitacoraMantenimiento(db.Model):
             'inventario_id': self.inventario_id,
             'usuario_id': self.usuario_id,
             'codigo_unico': self.codigo_unico,
+            'tipo_mantenimiento': self.tipo_mantenimiento,
+            'fecha_termino': self.fecha_termino.strftime('%Y-%m-%d %H:%M:%S') if self.fecha_termino else None,
+            'firma': self.firma,
             'tickets': [
                 {'id': t.id, 'codigo_unico': t.codigo_unico, 'descripcion': t.descripcion}
                 for t in self.tickets
