@@ -3,6 +3,6 @@ Flask-SQLAlchemy
 Flask-Cors
 reportlab
 pandas
-gunicorn
+gunicorn==23.0.0
 PyJWT
 werkzeug
