@@ -210,7 +210,6 @@ export function InventarioList({ admin, usuario }) {
   // Generar datos dinámicos según campo seleccionado
   const getDatosGrafico = () => {
     let key = campoAnalizar;
-    let label = '';
     let data = {};
     inventarioFiltrado.forEach(e => {
       let valor = '';
