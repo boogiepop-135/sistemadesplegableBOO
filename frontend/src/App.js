@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaLeaf } from 'react-icons/fa';
 import './App.css';
-import { InventarioList, TicketsList, Avisos, AdminPanel, DocumentosPanel, BitacorasPanel, DiaLabores, TrabajosAdminPanel } from './components/Paneles';
+import { InventarioList, TicketsList, Avisos, AdminPanel, DocumentosPanel, BitacorasPanel, DiaLabores, TrabajosAdminPanel, MantenimientosPanel } from './components/Paneles';
 import { API_URL } from './config';
 
 function Navbar({ onLogout, onSelect, selected, isAdmin, rol }) {
