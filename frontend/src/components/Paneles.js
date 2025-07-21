@@ -5,7 +5,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Button, Box, Tabs, Tab, Grid, Paper } from '@mui/material';
 import { getToken } from '../App';
 import { API_URL } from '../config';
-import { BarChart, XAxis, YAxis, Tooltip, Legend, PieChart, Pie } from 'recharts';
+import { BarChart, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Bar } from 'recharts';
 
 // Helper para fetch con token
 function fetchWithAuth(url, options = {}) {
