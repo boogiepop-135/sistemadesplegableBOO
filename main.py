@@ -55,7 +55,11 @@ from app.models import usuario, ticket, inventario, documento, bitacora_mantenim
 def home():
     return 'Sistema de Inventario IT - Backend Flask funcionando'
 
-if __name__ == '__main__':
+# Esto asegura que las tablas se creen siempre, incluso con gunicorn
+def ensure_tables():
     with app.app_context():
         db.create_all()
+ensure_tables()
+
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
