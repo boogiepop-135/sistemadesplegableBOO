@@ -101,3 +101,21 @@ def descargar_pdf_bitacora(bitacora_id):
     c.save()
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name=f'bitacora_{bitacora.id}.pdf', mimetype='application/pdf')
+
+@bitacoras_bp.route('/<int:bitacora_id>', methods=['PUT'])
+def actualizar_bitacora(bitacora_id):
+    bitacora = BitacoraMantenimiento.query.get(bitacora_id)
+    if not bitacora:
+        return jsonify({'error': 'Bitácora no encontrada'}), 404
+    data = request.get_json()
+    bitacora.descripcion = data.get('descripcion', bitacora.descripcion)
+    bitacora.inventario_id = data.get('inventario_id', bitacora.inventario_id)
+    bitacora.usuario_id = data.get('usuario_id', bitacora.usuario_id)
+    bitacora.tipo_mantenimiento = data.get('tipo_mantenimiento', bitacora.tipo_mantenimiento)
+    bitacora.fecha_termino = data.get('fecha_termino', bitacora.fecha_termino)
+    bitacora.firma = data.get('firma', bitacora.firma)
+    # Si se envía fecha, actualizarla
+    if data.get('fecha'):
+        bitacora.fecha = data.get('fecha')
+    db.session.commit()
+    return jsonify(bitacora.to_dict())
