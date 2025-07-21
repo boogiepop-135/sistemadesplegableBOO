@@ -1367,6 +1367,38 @@ export function MantenimientosPanel({ admin }) {
       });
   };
 
+  const [editando, setEditando] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [modalAbierto, setModalAbierto] = useState(false);
+
+  const handleEditar = (m) => {
+    setEditando(m.id);
+    setEditData({
+      inventario_id: m.inventario_id,
+      tipo_mantenimiento: m.tipo_mantenimiento || '',
+      fecha: m.fecha ? m.fecha.slice(0, 10) : '',
+      usuario_id: m.usuario_id || '',
+      fecha_termino: m.fecha_termino ? m.fecha_termino.slice(0, 10) : '',
+      firma: m.firma || '',
+      descripcion: m.descripcion || ''
+    });
+    setModalAbierto(true);
+  };
+
+  const handleGuardarEdicion = () => {
+    fetchWithAuth(`${API_URL}/bitacoras/${editando}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editData)
+    })
+      .then(res => res.json())
+      .then(data => {
+        setMantenimientos(prev => prev.map(m => m.id === editando ? data : m));
+        setEditando(null);
+        setModalAbierto(false);
+      });
+  };
+
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
       <h2 style={{ color: '#388e3c', marginBottom: 16 }}>Mantenimientos Programados</h2>
@@ -1405,24 +1437,57 @@ export function MantenimientosPanel({ admin }) {
                 <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>RESPONSABLE</th>
                 <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>FECHA DE TERMINO</th>
                 <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>FIRMA</th>
+                {admin && <th style={{ padding: 10, border: '1px solid #a5d6a7' }}>ACCIONES</th>}
               </tr>
             </thead>
             <tbody>
               {mantenimientos.map(m => (
                 <tr key={m.id}>
-                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getSucursal(m.inventario_id)}</td>
-                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getEquipo(m.inventario_id)}</td>
-                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getAsignadoA(m.inventario_id)}</td>
-                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.tipo_mantenimiento || ''}</td>
-                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.fecha}</td>
-                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getResponsable(m.usuario_id)}</td>
-                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.fecha_termino || ''}</td>
-                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.firma || ''}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getSucursal(m.inventario_id) || '—'}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getEquipo(m.inventario_id) || '—'}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getAsignadoA(m.inventario_id) || '—'}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.tipo_mantenimiento || '—'}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.fecha || '—'}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{getResponsable(m.usuario_id) || '—'}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.fecha_termino || '—'}</td>
+                  <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.firma || '—'}</td>
+                  {admin && (
+                    <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>
+                      <Button size="small" color="primary" onClick={() => handleEditar(m)}>Editar</Button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
           {mantenimientos.length === 0 && <div style={{ marginTop: 24, color: '#888' }}>No hay mantenimientos programados.</div>}
+        </div>
+      )}
+      {/* MODAL DE EDICIÓN */}
+      {modalAbierto && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320, maxWidth: 500 }}>
+            <h3>Editar Mantenimiento</h3>
+            <form onSubmit={e => { e.preventDefault(); handleGuardarEdicion(); }}>
+              <select value={editData.inventario_id} onChange={e => setEditData({ ...editData, inventario_id: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required>
+                <option value="">Seleccionar Equipo</option>
+                {inventario.map(eq => <option key={eq.id} value={eq.id}>{getSucursal(eq.id)} - {eq.equipo}</option>)}
+              </select>
+              <input type="text" value={editData.tipo_mantenimiento} onChange={e => setEditData({ ...editData, tipo_mantenimiento: e.target.value })} placeholder="Tipo de mantenimiento" style={{ width: '100%', marginBottom: 8 }} required />
+              <input type="date" value={editData.fecha} onChange={e => setEditData({ ...editData, fecha: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required />
+              <select value={editData.usuario_id} onChange={e => setEditData({ ...editData, usuario_id: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required>
+                <option value="">Responsable</option>
+                {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+              </select>
+              <input type="date" value={editData.fecha_termino} onChange={e => setEditData({ ...editData, fecha_termino: e.target.value })} placeholder="Fecha de término" style={{ width: '100%', marginBottom: 8 }} />
+              <input type="text" value={editData.firma} onChange={e => setEditData({ ...editData, firma: e.target.value })} placeholder="Firma" style={{ width: '100%', marginBottom: 8 }} />
+              <input type="text" value={editData.descripcion} onChange={e => setEditData({ ...editData, descripcion: e.target.value })} placeholder="Descripción (opcional)" style={{ width: '100%', marginBottom: 8 }} />
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <Button variant="contained" color="success" type="submit">Guardar</Button>
+                <Button variant="outlined" color="error" onClick={() => setModalAbierto(false)}>Cancelar</Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </Box>
