@@ -5,6 +5,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Button, Box, Tabs, Tab, Grid, Paper } from '@mui/material';
 import { getToken } from '../App';
 import { API_URL } from '../config';
+import { BarChart, XAxis, YAxis, Tooltip, Legend, PieChart, Pie } from 'recharts';
 
 // Helper para fetch con token
 function fetchWithAuth(url, options = {}) {
@@ -121,8 +122,59 @@ export function InventarioList({ admin, usuario }) {
     { field: 'tipo', headerName: 'Tipo', flex: 1 },
     { field: 'estado', headerName: 'Estado', flex: 1 },
     { field: 'usuario_nombre', headerName: 'Usuario', flex: 1 },
-    { field: 'codigo_unico', headerName: 'Código Único', flex: 1 }
-  ];
+    { field: 'codigo_unico', headerName: 'Código Único', flex: 1 },
+    admin && {
+      field: 'acciones',
+      headerName: 'Acciones',
+      flex: 1,
+      renderCell: (params) => (
+        <>
+          <Button size="small" color="primary" onClick={() => handleEditar(params.row)}><FaEdit /></Button>
+          <Button size="small" color="error" onClick={() => handleEliminar(params.row.id)}><FaTrash /></Button>
+        </>
+      )
+    }
+  ].filter(Boolean);
+
+  // Estado para edición
+  const [editando, setEditando] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [modalAbierto, setModalAbierto] = useState(false);
+
+  const handleEditar = (row) => {
+    setEditando(row.id);
+    setEditData({
+      equipo: row.equipo,
+      tipo: row.tipo,
+      estado: row.estado,
+      ubicacion_id: row.ubicacion_id || '',
+      usuario_id: row.usuario_id || ''
+    });
+    setModalAbierto(true);
+  };
+
+  const handleGuardarEdicion = () => {
+    fetchWithAuth(`${API_URL}/inventario/${editando}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editData)
+    })
+      .then(res => res.json())
+      .then(data => {
+        setInventario(prev => prev.map(e => e.id === editando ? data : e));
+        setEditando(null);
+        setModalAbierto(false);
+      });
+  };
+
+  const handleEliminar = (id) => {
+    if (!window.confirm('¿Seguro que deseas eliminar este equipo?')) return;
+    fetchWithAuth(`${API_URL}/inventario/${id}`, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setInventario(prev => prev.filter(e => e.id !== id));
+      });
+  };
 
   // Filtro aplicado
   const inventarioFiltrado = inventario.filter(e =>
@@ -252,7 +304,52 @@ export function InventarioList({ admin, usuario }) {
       {tab === 1 && (
         <Box sx={{ mt: 4, display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
           {/* Gráficos aquí */}
+          <BarChart width={400} height={300} data={Object.entries(inventario.reduce((acc, e) => { acc[e.tipo] = (acc[e.tipo] || 0) + 1; return acc; }, {})).map(([tipo, count]) => ({ tipo, count }))}>
+            <XAxis dataKey="tipo" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="count" fill="#43a047" />
+          </BarChart>
+          <PieChart width={400} height={300}>
+            <Pie data={Object.entries(inventario.reduce((acc, e) => { acc[e.estado] = (acc[e.estado] || 0) + 1; return acc; }, {})).map(([estado, value]) => ({ name: estado, value }))} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#1976d2" label />
+            <Tooltip />
+            <Legend />
+          </PieChart>
         </Box>
+      )}
+      {/* MODAL DE EDICIÓN */}
+      {modalAbierto && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320 }}>
+            <h3>Editar equipo</h3>
+            <input type="text" value={editData.equipo} onChange={e => setEditData({ ...editData, equipo: e.target.value })} placeholder="Nombre del equipo" style={{ width: '100%', marginBottom: 8 }} />
+            <select value={editData.tipo} onChange={e => setEditData({ ...editData, tipo: e.target.value })} style={{ width: '100%', marginBottom: 8 }}>
+              <option value="">Tipo/Categoría</option>
+              {categorias.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
+            </select>
+            <select value={editData.estado} onChange={e => setEditData({ ...editData, estado: e.target.value })} style={{ width: '100%', marginBottom: 8 }}>
+              <option value="">Estado</option>
+              <option value="buen estado">Buen estado</option>
+              <option value="marcas de uso">Marcas de uso</option>
+              <option value="rayones">Rayones</option>
+              <option value="daño serio">Daño serio</option>
+              <option value="inservible">Inservible</option>
+            </select>
+            <select value={editData.ubicacion_id} onChange={e => setEditData({ ...editData, ubicacion_id: e.target.value })} style={{ width: '100%', marginBottom: 8 }}>
+              <option value="">Seleccionar Ubicación</option>
+              {ubicaciones.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+            </select>
+            <select value={editData.usuario_id} onChange={e => setEditData({ ...editData, usuario_id: e.target.value })} style={{ width: '100%', marginBottom: 8 }}>
+              <option value="">Seleccionar Usuario</option>
+              {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+            </select>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <Button variant="contained" color="success" onClick={handleGuardarEdicion}>Guardar</Button>
+              <Button variant="outlined" color="error" onClick={() => setModalAbierto(false)}>Cancelar</Button>
+            </div>
+          </div>
+        </div>
       )}
     </Box>
   );
