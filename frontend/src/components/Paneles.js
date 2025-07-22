@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { FaPlus, FaBell, FaTrash, FaEdit } from 'react-icons/fa';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { Box, Button, Paper, Grid, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Chip, IconButton, Tooltip } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { Button, Box, Tabs, Tab, Grid, Paper } from '@mui/material';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { FaTrash, FaEdit, FaPlus, FaDownload, FaUpload, FaEye, FaWrench, FaCheck, FaTimes, FaPause, FaPlay, FaExclamationTriangle, FaFileAlt, FaUser, FaMapMarkerAlt, FaTag, FaCalendarAlt, FaSignature, FaTools } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 import { getToken } from '../App';
 import { API_URL } from '../config';
-import { BarChart, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Bar, ResponsiveContainer, Cell } from 'recharts';
-import * as XLSX from 'xlsx';
 
 // Paleta de colores global para gráficas
 const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
@@ -190,11 +190,50 @@ export function InventarioList({ admin, usuario }) {
       headerName: 'Acciones',
       flex: 1,
       renderCell: (params) => (
-        <>
-          <Button size="small" color="primary" onClick={() => handleEditar(params.row)}>Editar</Button>
-          <Button size="small" color="warning" onClick={() => handleAbrirMantenimiento(params.row)}>Mantenimiento</Button>
-          <Button size="small" color="error" onClick={() => handleEliminar(params.row.id)}>Borrar</Button>
-        </>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Tooltip title="Editar equipo">
+            <IconButton 
+              size="small" 
+              color="primary" 
+              onClick={() => handleEditar(params.row)}
+              sx={{ 
+                backgroundColor: '#e3f2fd', 
+                '&:hover': { backgroundColor: '#bbdefb' },
+                border: '1px solid #2196f3'
+              }}
+            >
+              <FaEdit />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Registrar mantenimiento">
+            <IconButton 
+              size="small" 
+              color="warning" 
+              onClick={() => handleAbrirMantenimiento(params.row)}
+              sx={{ 
+                backgroundColor: '#fff3e0', 
+                '&:hover': { backgroundColor: '#ffe0b2' },
+                border: '1px solid #ff9800'
+              }}
+            >
+              <FaWrench />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Eliminar equipo">
+            <IconButton 
+              size="small" 
+              color="error" 
+              onClick={() => handleEliminar(params.row.id)}
+              sx={{ 
+                backgroundColor: '#ffebee', 
+                '&:hover': { backgroundColor: '#ffcdd2' },
+                border: '1px solid #f44336'
+              }}
+            >
+              <FaTrash />
+            </IconButton>
+          </Tooltip>
+        </Box>
       )
     }
   ].filter(Boolean);
@@ -443,18 +482,42 @@ export function InventarioList({ admin, usuario }) {
                   Debug: Ver Estado
                 </Button>
                 {/* NUEVO: Botón para importar Excel */}
-                <label style={{ display: 'block', marginTop: 12 }}>
-                  <span style={{ color: '#1976d2', fontWeight: 'bold', marginRight: 8 }}>Importar desde Excel:</span>
-                  <input type="file" accept=".xlsx,.xls" onChange={handleImportExcel} style={{ display: 'inline-block', marginTop: 6 }} />
-                </label>
+                <Tooltip title="Importar inventario desde Excel">
+                  <Button 
+                    variant="contained" 
+                    color="info" 
+                    component="label"
+                    sx={{ minWidth: 120, width: '100%', marginTop: 12 }}
+                  >
+                    <FaUpload style={{ marginRight: 6 }} />
+                    Importar Excel
+                    <input 
+                      type="file" 
+                      accept=".xlsx,.xls" 
+                      onChange={handleImportExcel} 
+                      style={{ display: 'none' }} 
+                    />
+                  </Button>
+                </Tooltip>
                 {/* NUEVO: Botón para descargar plantilla */}
-                <a
-                  href={require('./PlantillaInventario.xlsx')}
-                  download="PlantillaInventario.xlsx"
-                  style={{ display: 'inline-block', marginTop: 8, color: '#388e3c', fontWeight: 'bold', textDecoration: 'underline', fontSize: '0.98em' }}
-                >
-                  Descargar plantilla Excel
-                </a>
+                <Tooltip title="Descargar plantilla de Excel">
+                  <Button 
+                    variant="contained" 
+                    color="warning" 
+                    onClick={() => {
+                      const ws = XLSX.utils.json_to_sheet([
+                        { equipo: 'Ejemplo', tipo: 'Computadora', estado: 'Disponible', ubicacion_id: '', usuario_id: '' }
+                      ]);
+                      const wb = XLSX.utils.book_new();
+                      XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
+                      XLSX.writeFile(wb, 'plantilla_inventario.xlsx');
+                    }}
+                    sx={{ minWidth: 120, width: '100%', marginTop: 8 }}
+                  >
+                    <FaFileAlt style={{ marginRight: 6 }} />
+                    Descargar Plantilla
+                  </Button>
+                </Tooltip>
                 {/* NUEVO: Resumen de importación */}
                 {mostrarResumen && importResumen.length > 0 && (
                   <Paper sx={{ mt: 2, p: 2, background: '#fffde7', borderRadius: 2, boxShadow: 1 }}>
@@ -491,7 +554,12 @@ export function InventarioList({ admin, usuario }) {
                 <option value="">Estado</option>
                 {[...new Set(inventario.map(e => e.estado))].map(estado => <option key={estado} value={estado}>{estado}</option>)}
               </select>
-              <Button variant="contained" color="success" onClick={exportarExcel} sx={{ minWidth: 120, width: '100%' }}>Exportar a Excel</Button>
+              <Tooltip title="Exportar inventario a Excel">
+                <Button variant="contained" color="success" onClick={exportarExcel} sx={{ minWidth: 120, width: '100%' }}>
+                  <FaDownload style={{ marginRight: 6 }} />
+                  Exportar a Excel
+                </Button>
+              </Tooltip>
             </Paper>
           </Box>
           {/* Tabla a la derecha */}
@@ -542,7 +610,7 @@ export function InventarioList({ admin, usuario }) {
                     <BarChart data={getDatosGraficoCustom(graficas[idx].campo)} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
                       <XAxis dataKey="name" tick={{ fontSize: 14 }} />
                       <YAxis allowDecimals={false} />
-                      <Tooltip />
+                      <RechartsTooltip />
                       <Legend />
                       <Bar dataKey="value" fill="#43a047">
                         {getDatosGraficoCustom(graficas[idx].campo).map((entry, i) => (
@@ -557,7 +625,7 @@ export function InventarioList({ admin, usuario }) {
                           <Cell key={`cell-${i}`} fill={colores[i % colores.length]} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <RechartsTooltip />
                       <Legend />
                     </PieChart>
                   )}
@@ -712,33 +780,54 @@ export function TicketsList({ admin, usuario }) {
                   </div>
                   {admin && t.estado !== 'cerrado' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginLeft: 8 }}>
-                      <Button
-                        variant="contained"
-                        color="success"
-                        size="small"
-                        onClick={() => finalizarTicket(t.id)}
-                        sx={{ minWidth: 40, fontWeight: 'bold', fontSize: '0.85em', px: 1, py: 0.5, borderRadius: 1 }}
-                      >
-                        ✓
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="warning"
-                        size="small"
-                        onClick={() => pausarTicket(t.id)}
-                        sx={{ minWidth: 40, fontWeight: 'bold', fontSize: '0.85em', px: 1, py: 0.5, borderRadius: 1 }}
-                      >
-                        ⏸
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="error"
-                        size="small"
-                        onClick={() => descartarTicket(t.id)}
-                        sx={{ minWidth: 40, fontWeight: 'bold', fontSize: '0.85em', px: 1, py: 0.5, borderRadius: 1 }}
-                      >
-                        ✗
-                      </Button>
+                      <Tooltip title="Finalizar ticket">
+                        <IconButton
+                          size="small"
+                          color="success"
+                          onClick={() => finalizarTicket(t.id)}
+                          sx={{ 
+                            backgroundColor: '#e8f5e9', 
+                            '&:hover': { backgroundColor: '#c8e6c9' },
+                            border: '1px solid #4caf50',
+                            minWidth: 40,
+                            minHeight: 40
+                          }}
+                        >
+                          <FaCheck />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Pausar ticket">
+                        <IconButton
+                          size="small"
+                          color="warning"
+                          onClick={() => pausarTicket(t.id)}
+                          sx={{ 
+                            backgroundColor: '#fff3e0', 
+                            '&:hover': { backgroundColor: '#ffe0b2' },
+                            border: '1px solid #ff9800',
+                            minWidth: 40,
+                            minHeight: 40
+                          }}
+                        >
+                          <FaPause />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Descartar ticket">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => descartarTicket(t.id)}
+                          sx={{ 
+                            backgroundColor: '#ffebee', 
+                            '&:hover': { backgroundColor: '#ffcdd2' },
+                            border: '1px solid #f44336',
+                            minWidth: 40,
+                            minHeight: 40
+                          }}
+                        >
+                          <FaTimes />
+                        </IconButton>
+                      </Tooltip>
                     </div>
                   )}
                 </div>
@@ -945,9 +1034,35 @@ export function AdminPanel() {
                   ) : (
                     <>
                       <span><b>{u.nombre}</b> <span style={{ color: '#888', fontSize: '0.9em' }}>({u.rol})</span> <span style={{ color: '#1976d2', fontSize: '0.95em', marginLeft: 8 }}>{u.nombre_perfil ? `[${u.nombre_perfil}]` : ''}</span></span>
-                      <div>
-                        <Button variant="contained" color="info" size="small" onClick={() => handleEditarUsuario(u)} sx={{ minWidth: 60, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}>Editar</Button>
-                        <Button variant="contained" color="error" size="small" onClick={() => borrarUsuario(u.id)} sx={{ minWidth: 60, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}>Borrar</Button>
+                      <div style={{ display: 'flex', gap: 1 }}>
+                        <Tooltip title="Editar usuario">
+                          <IconButton 
+                            size="small" 
+                            color="info" 
+                            onClick={() => handleEditarUsuario(u)}
+                            sx={{ 
+                              backgroundColor: '#e3f2fd', 
+                              '&:hover': { backgroundColor: '#bbdefb' },
+                              border: '1px solid #2196f3'
+                            }}
+                          >
+                            <FaEdit />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar usuario">
+                          <IconButton 
+                            size="small" 
+                            color="error" 
+                            onClick={() => borrarUsuario(u.id)}
+                            sx={{ 
+                              backgroundColor: '#ffebee', 
+                              '&:hover': { backgroundColor: '#ffcdd2' },
+                              border: '1px solid #f44336'
+                            }}
+                          >
+                            <FaTrash />
+                          </IconButton>
+                        </Tooltip>
                       </div>
                     </>
                   )}
@@ -967,7 +1082,20 @@ export function AdminPanel() {
               {ubicaciones.map(u => (
                 <li key={u.id} style={{ padding: '8px 0', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>{u.nombre}{u.descripcion ? ` - ${u.descripcion}` : ''}</span>
-                  <Button variant="contained" color="error" size="small" onClick={() => eliminarUbicacion(u.id)} sx={{ minWidth: 60, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}>Borrar</Button>
+                  <Tooltip title="Eliminar ubicación">
+                    <IconButton 
+                      size="small" 
+                      color="error" 
+                      onClick={() => eliminarUbicacion(u.id)}
+                      sx={{ 
+                        backgroundColor: '#ffebee', 
+                        '&:hover': { backgroundColor: '#ffcdd2' },
+                        border: '1px solid #f44336'
+                      }}
+                    >
+                      <FaTrash />
+                    </IconButton>
+                  </Tooltip>
                 </li>
               ))}
             </ul>
@@ -983,7 +1111,20 @@ export function AdminPanel() {
               {categorias.map(c => (
                 <li key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>{c.nombre}</span>
-                  <Button variant="contained" color="error" size="small" onClick={() => eliminarCategoria(c.id)} sx={{ minWidth: 60, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}>Borrar</Button>
+                  <Tooltip title="Eliminar categoría">
+                    <IconButton 
+                      size="small" 
+                      color="error" 
+                      onClick={() => eliminarCategoria(c.id)}
+                      sx={{ 
+                        backgroundColor: '#ffebee', 
+                        '&:hover': { backgroundColor: '#ffcdd2' },
+                        border: '1px solid #f44336'
+                      }}
+                    >
+                      <FaTrash />
+                    </IconButton>
+                  </Tooltip>
                 </li>
               ))}
             </ul>
@@ -1095,30 +1236,54 @@ export function DocumentosPanel() {
                         <strong style={{ color: '#388e3c' }}>{doc.nombre_archivo}</strong><br />
                         <span style={{ fontSize: '0.9em', color: '#888' }}>Subido: {doc.fecha_subida} | Descripción: {doc.descripcion}</span>
                       </div>
-                      <div>
+                      <div style={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                         {doc.nombre_archivo.toLowerCase().endsWith('.pdf') && (
-                          <Button
-                            variant="outlined"
-                            color="info"
-                            size="small"
-                            onClick={() => setPdfPreview(`${API_URL}/documentos/${doc.id}/descargar`)}
-                            sx={{ minWidth: 80, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}
-                          >
-                            Vista previa
-                          </Button>
+                          <Tooltip title="Vista previa PDF">
+                            <IconButton
+                              size="small"
+                              color="info"
+                              onClick={() => setPdfPreview(`${API_URL}/documentos/${doc.id}/descargar`)}
+                              sx={{ 
+                                backgroundColor: '#e3f2fd', 
+                                '&:hover': { backgroundColor: '#bbdefb' },
+                                border: '1px solid #2196f3'
+                              }}
+                            >
+                              <FaEye />
+                            </IconButton>
+                          </Tooltip>
                         )}
-                        <a href={`${API_URL}/documentos/${doc.id}/descargar`} style={{ marginLeft: 16, color: '#43a047', fontWeight: 'bold' }} target="_blank" rel="noopener noreferrer">
-                          Descargar
-                        </a>
-                        <Button
-                          variant="contained"
-                          color="error"
-                          size="small"
-                          onClick={() => eliminarDocumento(doc.id)}
-                          sx={{ minWidth: 80, fontWeight: 'bold', fontSize: '0.9em', ml: 1 }}
-                        >
-                          Eliminar
-                        </Button>
+                        <Tooltip title="Descargar documento">
+                          <IconButton
+                            size="small"
+                            color="success"
+                            component="a"
+                            href={`${API_URL}/documentos/${doc.id}/descargar`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ 
+                              backgroundColor: '#e8f5e9', 
+                              '&:hover': { backgroundColor: '#c8e6c9' },
+                              border: '1px solid #4caf50'
+                            }}
+                          >
+                            <FaDownload />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar documento">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => eliminarDocumento(doc.id)}
+                            sx={{ 
+                              backgroundColor: '#ffebee', 
+                              '&:hover': { backgroundColor: '#ffcdd2' },
+                              border: '1px solid #f44336'
+                            }}
+                          >
+                            <FaTrash />
+                          </IconButton>
+                        </Tooltip>
                       </div>
                     </div>
                   </li>
@@ -1792,7 +1957,20 @@ export function MantenimientosPanel({ admin }) {
                   <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>{m.firma || '—'}</td>
                   {admin && (
                     <td style={{ padding: 8, border: '1px solid #a5d6a7' }}>
-                      <Button size="small" color="primary" onClick={() => handleEditar(m)}>Editar</Button>
+                      <Tooltip title="Editar mantenimiento">
+                        <IconButton 
+                          size="small" 
+                          color="primary" 
+                          onClick={() => handleEditar(m)}
+                          sx={{ 
+                            backgroundColor: '#e3f2fd', 
+                            '&:hover': { backgroundColor: '#bbdefb' },
+                            border: '1px solid #2196f3'
+                          }}
+                        >
+                          <FaEdit />
+                        </IconButton>
+                      </Tooltip>
                     </td>
                   )}
                 </tr>
