@@ -25,6 +25,24 @@ documentos_bp = Blueprint('documentos', __name__)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# Helper para generar nombre único de archivo
+def generate_unique_filename(base_filename, upload_folder):
+    name, ext = os.path.splitext(base_filename)
+    counter = 1
+    filename = base_filename
+    
+    # Verificar si ya existe un archivo con el mismo nombre
+    while os.path.exists(os.path.join(upload_folder, filename)):
+        filename = f"{name}_{counter}{ext}"
+        counter += 1
+    
+    return filename
+
+# Helper para verificar si ya existe un documento con la misma ruta en la BD
+def check_document_exists(ruta_archivo):
+    existing_doc = Documento.query.filter_by(ruta_archivo=ruta_archivo).first()
+    return existing_doc is not None
+
 # Endpoint para subir documento
 @documentos_bp.route('/subir', methods=['POST'])
 def subir_documento():
@@ -44,9 +62,19 @@ def subir_documento():
         return jsonify({'error': 'Nombre de archivo vacío'}), 400
     
     if archivo and allowed_file(archivo.filename):
-        filename = secure_filename(archivo.filename)
+        # Generar nombre único para evitar conflictos
+        base_filename = secure_filename(archivo.filename)
+        filename = generate_unique_filename(base_filename, DOCUMENTOS_UPLOAD_FOLDER)
         ruta = os.path.join(DOCUMENTOS_UPLOAD_FOLDER, filename)
+        
+        print(f"DEBUG - Nombre original: {archivo.filename}")
+        print(f"DEBUG - Nombre final: {filename}")
         print(f"DEBUG - Guardando archivo en: {ruta}")
+        
+        # Verificar si ya existe un documento con esta ruta en la BD
+        if check_document_exists(ruta):
+            print(f"DEBUG - ERROR: Ya existe un documento con la ruta: {ruta}")
+            return jsonify({'error': 'Ya existe un documento con este nombre'}), 400
         
         archivo.save(ruta)
         
@@ -80,6 +108,13 @@ def subir_documento():
         except Exception as e:
             print(f"DEBUG - Error al guardar en BD: {e}")
             db.session.rollback()
+            # Si hay error en la BD, eliminar el archivo físico para evitar archivos huérfanos
+            try:
+                if os.path.exists(ruta):
+                    os.remove(ruta)
+                    print(f"DEBUG - Archivo físico eliminado debido a error en BD: {ruta}")
+            except Exception as cleanup_error:
+                print(f"DEBUG - Error al limpiar archivo físico: {cleanup_error}")
             return jsonify({'error': f'Error al guardar en base de datos: {str(e)}'}), 500
     else:
         print(f"DEBUG - Error: Tipo de archivo no permitido: {archivo.filename}")
@@ -110,9 +145,46 @@ def eliminar_documento(doc_id):
         return jsonify({'error': 'Documento no encontrado'}), 404
     # Eliminar archivo físico
     try:
-        os.remove(doc.ruta_archivo)
-    except Exception:
-        pass
+        if os.path.exists(doc.ruta_archivo):
+            os.remove(doc.ruta_archivo)
+            print(f"DEBUG - Archivo físico eliminado: {doc.ruta_archivo}")
+    except Exception as e:
+        print(f"DEBUG - Error al eliminar archivo físico: {e}")
     db.session.delete(doc)
     db.session.commit()
     return jsonify({'success': True})
+
+# Endpoint para limpiar archivos huérfanos (solo para administradores)
+@documentos_bp.route('/limpiar-huérfanos', methods=['POST'])
+def limpiar_archivos_huérfanos():
+    try:
+        # Obtener todas las rutas de archivos en la BD
+        docs_en_bd = Documento.query.all()
+        rutas_en_bd = {doc.ruta_archivo for doc in docs_en_bd}
+        
+        # Obtener todos los archivos físicos
+        archivos_fisicos = []
+        if os.path.exists(DOCUMENTOS_UPLOAD_FOLDER):
+            archivos_fisicos = [os.path.join(DOCUMENTOS_UPLOAD_FOLDER, f) for f in os.listdir(DOCUMENTOS_UPLOAD_FOLDER)]
+        
+        # Encontrar archivos huérfanos
+        archivos_huérfanos = [f for f in archivos_fisicos if f not in rutas_en_bd]
+        
+        # Eliminar archivos huérfanos
+        eliminados = 0
+        for archivo in archivos_huérfanos:
+            try:
+                os.remove(archivo)
+                eliminados += 1
+                print(f"DEBUG - Archivo huérfano eliminado: {archivo}")
+            except Exception as e:
+                print(f"DEBUG - Error al eliminar archivo huérfano {archivo}: {e}")
+        
+        return jsonify({
+            'success': True, 
+            'mensaje': f'Se eliminaron {eliminados} archivos huérfanos',
+            'archivos_eliminados': eliminados
+        })
+    except Exception as e:
+        print(f"DEBUG - Error en limpieza de archivos huérfanos: {e}")
+        return jsonify({'error': f'Error al limpiar archivos: {str(e)}'}), 500

@@ -1258,23 +1258,54 @@ export function DocumentosPanel() {
                 <strong style={{ color: '#388e3c' }}>Total de documentos: {documentos.length}</strong>
                 {documentos.length === 0 && <span style={{ color: '#666', marginLeft: 8 }}>No hay documentos subidos</span>}
               </div>
-              <Button 
-                variant="outlined" 
-                size="small" 
-                onClick={() => {
-                  console.log('Refrescando documentos...');
-                  fetchWithAuth(`${API_URL}/documentos/`)
-                    .then(res => res.json())
-                    .then(data => {
-                      console.log('Documentos refrescados:', data);
-                      setDocumentos(data);
-                    })
-                    .catch(err => console.error('Error refrescando:', err));
-                }}
-                sx={{ fontSize: '0.8em' }}
-              >
-                🔄 Refrescar
-              </Button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  onClick={() => {
+                    console.log('Refrescando documentos...');
+                    fetchWithAuth(`${API_URL}/documentos/`)
+                      .then(res => res.json())
+                      .then(data => {
+                        console.log('Documentos refrescados:', data);
+                        setDocumentos(data);
+                      })
+                      .catch(err => console.error('Error refrescando:', err));
+                  }}
+                  sx={{ fontSize: '0.8em' }}
+                >
+                  🔄 Refrescar
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  color="warning"
+                  size="small" 
+                  onClick={() => {
+                    if (window.confirm('¿Estás seguro de que quieres limpiar archivos huérfanos? Esta acción no se puede deshacer.')) {
+                      console.log('Limpiando archivos huérfanos...');
+                      fetchWithAuth(`${API_URL}/documentos/limpiar-huérfanos`, {
+                        method: 'POST'
+                      })
+                        .then(res => res.json())
+                        .then(data => {
+                          console.log('Limpieza completada:', data);
+                          alert(data.mensaje || 'Limpieza completada');
+                          // Refrescar la lista después de limpiar
+                          fetchWithAuth(`${API_URL}/documentos/`)
+                            .then(res => res.json())
+                            .then(nuevosDocs => setDocumentos(nuevosDocs));
+                        })
+                        .catch(err => {
+                          console.error('Error limpiando archivos:', err);
+                          alert('Error al limpiar archivos');
+                        });
+                    }
+                  }}
+                  sx={{ fontSize: '0.8em' }}
+                >
+                  🧹 Limpiar
+                </Button>
+              </div>
             </div>
             <div style={{ maxHeight: 500, overflowY: 'auto' }}>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
