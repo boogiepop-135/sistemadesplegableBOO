@@ -2975,7 +2975,6 @@ export function MantenimientosPanel({ admin }) {
 export function SoportePanel({ admin, usuario }) {
   const [temas, setTemas] = useState([]);
   const [procedimientos, setProcedimientos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
   const [temaSeleccionado, setTemaSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState('');
   const [resultadosBusqueda, setResultadosBusqueda] = useState([]);
@@ -3006,7 +3005,6 @@ export function SoportePanel({ admin, usuario }) {
 
   useEffect(() => {
     cargarTemas();
-    cargarCategorias();
   }, []);
 
   useEffect(() => {
@@ -3037,14 +3035,7 @@ export function SoportePanel({ admin, usuario }) {
       });
   };
 
-  const cargarCategorias = () => {
-    fetchWithAuth(`${API_URL}/soporte/categorias/`)
-      .then(res => res.json())
-      .then(data => setCategorias(data))
-      .catch(err => {
-        console.error('Error cargando categorías:', err);
-      });
-  };
+
 
   const buscarSoporte = () => {
     if (!busqueda.trim()) {
