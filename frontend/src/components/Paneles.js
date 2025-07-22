@@ -268,7 +268,7 @@ export function InventarioList({ admin, usuario }) {
   };
 
   // Generar datos dinámicos según campo seleccionado
- //asdasd
+  //asdasd
   // NUEVO: Importar desde Excel con resumen de resultados
   const [importResumen, setImportResumen] = useState([]);
   const [mostrarResumen, setMostrarResumen] = useState(false);
