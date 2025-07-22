@@ -12,7 +12,7 @@ soporte_bp = Blueprint('soporte', __name__)
 
 @soporte_bp.route('/temas/', methods=['GET'])
 @token_required
-def listar_temas(current_user):
+def listar_temas():
     """Listar todos los temas de soporte activos"""
     try:
         temas = TemaSoporte.query.filter_by(activo=True).order_by(TemaSoporte.nombre).all()
@@ -31,7 +31,7 @@ def listar_temas(current_user):
 
 @soporte_bp.route('/temas/', methods=['POST'])
 @token_required
-def crear_tema(current_user):
+def crear_tema():
     """Crear un nuevo tema de soporte"""
     try:
         data = request.get_json()
@@ -73,7 +73,7 @@ def crear_tema(current_user):
 
 @soporte_bp.route('/temas/<int:tema_id>', methods=['PUT'])
 @token_required
-def actualizar_tema(current_user, tema_id):
+def actualizar_tema(tema_id):
     """Actualizar un tema de soporte"""
     try:
         tema = TemaSoporte.query.get_or_404(tema_id)
@@ -112,7 +112,7 @@ def actualizar_tema(current_user, tema_id):
 
 @soporte_bp.route('/temas/<int:tema_id>', methods=['DELETE'])
 @token_required
-def eliminar_tema(current_user, tema_id):
+def eliminar_tema(tema_id):
     """Eliminar un tema de soporte (marcar como inactivo)"""
     try:
         tema = TemaSoporte.query.get_or_404(tema_id)
@@ -129,7 +129,7 @@ def eliminar_tema(current_user, tema_id):
 
 @soporte_bp.route('/procedimientos/', methods=['GET'])
 @token_required
-def listar_procedimientos(current_user):
+def listar_procedimientos():
     """Listar todos los procedimientos de soporte"""
     try:
         tema_id = request.args.get('tema_id', type=int)
@@ -163,7 +163,7 @@ def listar_procedimientos(current_user):
 
 @soporte_bp.route('/procedimientos/', methods=['POST'])
 @token_required
-def crear_procedimiento(current_user):
+def crear_procedimiento():
     """Crear un nuevo procedimiento de soporte"""
     try:
         data = request.get_json()
@@ -179,6 +179,11 @@ def crear_procedimiento(current_user):
         if not tema:
             return jsonify({'error': 'El tema especificado no existe'}), 400
         
+        # Obtener usuario actual desde el token
+        usuario_actual = Usuario.query.get(request.usuario_jwt['usuario_id'])
+        if not usuario_actual:
+            return jsonify({'error': 'Usuario no encontrado'}), 404
+        
         # Crear nuevo procedimiento
         nuevo_procedimiento = ProcedimientoSoporte(
             titulo=data['titulo'],
@@ -190,7 +195,7 @@ def crear_procedimiento(current_user):
             tiempo_estimado=data.get('tiempo_estimado', ''),
             orden=data.get('orden', 0),
             tema_id=data['tema_id'],
-            usuario_id=current_user.id
+            usuario_id=usuario_actual.id
         )
         
         db.session.add(nuevo_procedimiento)
@@ -208,7 +213,7 @@ def crear_procedimiento(current_user):
             'orden': nuevo_procedimiento.orden,
             'tema_id': nuevo_procedimiento.tema_id,
             'tema_nombre': tema.nombre,
-            'usuario_creador': current_user.nombre,
+            'usuario_creador': usuario_actual.nombre,
             'fecha_creacion': nuevo_procedimiento.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S'),
             'codigo_unico': nuevo_procedimiento.codigo_unico,
             'success': True
@@ -220,7 +225,7 @@ def crear_procedimiento(current_user):
 
 @soporte_bp.route('/procedimientos/<int:proc_id>', methods=['PUT'])
 @token_required
-def actualizar_procedimiento(current_user, proc_id):
+def actualizar_procedimiento(proc_id):
     """Actualizar un procedimiento de soporte"""
     try:
         procedimiento = ProcedimientoSoporte.query.get_or_404(proc_id)
@@ -269,7 +274,7 @@ def actualizar_procedimiento(current_user, proc_id):
 
 @soporte_bp.route('/procedimientos/<int:proc_id>', methods=['DELETE'])
 @token_required
-def eliminar_procedimiento(current_user, proc_id):
+def eliminar_procedimiento(proc_id):
     """Eliminar un procedimiento de soporte (marcar como inactivo)"""
     try:
         procedimiento = ProcedimientoSoporte.query.get_or_404(proc_id)
@@ -286,7 +291,7 @@ def eliminar_procedimiento(current_user, proc_id):
 
 @soporte_bp.route('/categorias/', methods=['GET'])
 @token_required
-def listar_categorias(current_user):
+def listar_categorias():
     """Listar todas las categorías de temas disponibles"""
     try:
         categorias = db.session.query(TemaSoporte.categoria).distinct().filter_by(activo=True).all()
@@ -296,7 +301,7 @@ def listar_categorias(current_user):
 
 @soporte_bp.route('/buscar/', methods=['GET'])
 @token_required
-def buscar_soporte(current_user):
+def buscar_soporte():
     """Buscar temas y procedimientos por texto"""
     try:
         query = request.args.get('q', '').strip()
