@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Button, Paper, Grid, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Chip, IconButton, Tooltip } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { FaTrash, FaEdit, FaPlus, FaDownload, FaUpload, FaEye, FaWrench, FaCheck, FaTimes, FaPause, FaPlay, FaExclamationTriangle, FaFileAlt, FaUser, FaMapMarkerAlt, FaTag, FaCalendarAlt, FaSignature, FaTools } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import { getToken } from '../App';
