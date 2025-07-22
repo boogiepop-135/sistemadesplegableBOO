@@ -1631,16 +1631,6 @@ export function MantenimientosPanel({ admin }) {
     descripcion: ''
   });
   const [mensaje, setMensaje] = useState('');
-  // NUEVO: Estado para gráficos avanzados
-  const [graficoTipo, setGraficoTipo] = useState('barras'); // Solo si el render lo usa
-  const [campoAnalizar, setCampoAnalizar] = useState('tipo_mantenimiento'); // 'tipo_mantenimiento', 'sucursal', 'responsable', 'mes'
-  // NUEVO: Estado para múltiples gráficas
-  // const [numGraficas, setNumGraficas] = useState(1);
-  // const [graficas, setGraficas] = useState([
-  //   { campo: 'tipo', tipo: 'barras' },
-  //   { campo: 'estado', tipo: 'pastel' },
-  //   { campo: 'sucursal', tipo: 'barras' }
-  // ]);
 
   useEffect(() => {
     setLoading(true);
@@ -1677,11 +1667,6 @@ export function MantenimientosPanel({ admin }) {
   const getResponsable = (id) => {
     const usu = usuarios.find(u => u.id === id);
     return usu ? usu.nombre : '';
-  };
-  const getMes = (m) => {
-    if (!m.fecha) return 'Sin fecha';
-    const d = new Date(m.fecha);
-    return d.toLocaleString('es-MX', { month: 'short', year: 'numeric' });
   };
 
   const handleCrear = (e) => {
@@ -1751,22 +1736,7 @@ export function MantenimientosPanel({ admin }) {
       });
   };
 
-  // Generar datos dinámicos según campo seleccionado
-  const getDatosGrafico = () => {
-    let key = campoAnalizar;
-    let data = {};
-    mantenimientos.forEach(m => {
-      let valor = '';
-      if (key === 'tipo_mantenimiento') valor = m.tipo_mantenimiento || 'Sin tipo';
-      else if (key === 'sucursal') valor = getSucursal(m.inventario_id);
-      else if (key === 'responsable') valor = getResponsable(m.usuario_id);
-      else if (key === 'mes') valor = getMes(m);
-      else valor = 'Otro';
-      data[valor] = (data[valor] || 0) + 1;
-    });
-    return Object.entries(data).map(([k, v]) => ({ name: k, value: v }));
-  };
-  // const datosGrafico = getDatosGrafico();
+
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
@@ -1854,33 +1824,6 @@ export function MantenimientosPanel({ admin }) {
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <Button variant="contained" color="success" type="submit">Guardar</Button>
                 <Button variant="outlined" color="error" onClick={() => setModalAbierto(false)}>Cancelar</Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      {/* MODAL DE MANTENIMIENTO */}
-      {modalMantenimiento && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320, maxWidth: 500 }}>
-            <h3>Registrar Mantenimiento</h3>
-            <form onSubmit={handleGuardarMantenimiento}>
-              <select value={mantenimientoData.inventario_id} disabled style={{ width: '100%', marginBottom: 8 }} required>
-                <option value="">Seleccionar Equipo</option>
-                {inventario.map(eq => <option key={eq.id} value={eq.id}>{eq.equipo}</option>)}
-              </select>
-              <input type="text" value={mantenimientoData.tipo_mantenimiento} onChange={e => setMantenimientoData({ ...mantenimientoData, tipo_mantenimiento: e.target.value })} placeholder="Tipo de mantenimiento" style={{ width: '100%', marginBottom: 8 }} required />
-              <input type="date" value={mantenimientoData.fecha} onChange={e => setMantenimientoData({ ...mantenimientoData, fecha: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required />
-              <select value={mantenimientoData.usuario_id} onChange={e => setMantenimientoData({ ...mantenimientoData, usuario_id: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required>
-                <option value="">Responsable</option>
-                {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
-              </select>
-              <input type="date" value={mantenimientoData.fecha_termino} onChange={e => setMantenimientoData({ ...mantenimientoData, fecha_termino: e.target.value })} placeholder="Fecha de término" style={{ width: '100%', marginBottom: 8 }} />
-              <input type="text" value={mantenimientoData.firma} onChange={e => setMantenimientoData({ ...mantenimientoData, firma: e.target.value })} placeholder="Firma" style={{ width: '100%', marginBottom: 8 }} />
-              <input type="text" value={mantenimientoData.descripcion} onChange={e => setMantenimientoData({ ...mantenimientoData, descripcion: e.target.value })} placeholder="Descripción (opcional)" style={{ width: '100%', marginBottom: 8 }} />
-              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <Button variant="contained" color="success" type="submit">Guardar</Button>
-                <Button variant="outlined" color="error" onClick={() => setModalMantenimiento(false)}>Cancelar</Button>
               </div>
             </form>
           </div>
