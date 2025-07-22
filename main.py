@@ -9,6 +9,7 @@ from app.routes.bitacoras import bitacoras_bp
 from app.routes.trabajos import trabajos_bp
 from app.routes.ubicaciones import ubicaciones_bp
 from app.routes.categorias import categorias_bp
+from app.routes.propuestas import propuestas_bp
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -47,9 +48,10 @@ app.register_blueprint(bitacoras_bp, url_prefix='/bitacoras')
 app.register_blueprint(trabajos_bp, url_prefix='/trabajos')
 app.register_blueprint(ubicaciones_bp, url_prefix='/ubicaciones')
 app.register_blueprint(categorias_bp, url_prefix='/categorias')
+app.register_blueprint(propuestas_bp, url_prefix='/propuestas')
 
 # Importar modelos aquí para evitar ciclos de importación
-from app.models import usuario, ticket, inventario, documento, bitacora_mantenimiento, trabajo, ubicacion
+from app.models import usuario, ticket, inventario, documento, bitacora_mantenimiento, trabajo, ubicacion, propuesta_mejora
 
 @app.route('/')
 def home():

@@ -8,6 +8,7 @@ class Usuario(db.Model):
     rol = db.Column(db.String(20), nullable=False)  # 'admin' o 'usuario'
     nombre_perfil = db.Column(db.String(100), nullable=True)
     tickets = db.relationship('Ticket', back_populates='usuario', cascade='all, delete-orphan')
+    propuestas = db.relationship('PropuestaMejora', back_populates='usuario', cascade='all, delete-orphan')
 
     def to_dict(self):
         return {

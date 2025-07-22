@@ -413,30 +413,407 @@ export function InventarioList({ admin, usuario }) {
   };
 
   return (
-    <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
-      {error && <div style={{ color: 'red', marginBottom: 12, fontWeight: 'bold' }}>{error}</div>}
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} centered>
-        <Tab label="Inventario" />
-        <Tab label="Gráficos" />
+    <Box sx={{ 
+      width: '100%', 
+      maxWidth: '100%', 
+      bgcolor: 'background.paper', 
+      borderRadius: 3, 
+      boxShadow: 3, 
+      p: 3, 
+      minHeight: '85vh', 
+      overflowX: 'auto',
+      background: 'linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%)'
+    }}>
+      {error && (
+        <div style={{ 
+          color: '#d32f2f', 
+          marginBottom: 16, 
+          fontWeight: 'bold',
+          padding: '12px 16px',
+          backgroundColor: '#ffebee',
+          borderRadius: '8px',
+          border: '1px solid #ffcdd2'
+        }}>
+          ⚠️ {error}
+        </div>
+      )}
+      <Tabs 
+        value={tab} 
+        onChange={(_, v) => setTab(v)} 
+        centered
+        sx={{
+          '& .MuiTab-root': {
+            fontSize: '1.1em',
+            fontWeight: 'bold',
+            color: '#2e7d32',
+            '&.Mui-selected': {
+              color: '#1b5e20'
+            }
+          },
+          '& .MuiTabs-indicator': {
+            backgroundColor: '#4caf50',
+            height: 3
+          }
+        }}
+      >
+        <Tab label="📦 Inventario" />
+        <Tab label="📊 Gráficos" />
       </Tabs>
       {tab === 0 && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, width: '100vw', maxWidth: '100vw' }}>
-          {/* Filtros y formulario a la izquierda */}
-          <Box sx={{ flex: '0 0 320px', minWidth: 220, maxWidth: 400 }}>
+        <Grid container spacing={3} sx={{ mt: 1 }}>
+          {/* Panel izquierdo - Formularios */}
+          <Grid item xs={12} lg={4} xl={3}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* Formulario Agregar Equipo */}
+              {admin && (
+                <Paper sx={{ 
+                  p: 3, 
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8fff8 100%)', 
+                  borderRadius: 3, 
+                  boxShadow: 2,
+                  border: '1px solid #e8f5e9'
+                }}>
+                  <h3 style={{ 
+                    color: '#2e7d32', 
+                    marginBottom: 16, 
+                    fontSize: '1.2em', 
+                    textAlign: 'center', 
+                    fontWeight: 'bold',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                  }}>
+                    ➕ Agregar Equipo
+                  </h3>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <input
+                        type="text"
+                        value={nuevoEquipo.nombre}
+                        onChange={e => setNuevoEquipo({ ...nuevoEquipo, nombre: e.target.value })}
+                        placeholder="Nombre del equipo"
+                        style={{ 
+                          padding: '12px 16px', 
+                          borderRadius: '8px', 
+                          border: '2px solid #c8e6c9', 
+                          width: '100%', 
+                          fontSize: '1em', 
+                          boxSizing: 'border-box',
+                          transition: 'all 0.3s ease',
+                          backgroundColor: '#fafafa'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#4caf50'}
+                        onBlur={(e) => e.target.style.borderColor = '#c8e6c9'}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <select
+                        value={nuevoEquipo.tipo}
+                        onChange={e => setNuevoEquipo({ ...nuevoEquipo, tipo: e.target.value })}
+                        style={{ 
+                          padding: '12px 16px', 
+                          borderRadius: '8px', 
+                          border: '2px solid #c8e6c9', 
+                          width: '100%', 
+                          fontSize: '1em', 
+                          backgroundColor: '#fafafa',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#4caf50'}
+                        onBlur={(e) => e.target.style.borderColor = '#c8e6c9'}
+                      >
+                        <option value="">Tipo/Categoría</option>
+                        {categorias.map(c => (
+                          <option key={c.id} value={c.nombre}>{c.nombre}</option>
+                        ))}
+                      </select>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <select
+                        value={nuevoEquipo.estado}
+                        onChange={e => setNuevoEquipo({ ...nuevoEquipo, estado: e.target.value })}
+                        style={{ 
+                          padding: '12px 16px', 
+                          borderRadius: '8px', 
+                          border: '2px solid #c8e6c9', 
+                          width: '100%', 
+                          fontSize: '1em', 
+                          backgroundColor: '#fafafa',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#4caf50'}
+                        onBlur={(e) => e.target.style.borderColor = '#c8e6c9'}
+                      >
+                        <option value="">Estado</option>
+                        <option value="buen estado">Buen estado</option>
+                        <option value="marcas de uso">Marcas de uso</option>
+                        <option value="rayones">Rayones</option>
+                        <option value="daño serio">Daño serio</option>
+                        <option value="inservible">Inservible</option>
+                      </select>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <select
+                        value={nuevoEquipo.ubicacion_id || ''}
+                        onChange={e => setNuevoEquipo({ ...nuevoEquipo, ubicacion_id: e.target.value })}
+                        style={{ 
+                          padding: '12px 16px', 
+                          borderRadius: '8px', 
+                          border: '2px solid #c8e6c9', 
+                          width: '100%', 
+                          fontSize: '1em', 
+                          backgroundColor: '#fafafa',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#4caf50'}
+                        onBlur={(e) => e.target.style.borderColor = '#c8e6c9'}
+                      >
+                        <option value="">Ubicación</option>
+                        {ubicaciones.map(u => (
+                          <option key={u.id} value={u.id}>{u.nombre}</option>
+                        ))}
+                      </select>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <select
+                        value={nuevoEquipo.usuario_id || ''}
+                        onChange={e => setNuevoEquipo({ ...nuevoEquipo, usuario_id: e.target.value })}
+                        style={{ 
+                          padding: '12px 16px', 
+                          borderRadius: '8px', 
+                          border: '2px solid #c8e6c9', 
+                          width: '100%', 
+                          fontSize: '1em', 
+                          backgroundColor: '#fafafa',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#4caf50'}
+                        onBlur={(e) => e.target.style.borderColor = '#c8e6c9'}
+                      >
+                        <option value="">Usuario</option>
+                        {usuarios.map(u => (
+                          <option key={u.id} value={u.id}>{u.nombre}</option>
+                        ))}
+                      </select>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Button 
+                        variant="contained" 
+                        color="success" 
+                        onClick={agregarEquipo} 
+                        sx={{ 
+                          width: '100%', 
+                          fontWeight: 'bold', 
+                          fontSize: '1em', 
+                          padding: '12px',
+                          borderRadius: '8px',
+                          background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
+                          boxShadow: '0 4px 8px rgba(76, 175, 80, 0.3)',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #388e3c 0%, #2e7d32 100%)',
+                            boxShadow: '0 6px 12px rgba(76, 175, 80, 0.4)'
+                          }
+                        }}
+                      >
+                        <FaPlus style={{ marginRight: 8 }} /> Agregar Equipo
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              )}
+
+              {/* Filtros */}
+              <Paper sx={{ 
+                p: 3, 
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8fff8 100%)', 
+                borderRadius: 3, 
+                boxShadow: 2,
+                border: '1px solid #e8f5e9'
+              }}>
+                <h3 style={{ 
+                  color: '#2e7d32', 
+                  marginBottom: 16, 
+                  fontSize: '1.2em', 
+                  textAlign: 'center', 
+                  fontWeight: 'bold',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                }}>
+                  🔍 Filtros
+                </h3>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <select
+                      value={filtro.tipo}
+                      onChange={e => setFiltro({ ...filtro, tipo: e.target.value })}
+                      style={{ 
+                        padding: '12px 16px', 
+                        borderRadius: '8px', 
+                        border: '2px solid #c8e6c9', 
+                        width: '100%', 
+                        fontSize: '1em', 
+                        backgroundColor: '#fafafa',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#4caf50'}
+                      onBlur={(e) => e.target.style.borderColor = '#c8e6c9'}
+                    >
+                      <option value="">Todos los tipos</option>
+                      {categorias.map(c => (
+                        <option key={c.id} value={c.nombre}>{c.nombre}</option>
+                      ))}
+                    </select>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <select
+                      value={filtro.estado}
+                      onChange={e => setFiltro({ ...filtro, estado: e.target.value })}
+                      style={{ 
+                        padding: '12px 16px', 
+                        borderRadius: '8px', 
+                        border: '2px solid #c8e6c9', 
+                        width: '100%', 
+                        fontSize: '1em', 
+                        backgroundColor: '#fafafa',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#4caf50'}
+                      onBlur={(e) => e.target.style.borderColor = '#c8e6c9'}
+                    >
+                      <option value="">Todos los estados</option>
+                      <option value="buen estado">Buen estado</option>
+                      <option value="marcas de uso">Marcas de uso</option>
+                      <option value="rayones">Rayones</option>
+                      <option value="daño serio">Daño serio</option>
+                      <option value="inservible">Inservible</option>
+                    </select>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button 
+                      variant="outlined" 
+                      color="primary" 
+                      onClick={() => setFiltro({ tipo: '', estado: '' })} 
+                      sx={{ 
+                        width: '100%', 
+                        fontSize: '1em', 
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: '2px solid #2196f3',
+                        color: '#2196f3',
+                        '&:hover': {
+                          border: '2px solid #1976d2',
+                          backgroundColor: '#e3f2fd'
+                        }
+                      }}
+                    >
+                      🔄 Limpiar Filtros
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Paper>
+
+              {/* Botones de Excel */}
+              <Paper sx={{ 
+                p: 3, 
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8fff8 100%)', 
+                borderRadius: 3, 
+                boxShadow: 2,
+                border: '1px solid #e8f5e9'
+              }}>
+                <h3 style={{ 
+                  color: '#2e7d32', 
+                  marginBottom: 16, 
+                  fontSize: '1.2em', 
+                  textAlign: 'center', 
+                  fontWeight: 'bold',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                }}>
+                  📊 Excel
+                </h3>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <Button 
+                    variant="contained" 
+                    color="info" 
+                    onClick={exportarExcel} 
+                    sx={{ 
+                      flex: 1, 
+                      fontSize: '0.9em', 
+                      padding: '10px',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
+                      boxShadow: '0 4px 8px rgba(33, 150, 243, 0.3)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                        boxShadow: '0 6px 12px rgba(33, 150, 243, 0.4)'
+                      }
+                    }}
+                  >
+                    📥 Exportar
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    color="info" 
+                    component="label" 
+                    sx={{ 
+                      flex: 1, 
+                      fontSize: '0.9em', 
+                      padding: '10px',
+                      borderRadius: '8px',
+                      border: '2px solid #2196f3',
+                      '&:hover': {
+                        border: '2px solid #1976d2',
+                        backgroundColor: '#e3f2fd'
+                      }
+                    }}
+                  >
+                    📤 Importar
+                    <input type="file" accept=".xlsx,.xls" onChange={handleImportExcel} style={{ display: 'none' }} />
+                  </Button>
+                </div>
+                <Button 
+                  variant="outlined" 
+                  color="secondary" 
+                  onClick={() => {
+                    const ws = XLSX.utils.json_to_sheet([
+                      { equipo: 'Ejemplo', tipo: 'Computadora', estado: 'Disponible', ubicacion_id: '', usuario_id: '' }
+                    ]);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
+                    XLSX.writeFile(wb, 'plantilla_inventario.xlsx');
+                  }}
+                  sx={{ 
+                    width: '100%', 
+                    marginTop: 12, 
+                    fontSize: '0.9em', 
+                    padding: '10px',
+                    borderRadius: '8px',
+                    border: '2px solid #9c27b0',
+                    color: '#9c27b0',
+                    '&:hover': {
+                      border: '2px solid #7b1fa2',
+                      backgroundColor: '#f3e5f5'
+                    }
+                  }}
+                >
+                  📋 Plantilla
+                </Button>
+              </Paper>
+            </Box>
+          </Grid>
+
+          {/* Panel derecho - DataGrid */}
+          <Grid item xs={12} lg={8} xl={9}>
             {admin && (
-              <Paper sx={{ mb: 2, p: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
-                <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Agregar equipo</h3>
+              <Paper sx={{ mb: 2, p: 1.5, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
+                <h4 style={{ color: '#388e3c', marginBottom: 6, fontSize: '1em', textAlign: 'center' }}>➕ Agregar equipo</h4>
                 <input
                   type="text"
                   value={nuevoEquipo.nombre}
                   onChange={e => setNuevoEquipo({ ...nuevoEquipo, nombre: e.target.value })}
                   placeholder="Nombre del equipo"
-                  style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', minWidth: 160, marginBottom: 8, width: '100%' }}
+                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
                 />
                 <select
                   value={nuevoEquipo.tipo}
                   onChange={e => setNuevoEquipo({ ...nuevoEquipo, tipo: e.target.value })}
-                  style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', minWidth: 160, marginBottom: 8, width: '100%' }}
+                  style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
                 >
                   <option value="">Tipo/Categoría</option>
                   {categorias.map(c => (
@@ -446,7 +823,7 @@ export function InventarioList({ admin, usuario }) {
                 <select
                   value={nuevoEquipo.estado}
                   onChange={e => setNuevoEquipo({ ...nuevoEquipo, estado: e.target.value })}
-                  style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', minWidth: 140, marginBottom: 8, width: '100%' }}
+                  style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
                 >
                   <option value="">Estado</option>
                   <option value="buen estado">Buen estado</option>
@@ -458,9 +835,9 @@ export function InventarioList({ admin, usuario }) {
                 <select
                   value={nuevoEquipo.ubicacion_id || ''}
                   onChange={e => setNuevoEquipo({ ...nuevoEquipo, ubicacion_id: e.target.value })}
-                  style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', minWidth: 140, marginBottom: 8, width: '100%' }}
+                  style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
                 >
-                  <option value="">Seleccionar Ubicación</option>
+                  <option value="">Ubicación</option>
                   {ubicaciones.map(u => (
                     <option key={u.id} value={u.id}>{u.nombre}</option>
                   ))}
@@ -468,56 +845,57 @@ export function InventarioList({ admin, usuario }) {
                 <select
                   value={nuevoEquipo.usuario_id || ''}
                   onChange={e => setNuevoEquipo({ ...nuevoEquipo, usuario_id: e.target.value })}
-                  style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', minWidth: 140, marginBottom: 8, width: '100%' }}
+                  style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
                 >
-                  <option value="">Seleccionar Usuario</option>
+                  <option value="">Usuario</option>
                   {usuarios.map(u => (
                     <option key={u.id} value={u.id}>{u.nombre}</option>
                   ))}
                 </select>
-                <Button variant="contained" color="success" onClick={agregarEquipo} sx={{ minWidth: 120, fontWeight: 'bold', fontSize: '1em', width: '100%', marginBottom: 1 }}>
-                  <FaPlus style={{ marginRight: 6 }} /> Agregar
+                <Button variant="contained" color="success" onClick={agregarEquipo} sx={{ minWidth: 100, fontWeight: 'bold', fontSize: '0.9em', width: '100%', marginBottom: 4, padding: '6px' }}>
+                  <FaPlus style={{ marginRight: 4 }} /> Agregar
                 </Button>
-                <Button variant="outlined" color="info" onClick={() => console.log('Estado actual:', nuevoEquipo)} sx={{ minWidth: 120, fontSize: '0.8em', width: '100%' }}>
-                  Debug: Ver Estado
+                <Button variant="outlined" color="info" onClick={() => console.log('Estado actual:', nuevoEquipo)} sx={{ minWidth: 100, fontSize: '0.8em', width: '100%', padding: '4px' }}>
+                  Debug
                 </Button>
-                {/* NUEVO: Botón para importar Excel */}
-                <Tooltip title="Importar inventario desde Excel">
-                  <Button 
-                    variant="contained" 
-                    color="info" 
-                    component="label"
-                    sx={{ minWidth: 120, width: '100%', marginTop: 12 }}
-                  >
-                    <FaUpload style={{ marginRight: 6 }} />
-                    Importar Excel
-                    <input 
-                      type="file" 
-                      accept=".xlsx,.xls" 
-                      onChange={handleImportExcel} 
-                      style={{ display: 'none' }} 
-                    />
-                  </Button>
-                </Tooltip>
-                {/* NUEVO: Botón para descargar plantilla */}
-                <Tooltip title="Descargar plantilla de Excel">
-                  <Button 
-                    variant="contained" 
-                    color="warning" 
-                    onClick={() => {
-                      const ws = XLSX.utils.json_to_sheet([
-                        { equipo: 'Ejemplo', tipo: 'Computadora', estado: 'Disponible', ubicacion_id: '', usuario_id: '' }
-                      ]);
-                      const wb = XLSX.utils.book_new();
-                      XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
-                      XLSX.writeFile(wb, 'plantilla_inventario.xlsx');
-                    }}
-                    sx={{ minWidth: 120, width: '100%', marginTop: 8 }}
-                  >
-                    <FaFileAlt style={{ marginRight: 6 }} />
-                    Descargar Plantilla
-                  </Button>
-                </Tooltip>
+                {/* Botones de Excel más compactos */}
+                <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+                  <Tooltip title="Importar Excel">
+                    <Button 
+                      variant="contained" 
+                      color="info" 
+                      component="label"
+                      sx={{ flex: 1, fontSize: '0.8em', padding: '4px' }}
+                    >
+                      <FaUpload style={{ marginRight: 2 }} />
+                      Importar
+                      <input 
+                        type="file" 
+                        accept=".xlsx,.xls" 
+                        onChange={handleImportExcel} 
+                        style={{ display: 'none' }} 
+                      />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="Descargar plantilla">
+                    <Button 
+                      variant="contained" 
+                      color="warning" 
+                      onClick={() => {
+                        const ws = XLSX.utils.json_to_sheet([
+                          { equipo: 'Ejemplo', tipo: 'Computadora', estado: 'Disponible', ubicacion_id: '', usuario_id: '' }
+                        ]);
+                        const wb = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
+                        XLSX.writeFile(wb, 'plantilla_inventario.xlsx');
+                      }}
+                      sx={{ flex: 1, fontSize: '0.8em', padding: '4px' }}
+                    >
+                      <FaFileAlt style={{ marginRight: 2 }} />
+                      Plantilla
+                    </Button>
+                  </Tooltip>
+                </div>
                 {/* NUEVO: Resumen de importación */}
                 {mostrarResumen && importResumen.length > 0 && (
                   <Paper sx={{ mt: 2, p: 2, background: '#fffde7', borderRadius: 2, boxShadow: 1 }}>
@@ -536,12 +914,12 @@ export function InventarioList({ admin, usuario }) {
                 )}
               </Paper>
             )}
-            <Paper sx={{ p: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
-              <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Filtros</h3>
+            <Paper sx={{ p: 1.5, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
+              <h4 style={{ color: '#388e3c', marginBottom: 6, fontSize: '1em', textAlign: 'center' }}>🔍 Filtros</h4>
               <select
                 value={filtro.tipo}
                 onChange={e => setFiltro(f => ({ ...f, tipo: e.target.value }))}
-                style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', marginBottom: 8, width: '100%' }}
+                style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
               >
                 <option value="">Tipo</option>
                 {[...new Set(inventario.map(e => e.tipo))].map(tipo => <option key={tipo} value={tipo}>{tipo}</option>)}
@@ -549,36 +927,92 @@ export function InventarioList({ admin, usuario }) {
               <select
                 value={filtro.estado}
                 onChange={e => setFiltro(f => ({ ...f, estado: e.target.value }))}
-                style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', marginBottom: 8, width: '100%' }}
+                style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
               >
                 <option value="">Estado</option>
                 {[...new Set(inventario.map(e => e.estado))].map(estado => <option key={estado} value={estado}>{estado}</option>)}
               </select>
               <Tooltip title="Exportar inventario a Excel">
-                <Button variant="contained" color="success" onClick={exportarExcel} sx={{ minWidth: 120, width: '100%' }}>
-                  <FaDownload style={{ marginRight: 6 }} />
-                  Exportar a Excel
+                <Button variant="contained" color="success" onClick={exportarExcel} sx={{ minWidth: 100, width: '100%', fontSize: '0.9em', padding: '6px' }}>
+                  <FaDownload style={{ marginRight: 4 }} />
+                  Exportar Excel
                 </Button>
               </Tooltip>
             </Paper>
-          </Box>
-          {/* Tabla a la derecha */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Paper sx={{ p: 2, background: '#fff', borderRadius: 2, boxShadow: 2, width: '100%', minWidth: 0 }}>
-              <div style={{ height: 500, width: '100%' }}>
+          </Grid>
+
+          {/* Panel derecho - DataGrid */}
+          <Grid item xs={12} lg={8} xl={9}>
+            <Paper sx={{ 
+              p: 2, 
+              background: 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)', 
+              borderRadius: 3, 
+              boxShadow: 3, 
+              width: '100%', 
+              minWidth: 0,
+              border: '1px solid #e0e0e0'
+            }}>
+              <div style={{ 
+                padding: '16px 20px', 
+                background: 'linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%)', 
+                borderBottom: '2px solid #c8e6c9', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                borderRadius: '8px 8px 0 0'
+              }}>
+                <strong style={{ 
+                  color: '#2e7d32', 
+                  fontSize: '1.1em',
+                  fontWeight: 'bold',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                }}>
+                  📦 Inventario: {inventarioFiltrado.length} elementos
+                </strong>
+                <span style={{ 
+                  fontSize: '0.9em', 
+                  color: '#666',
+                  background: '#ffffff',
+                  padding: '6px 12px',
+                  borderRadius: '20px',
+                  border: '1px solid #e0e0e0'
+                }}>
+                  {filtro.tipo && `Filtro tipo: ${filtro.tipo}`} {filtro.estado && `| Estado: ${filtro.estado}`}
+                </span>
+              </div>
+              <div style={{ height: 600, width: '100%' }}>
                 <DataGrid
                   rows={inventarioFiltrado.map(e => ({ ...e, id: e.id }))}
                   columns={columns}
-                  pageSize={10}
-                  rowsPerPageOptions={[10, 25, 50]}
+                  pageSize={15}
+                  rowsPerPageOptions={[15, 25, 50, 100]}
                   disableSelectionOnClick
                   autoHeight={false}
-                  sx={{ fontFamily: 'Segoe UI, Arial', fontSize: '1em', border: 0 }}
+                  sx={{
+                    fontFamily: 'Segoe UI, Arial',
+                    fontSize: '0.95em',
+                    border: 0,
+                    '& .MuiDataGrid-cell': {
+                      padding: '12px 8px',
+                      fontSize: '0.9em',
+                      borderBottom: '1px solid #f0f0f0'
+                    },
+                    '& .MuiDataGrid-columnHeader': {
+                      backgroundColor: 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
+                      fontWeight: 'bold',
+                      fontSize: '1em',
+                      borderBottom: '2px solid #c8e6c9',
+                      color: '#2e7d32'
+                    },
+                    '& .MuiDataGrid-row:hover': {
+                      backgroundColor: '#f8fff8'
+                    }
+                  }}
                 />
               </div>
             </Paper>
-          </Box>
-        </Box>
+          </Grid>
+        </Grid>
       )}
       {tab === 1 && (
         <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', justifyContent: 'center' }}>
@@ -706,6 +1140,18 @@ export function TicketsList({ admin, usuario }) {
 
   const crearTicket = () => {
     if (!descripcion) return;
+    
+    // Obtener hora de México Central
+    const horaMexico = new Date().toLocaleString('es-MX', { 
+      timeZone: 'America/Mexico_City',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    
     fetchWithAuth(`${API_URL}/tickets/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -715,6 +1161,79 @@ export function TicketsList({ admin, usuario }) {
       .then(data => {
         setTickets([...tickets, data]);
         setDescripcion('');
+        
+        // Notificación para admin cuando se crea un ticket
+        if (admin) {
+          // Crear notificación de audio
+          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+          audio.volume = 0.7;
+          audio.play().catch(e => console.log('Audio notification failed:', e));
+          
+          // Notificación del navegador
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('🚨 Nuevo Ticket Creado', {
+              body: `Usuario: ${usuario}\nDescripción: ${descripcion}\nHora: ${horaMexico}`,
+              icon: '/favicon.ico',
+              tag: 'ticket-notification',
+              requireInteraction: true,
+              silent: false
+            });
+          }
+          
+          // Mostrar alerta visual
+          const alertDiv = document.createElement('div');
+          alertDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
+            z-index: 10000;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            max-width: 300px;
+            animation: slideIn 0.5s ease-out;
+          `;
+          alertDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 24px;">🚨</span>
+              <div>
+                <div style="font-size: 16px; margin-bottom: 5px;">NUEVO TICKET</div>
+                <div style="font-size: 12px; opacity: 0.9;">Usuario: ${usuario}</div>
+                <div style="font-size: 12px; opacity: 0.9;">Hora: ${horaMexico}</div>
+              </div>
+            </div>
+          `;
+          
+          // Agregar estilos de animación
+          const style = document.createElement('style');
+          style.textContent = `
+            @keyframes slideIn {
+              from { transform: translateX(100%); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+              from { transform: translateX(0); opacity: 1; }
+              to { transform: translateX(100%); opacity: 0; }
+            }
+          `;
+          document.head.appendChild(style);
+          
+          document.body.appendChild(alertDiv);
+          
+          // Remover la alerta después de 8 segundos
+          setTimeout(() => {
+            alertDiv.style.animation = 'slideOut 0.5s ease-in';
+            setTimeout(() => {
+              if (alertDiv.parentNode) {
+                alertDiv.parentNode.removeChild(alertDiv);
+              }
+            }, 500);
+          }, 8000);
+        }
       });
   };
 
@@ -752,86 +1271,242 @@ export function TicketsList({ admin, usuario }) {
   const ticketsFiltrados = admin ? tickets : tickets.filter(t => t.usuario_nombre === usuario);
 
   return (
-    <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 0, boxShadow: 0, p: { xs: 1, md: 3 }, minHeight: '80vh', overflowX: 'auto' }}>
-      <Grid container spacing={2} alignItems="flex-start">
-        <Grid item xs={12} md={4} lg={3} xl={2}>
-          <Paper sx={{ p: 2, mb: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1, minWidth: 0 }}>
-            <h3 style={{ color: '#388e3c', marginBottom: 8, textAlign: 'center' }}>Crear Ticket</h3>
+    <Box sx={{ 
+      width: '100%', 
+      maxWidth: '100%', 
+      bgcolor: 'background.paper', 
+      borderRadius: 3, 
+      boxShadow: 3, 
+      p: 3, 
+      minHeight: '85vh', 
+      overflowX: 'auto',
+      background: 'linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%)'
+    }}>
+      <Grid container spacing={3}>
+        {/* Panel izquierdo - Formulario */}
+        <Grid item xs={12} lg={4} xl={3}>
+          <Paper sx={{ 
+            p: 3, 
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8fff8 100%)', 
+            borderRadius: 3, 
+            boxShadow: 2,
+            border: '1px solid #e8f5e9',
+            height: 'fit-content'
+          }}>
+            <h3 style={{ 
+              color: '#2e7d32', 
+              marginBottom: 16, 
+              fontSize: '1.2em', 
+              textAlign: 'center', 
+              fontWeight: 'bold',
+              textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+            }}>
+              🎫 Crear Ticket
+            </h3>
             <textarea
               value={descripcion}
               onChange={e => setDescripcion(e.target.value)}
-              placeholder="Descripción del problema..."
-              style={{ width: '100%', minHeight: 120, padding: 10, borderRadius: 8, border: '1.5px solid #a5d6a7', marginBottom: 12, fontSize: '1em', resize: 'vertical', boxSizing: 'border-box' }}
+              placeholder="Describe el problema o solicitud..."
+              style={{ 
+                width: '100%', 
+                minHeight: 120, 
+                padding: '16px', 
+                borderRadius: '8px', 
+                border: '2px solid #c8e6c9', 
+                marginBottom: 16, 
+                fontSize: '1em', 
+                resize: 'vertical', 
+                boxSizing: 'border-box',
+                transition: 'all 0.3s ease',
+                backgroundColor: '#fafafa'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#4caf50'}
+              onBlur={(e) => e.target.style.borderColor = '#c8e6c9'}
             />
-            <Button variant="contained" color="success" onClick={crearTicket} sx={{ width: '100%', fontWeight: 'bold', fontSize: '1.1em', py: 1.2, borderRadius: 1 }}>
+            <Button 
+              variant="contained" 
+              color="success" 
+              onClick={crearTicket} 
+              sx={{ 
+                width: '100%', 
+                fontWeight: 'bold', 
+                fontSize: '1.1em', 
+                padding: '14px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
+                boxShadow: '0 4px 8px rgba(76, 175, 80, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #388e3c 0%, #2e7d32 100%)',
+                  boxShadow: '0 6px 12px rgba(76, 175, 80, 0.4)'
+                }
+              }}
+            >
               <FaPlus style={{ marginRight: 8 }} /> CREAR TICKET
             </Button>
           </Paper>
         </Grid>
-        <Grid item xs={12} md={8} lg={9} xl={10}>
-          <Paper sx={{ p: 2, background: '#fff', borderRadius: 2, boxShadow: 2, width: '100%', minWidth: 0, minHeight: 300 }}>
-            <div style={{ maxHeight: 520, overflowY: 'auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {ticketsFiltrados.map(t => (
-                <div key={t.id} style={{ background: '#e8f5e9', borderRadius: 12, boxShadow: '0 2px 8px #c8e6c9', padding: '12px 18px', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 60, maxWidth: 420, marginBottom: 8 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 'bold', color: '#388e3c', fontSize: '1.1em', wordBreak: 'break-word' }}>{t.descripcion}</div>
-                    <div style={{ fontSize: '0.93em', color: '#888' }}>Apertura: {t.fecha_apertura} | Usuario: {t.usuario_nombre}</div>
-                    <div style={{ fontSize: '0.97em', color: '#555' }}>Estado: <strong>{t.estado}</strong></div>
-                  </div>
-                  {admin && t.estado !== 'cerrado' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginLeft: 8 }}>
-                      <Tooltip title="Finalizar ticket">
-                        <IconButton
-                          size="small"
-                          color="success"
-                          onClick={() => finalizarTicket(t.id)}
-                          sx={{ 
-                            backgroundColor: '#e8f5e9', 
-                            '&:hover': { backgroundColor: '#c8e6c9' },
-                            border: '1px solid #4caf50',
-                            minWidth: 40,
-                            minHeight: 40
-                          }}
-                        >
-                          <FaCheck />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Pausar ticket">
-                        <IconButton
-                          size="small"
-                          color="warning"
-                          onClick={() => pausarTicket(t.id)}
-                          sx={{ 
-                            backgroundColor: '#fff3e0', 
-                            '&:hover': { backgroundColor: '#ffe0b2' },
-                            border: '1px solid #ff9800',
-                            minWidth: 40,
-                            minHeight: 40
-                          }}
-                        >
-                          <FaPause />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Descartar ticket">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => descartarTicket(t.id)}
-                          sx={{ 
-                            backgroundColor: '#ffebee', 
-                            '&:hover': { backgroundColor: '#ffcdd2' },
-                            border: '1px solid #f44336',
-                            minWidth: 40,
-                            minHeight: 40
-                          }}
-                        >
-                          <FaTimes />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
-                  )}
+
+        {/* Panel derecho - Lista de Tickets */}
+        <Grid item xs={12} lg={8} xl={9}>
+          <Paper sx={{ 
+            p: 3, 
+            background: 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)', 
+            borderRadius: 3, 
+            boxShadow: 3, 
+            width: '100%', 
+            minWidth: 0,
+            border: '1px solid #e0e0e0'
+          }}>
+            <div style={{ 
+              padding: '16px 20px', 
+              background: 'linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%)', 
+              borderBottom: '2px solid #c8e6c9', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              borderRadius: '8px 8px 0 0',
+              marginBottom: 16
+            }}>
+              <strong style={{ 
+                color: '#2e7d32', 
+                fontSize: '1.1em',
+                fontWeight: 'bold',
+                textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+              }}>
+                🎫 Tickets: {ticketsFiltrados.length} total
+              </strong>
+              <span style={{ 
+                fontSize: '0.9em', 
+                color: '#666',
+                background: '#ffffff',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                border: '1px solid #e0e0e0'
+              }}>
+                {admin ? 'Vista de Administrador' : 'Mis Tickets'}
+              </span>
+            </div>
+            <div style={{ 
+              maxHeight: 600, 
+              overflowY: 'auto', 
+              width: '100%', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: 16 
+            }}>
+              {ticketsFiltrados.length === 0 ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  color: '#666', 
+                  padding: 40,
+                  fontSize: '1.1em'
+                }}>
+                  📭 No hay tickets registrados
                 </div>
-              ))}
+              ) : (
+                ticketsFiltrados.map(t => (
+                  <div key={t.id} style={{ 
+                    background: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)', 
+                    borderRadius: 12, 
+                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.2)', 
+                    padding: '16px 20px', 
+                    margin: 0, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    minHeight: 80,
+                    border: '1px solid #a5d6a7',
+                    transition: 'all 0.3s ease'
+                  }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ 
+                        fontWeight: 'bold', 
+                        color: '#2e7d32', 
+                        fontSize: '1.1em', 
+                        wordBreak: 'break-word',
+                        marginBottom: 8
+                      }}>
+                        {t.descripcion}
+                      </div>
+                      <div style={{ 
+                        fontSize: '0.9em', 
+                        color: '#666',
+                        marginBottom: 4
+                      }}>
+                        📅 Apertura: {t.fecha_apertura} | 👤 Usuario: {t.usuario_nombre}
+                      </div>
+                      <div style={{ 
+                        fontSize: '1em', 
+                        color: '#555',
+                        fontWeight: 'bold'
+                      }}>
+                        Estado: <span style={{ 
+                          color: t.estado === 'abierto' ? '#ff9800' : 
+                                 t.estado === 'cerrado' ? '#4caf50' : 
+                                 t.estado === 'en pausa' ? '#2196f3' : '#f44336'
+                        }}>
+                          {t.estado}
+                        </span>
+                      </div>
+                    </div>
+                    {admin && t.estado !== 'cerrado' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginLeft: 16 }}>
+                        <Tooltip title="Finalizar ticket">
+                          <IconButton
+                            size="small"
+                            color="success"
+                            onClick={() => finalizarTicket(t.id)}
+                            sx={{ 
+                              backgroundColor: '#e8f5e9', 
+                              '&:hover': { backgroundColor: '#c8e6c9' },
+                              border: '2px solid #4caf50',
+                              minWidth: 44,
+                              minHeight: 44,
+                              boxShadow: '0 2px 4px rgba(76, 175, 80, 0.2)'
+                            }}
+                          >
+                            <FaCheck />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Pausar ticket">
+                          <IconButton
+                            size="small"
+                            color="info"
+                            onClick={() => pausarTicket(t.id)}
+                            sx={{ 
+                              backgroundColor: '#e3f2fd', 
+                              '&:hover': { backgroundColor: '#bbdefb' },
+                              border: '2px solid #2196f3',
+                              minWidth: 44,
+                              minHeight: 44,
+                              boxShadow: '0 2px 4px rgba(33, 150, 243, 0.2)'
+                            }}
+                          >
+                            <FaPause />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Descartar ticket">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => descartarTicket(t.id)}
+                            sx={{ 
+                              backgroundColor: '#ffebee', 
+                              '&:hover': { backgroundColor: '#ffcdd2' },
+                              border: '2px solid #f44336',
+                              minWidth: 44,
+                              minHeight: 44,
+                              boxShadow: '0 2px 4px rgba(244, 67, 54, 0.2)'
+                            }}
+                          >
+                            <FaTimes />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </Paper>
         </Grid>
@@ -840,19 +1515,32 @@ export function TicketsList({ admin, usuario }) {
   );
 }
 
-export function Avisos({ admin }) {
-  const [aviso, setAviso] = useState('');
+export function AvisosYDias({ admin }) {
+  const [avisos, setAvisos] = useState([]);
   const [nuevoAviso, setNuevoAviso] = useState('');
+  const [mensaje, setMensaje] = useState('');
+  const [activeTab, setActiveTab] = useState(0);
 
-  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
-    fetchWithAuth(`${API_URL}/avisos`)
-      .then(res => res.json())
-      .then(data => setAviso(data.mensaje));
+    cargarAvisos();
   }, []);
 
+  const cargarAvisos = () => {
+    fetchWithAuth(`${API_URL}/avisos/`)
+      .then(res => res.json())
+      .then(data => setAvisos(data))
+      .catch(err => {
+        console.error('Error cargando avisos:', err);
+        setMensaje('Error al cargar avisos');
+      });
+  };
+
   const fijarAviso = () => {
-    if (!nuevoAviso) return;
+    if (!nuevoAviso.trim()) {
+      setMensaje('Por favor escribe un aviso');
+      return;
+    }
+
     fetchWithAuth(`${API_URL}/avisos/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -860,44 +1548,95 @@ export function Avisos({ admin }) {
     })
       .then(res => res.json())
       .then(data => {
-        setAviso(data.mensaje);
-        setNuevoAviso('');
+        if (data.success) {
+          setNuevoAviso('');
+          setMensaje('Aviso fijado exitosamente');
+          cargarAvisos();
+        } else {
+          setMensaje(data.error || 'Error al fijar aviso');
+        }
+      })
+      .catch(err => {
+        console.error('Error fijando aviso:', err);
+        setMensaje('Error de conexión');
+      });
+  };
+
+  const eliminarAviso = (id) => {
+    fetchWithAuth(`${API_URL}/avisos/${id}`, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setMensaje('Aviso eliminado exitosamente');
+          cargarAvisos();
+        } else {
+          setMensaje(data.error || 'Error al eliminar');
+        }
+      })
+      .catch(err => {
+        console.error('Error eliminando aviso:', err);
+        setMensaje('Error de conexión');
       });
   };
 
   return (
     <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
-      <Grid container spacing={2} justifyContent="center" alignItems="flex-start">
-        <Grid item xs={12} md={6} lg={5} xl={4}>
-          <Paper sx={{ p: 2, background: 'linear-gradient(135deg, #e8f5e9 80%, #c8e6c9 100%)', borderRadius: 3, boxShadow: 2, minHeight: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', maxWidth: 340, margin: '0 auto' }}>
-            <FaBell style={{ color: '#43a047', fontSize: '1.7em', marginBottom: 6 }} />
-            <h3 style={{ color: '#388e3c', marginBottom: 4, textAlign: 'center', fontSize: '1.08em' }}>Aviso Importante</h3>
-            <p style={{ margin: 0, fontSize: '1em', color: '#2e7d32', textAlign: 'center', fontWeight: 500, wordBreak: 'break-word' }}>{aviso?.mensaje || 'No hay avisos por el momento.'}</p>
-            {aviso?.fecha && (
-              <span style={{ fontSize: '0.91em', color: '#888', marginTop: 4, textAlign: 'center', display: 'block' }}>
-                Publicado: {new Date(aviso.fecha).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
-              </span>
-            )}
-          </Paper>
-        </Grid>
-        {admin && (
-          <Grid item xs={12} md={4} lg={3} xl={2}>
-            <Paper sx={{ p: 3, background: '#f8fff8', borderRadius: 3, boxShadow: 1, mt: { xs: 3, md: 0 } }}>
-              <h3 style={{ color: '#388e3c', marginBottom: 8, textAlign: 'center' }}>Nuevo Aviso</h3>
-              <input
-                type="text"
+      <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Tab label="📢 Avisos" />
+        <Tab label="📅 Días de Labores" />
+      </Tabs>
+
+      {activeTab === 0 && (
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 2, background: '#fff3e0', borderRadius: 2, boxShadow: 1 }}>
+              <h3 style={{ color: '#e65100', marginBottom: 16 }}>📢 Fijar Aviso</h3>
+              <textarea
+                placeholder="Escribe tu aviso aquí..."
                 value={nuevoAviso}
                 onChange={e => setNuevoAviso(e.target.value)}
-                placeholder="Escribir aviso..."
-                style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%', marginBottom: 12 }}
+                style={{ width: '100%', padding: 12, borderRadius: 4, border: '1px solid #ffcc02', marginBottom: 12, minHeight: 100, resize: 'vertical' }}
               />
-              <Button variant="contained" color="success" onClick={fijarAviso} sx={{ minWidth: 120, fontWeight: 'bold', fontSize: '1em', width: '100%' }}>
-                <FaPlus style={{ marginRight: 6 }} /> Fijar Aviso
+              <Button variant="contained" color="warning" onClick={fijarAviso} sx={{ width: '100%' }}>
+                Fijar Aviso
               </Button>
+              {mensaje && <div style={{ color: '#e65100', marginTop: 8 }}>{mensaje}</div>}
             </Paper>
           </Grid>
-        )}
-      </Grid>
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ p: 2, background: '#fff', borderRadius: 2, boxShadow: 2 }}>
+              <h3 style={{ color: '#e65100', marginBottom: 16 }}>📢 Avisos Fijados</h3>
+              <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                {avisos.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: '#666', padding: 20 }}>
+                    No hay avisos fijados
+                  </div>
+                ) : (
+                  avisos.map(aviso => (
+                    <div key={aviso.id} style={{ padding: 12, borderBottom: '1px solid #eee', background: '#fff3e0', marginBottom: 8, borderRadius: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ margin: 0, color: '#e65100', fontWeight: 'bold' }}>{aviso.mensaje}</p>
+                          <small style={{ color: '#666' }}>Fijado el: {aviso.fecha}</small>
+                        </div>
+                        {admin && (
+                          <IconButton size="small" color="error" onClick={() => eliminarAviso(aviso.id)}>
+                            <FaTrash />
+                          </IconButton>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
+
+      {activeTab === 1 && (
+        <DiaLabores />
+      )}
     </Box>
   );
 }
@@ -1878,6 +2617,411 @@ export function TrabajosAdminPanel({ admin }) {
         </div>
       </DragDropContext>
     </div>
+  );
+}
+
+export function PropuestasMejoraPanel({ admin, usuario }) {
+  const [propuestas, setPropuestas] = useState([]);
+  const [nuevaPropuesta, setNuevaPropuesta] = useState({
+    titulo: '',
+    descripcion: '',
+    persona_responsable: '',
+    prioridad: 'media'
+  });
+  const [archivo, setArchivo] = useState(null);
+  const [mensaje, setMensaje] = useState('');
+  const [editando, setEditando] = useState(null);
+  const [editData, setEditData] = useState({});
+
+  useEffect(() => {
+    cargarPropuestas();
+  }, []);
+
+  const cargarPropuestas = () => {
+    console.log('Cargando propuestas...');
+    fetchWithAuth(`${API_URL}/propuestas/`)
+      .then(res => {
+        console.log('Respuesta de propuestas:', res.status);
+        return res.json();
+      })
+      .then(data => {
+        console.log('Propuestas cargadas:', data);
+        setPropuestas(data);
+      })
+      .catch(err => {
+        console.error('Error cargando propuestas:', err);
+        setMensaje('Error al cargar propuestas');
+      });
+  };
+
+  const crearPropuesta = (e) => {
+    e.preventDefault();
+    if (!nuevaPropuesta.titulo || !nuevaPropuesta.persona_responsable) {
+      setMensaje('Por favor completa el título y la persona responsable');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('titulo', nuevaPropuesta.titulo);
+    formData.append('descripcion', nuevaPropuesta.descripcion);
+    formData.append('persona_responsable', nuevaPropuesta.persona_responsable);
+    formData.append('prioridad', nuevaPropuesta.prioridad);
+    formData.append('usuario_id', usuario.id || 1); // ID del usuario actual
+    
+    if (archivo) {
+      formData.append('archivo', archivo);
+    }
+
+    console.log('Creando propuesta...', nuevaPropuesta);
+
+    fetchWithAuth(`${API_URL}/propuestas/`, {
+      method: 'POST',
+      body: formData
+    })
+      .then(res => {
+        console.log('Respuesta de creación:', res.status);
+        return res.json();
+      })
+      .then(data => {
+        console.log('Respuesta de creación:', data);
+        if (data.success) {
+          setNuevaPropuesta({ titulo: '', descripcion: '', persona_responsable: '', prioridad: 'media' });
+          setArchivo(null);
+          setMensaje('Propuesta creada exitosamente');
+          cargarPropuestas();
+        } else {
+          setMensaje(data.error || 'Error al crear propuesta');
+        }
+      })
+      .catch(err => {
+        console.error('Error creando propuesta:', err);
+        setMensaje('Error de conexión al crear propuesta');
+      });
+  };
+
+  const actualizarPropuesta = (id) => {
+    fetchWithAuth(`${API_URL}/propuestas/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editData)
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setEditando(null);
+          setEditData({});
+          setMensaje('Propuesta actualizada exitosamente');
+          cargarPropuestas();
+        } else {
+          setMensaje(data.error || 'Error al actualizar');
+        }
+      })
+      .catch(err => {
+        console.error('Error actualizando propuesta:', err);
+        setMensaje('Error de conexión');
+      });
+  };
+
+  const eliminarPropuesta = (id) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta propuesta?')) {
+      fetchWithAuth(`${API_URL}/propuestas/${id}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setMensaje('Propuesta eliminada exitosamente');
+            cargarPropuestas();
+          } else {
+            setMensaje(data.error || 'Error al eliminar');
+          }
+        })
+        .catch(err => {
+          console.error('Error eliminando propuesta:', err);
+          setMensaje('Error de conexión');
+        });
+    }
+  };
+
+  const getPrioridadColor = (prioridad) => {
+    switch (prioridad) {
+      case 'baja': return '#4caf50';
+      case 'media': return '#ff9800';
+      case 'alta': return '#f44336';
+      case 'critica': return '#9c27b0';
+      default: return '#666';
+    }
+  };
+
+  const getEstadoColor = (estado) => {
+    switch (estado) {
+      case 'pendiente': return '#ff9800';
+      case 'en_revision': return '#2196f3';
+      case 'aprobada': return '#4caf50';
+      case 'rechazada': return '#f44336';
+      case 'implementada': return '#9c27b0';
+      default: return '#666';
+    }
+  };
+
+  return (
+    <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
+      <Grid container spacing={2}>
+        {/* Formulario de creación */}
+        <Grid item xs={12} md={4} lg={3}>
+          <Paper sx={{ p: 1.5, background: '#f8fff8', borderRadius: 2, boxShadow: 1, mb: 2 }}>
+            <h4 style={{ color: '#388e3c', marginBottom: 6, fontSize: '1em', textAlign: 'center' }}>💡 Nueva Propuesta</h4>
+            <form onSubmit={crearPropuesta}>
+              <input
+                type="text"
+                placeholder="Título de la propuesta"
+                value={nuevaPropuesta.titulo}
+                onChange={e => setNuevaPropuesta({ ...nuevaPropuesta, titulo: e.target.value })}
+                style={{ padding: '8px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
+                required
+              />
+              <textarea
+                placeholder="Descripción (opcional)"
+                value={nuevaPropuesta.descripcion}
+                onChange={e => setNuevaPropuesta({ ...nuevaPropuesta, descripcion: e.target.value })}
+                style={{ padding: '8px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em', minHeight: '60px', resize: 'vertical' }}
+              />
+              <input
+                type="text"
+                placeholder="Persona responsable"
+                value={nuevaPropuesta.persona_responsable}
+                onChange={e => setNuevaPropuesta({ ...nuevaPropuesta, persona_responsable: e.target.value })}
+                style={{ padding: '8px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
+                required
+              />
+              <select
+                value={nuevaPropuesta.prioridad}
+                onChange={e => setNuevaPropuesta({ ...nuevaPropuesta, prioridad: e.target.value })}
+                style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
+              >
+                <option value="baja">Prioridad Baja</option>
+                <option value="media">Prioridad Media</option>
+                <option value="alta">Prioridad Alta</option>
+                <option value="critica">Prioridad Crítica</option>
+              </select>
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={e => setArchivo(e.target.files[0])}
+                style={{ marginBottom: 6, width: '100%', fontSize: '0.8em' }}
+              />
+              <Button type="submit" variant="contained" color="success" sx={{ minWidth: 100, fontWeight: 'bold', fontSize: '0.9em', width: '100%', padding: '6px' }}>
+                <FaPlus style={{ marginRight: 4 }} /> Crear
+              </Button>
+            </form>
+            {mensaje && <div style={{ color: '#388e3c', marginTop: 8, fontSize: '0.9em' }}>{mensaje}</div>}
+          </Paper>
+        </Grid>
+
+        {/* Lista de propuestas */}
+        <Grid item xs={12} md={8} lg={9}>
+          <Paper sx={{ p: 1, background: '#fff', borderRadius: 2, boxShadow: 2, width: '100%', minWidth: 0 }}>
+            <div style={{ padding: '8px 12px', background: '#f8fff8', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <strong style={{ color: '#388e3c', fontSize: '0.9em' }}>
+                📋 Propuestas: {propuestas.length} total
+              </strong>
+              <Button 
+                variant="outlined" 
+                size="small" 
+                onClick={cargarPropuestas}
+                sx={{ fontSize: '0.8em' }}
+              >
+                🔄 Refrescar
+              </Button>
+            </div>
+            <div style={{ maxHeight: 600, overflowY: 'auto' }}>
+              {propuestas.length === 0 ? (
+                <div style={{ padding: 20, textAlign: 'center', color: '#666' }}>
+                  No hay propuestas de mejora registradas
+                </div>
+              ) : (
+                propuestas.map((propuesta, index) => (
+                  <div key={propuesta.id} style={{ padding: '12px', borderBottom: '1px solid #e0e0e0', background: index % 2 === 0 ? '#fafafa' : '#fff' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span style={{ 
+                            background: '#e3f2fd', 
+                            color: '#1976d2', 
+                            padding: '2px 6px', 
+                            borderRadius: 4, 
+                            fontSize: '0.8em', 
+                            fontWeight: 'bold' 
+                          }}>
+                            #{index + 1}
+                          </span>
+                          <strong style={{ color: '#388e3c', fontSize: '1em' }}>{propuesta.titulo}</strong>
+                          <span style={{ 
+                            background: getPrioridadColor(propuesta.prioridad) + '20', 
+                            color: getPrioridadColor(propuesta.prioridad), 
+                            padding: '2px 6px', 
+                            borderRadius: 4, 
+                            fontSize: '0.8em', 
+                            textTransform: 'uppercase',
+                            fontWeight: 'bold'
+                          }}>
+                            {propuesta.prioridad}
+                          </span>
+                          <span style={{ 
+                            background: getEstadoColor(propuesta.estado) + '20', 
+                            color: getEstadoColor(propuesta.estado), 
+                            padding: '2px 6px', 
+                            borderRadius: 4, 
+                            fontSize: '0.8em', 
+                            textTransform: 'uppercase',
+                            fontWeight: 'bold'
+                          }}>
+                            {propuesta.estado.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.9em', color: '#666', lineHeight: 1.4, marginBottom: 4 }}>
+                          {propuesta.descripcion && <div style={{ marginBottom: 4 }}>📝 {propuesta.descripcion}</div>}
+                          <div>
+                            👤 <strong>Responsable:</strong> {propuesta.persona_responsable}
+                            {propuesta.usuario_nombre && <span> | 👨‍💻 <strong>Creado por:</strong> {propuesta.usuario_nombre}</span>}
+                          </div>
+                          <div style={{ marginTop: 4 }}>
+                            📅 <strong>Creado:</strong> {propuesta.fecha_creacion}
+                            {propuesta.fecha_aprobacion && <span> | ✅ <strong>Aprobado:</strong> {propuesta.fecha_aprobacion}</span>}
+                            {propuesta.fecha_implementacion && <span> | 🚀 <strong>Implementado:</strong> {propuesta.fecha_implementacion}</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        {propuesta.nombre_archivo && (
+                          <Tooltip title="Descargar PDF">
+                            <IconButton
+                              size="small"
+                              color="info"
+                              component="a"
+                              href={`${API_URL}/propuestas/${propuesta.id}/descargar`}
+                              target="_blank"
+                              sx={{ 
+                                backgroundColor: '#e3f2fd', 
+                                '&:hover': { backgroundColor: '#bbdefb' },
+                                border: '1px solid #2196f3'
+                              }}
+                            >
+                              <FaDownload />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {admin && (
+                          <>
+                            <Tooltip title="Editar propuesta">
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => {
+                                  setEditando(propuesta.id);
+                                  setEditData({
+                                    titulo: propuesta.titulo,
+                                    descripcion: propuesta.descripcion,
+                                    persona_responsable: propuesta.persona_responsable,
+                                    estado: propuesta.estado,
+                                    prioridad: propuesta.prioridad
+                                  });
+                                }}
+                                sx={{ 
+                                  backgroundColor: '#e8f5e9', 
+                                  '&:hover': { backgroundColor: '#c8e6c9' },
+                                  border: '1px solid #4caf50'
+                                }}
+                              >
+                                <FaEdit />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Eliminar propuesta">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => eliminarPropuesta(propuesta.id)}
+                                sx={{ 
+                                  backgroundColor: '#ffebee', 
+                                  '&:hover': { backgroundColor: '#ffcdd2' },
+                                  border: '1px solid #f44336'
+                                }}
+                              >
+                                <FaTrash />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Modal de edición */}
+      {editando && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', padding: 20, borderRadius: 8, minWidth: 400, maxWidth: 600, maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ color: '#388e3c', marginBottom: 16 }}>Editar Propuesta</h3>
+            <form onSubmit={(e) => { e.preventDefault(); actualizarPropuesta(editando); }}>
+              <input
+                type="text"
+                placeholder="Título"
+                value={editData.titulo || ''}
+                onChange={e => setEditData({ ...editData, titulo: e.target.value })}
+                style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ddd', marginBottom: 12, width: '100%' }}
+                required
+              />
+              <textarea
+                placeholder="Descripción"
+                value={editData.descripcion || ''}
+                onChange={e => setEditData({ ...editData, descripcion: e.target.value })}
+                style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ddd', marginBottom: 12, width: '100%', minHeight: '80px', resize: 'vertical' }}
+              />
+              <input
+                type="text"
+                placeholder="Persona responsable"
+                value={editData.persona_responsable || ''}
+                onChange={e => setEditData({ ...editData, persona_responsable: e.target.value })}
+                style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ddd', marginBottom: 12, width: '100%' }}
+                required
+              />
+              <select
+                value={editData.prioridad || 'media'}
+                onChange={e => setEditData({ ...editData, prioridad: e.target.value })}
+                style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ddd', marginBottom: 12, width: '100%' }}
+              >
+                <option value="baja">Prioridad Baja</option>
+                <option value="media">Prioridad Media</option>
+                <option value="alta">Prioridad Alta</option>
+                <option value="critica">Prioridad Crítica</option>
+              </select>
+              <select
+                value={editData.estado || 'pendiente'}
+                onChange={e => setEditData({ ...editData, estado: e.target.value })}
+                style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ddd', marginBottom: 16, width: '100%' }}
+              >
+                <option value="pendiente">Pendiente</option>
+                <option value="en_revision">En Revisión</option>
+                <option value="aprobada">Aprobada</option>
+                <option value="rechazada">Rechazada</option>
+                <option value="implementada">Implementada</option>
+              </select>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button variant="contained" color="success" type="submit" sx={{ flex: 1 }}>
+                  Guardar
+                </Button>
+                <Button variant="outlined" color="error" onClick={() => { setEditando(null); setEditData({}); }} sx={{ flex: 1 }}>
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </Box>
   );
 }
 

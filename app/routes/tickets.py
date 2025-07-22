@@ -3,6 +3,7 @@ from app.models.ticket import Ticket
 from app.models.usuario import Usuario
 from app import db
 from datetime import datetime
+import pytz
 from flask_cors import CORS
 
 tickets_bp = Blueprint('tickets', __name__)
@@ -20,9 +21,17 @@ def crear_ticket():
     usuario_id = data.get('usuario_id')
     if not descripcion or not usuario_id:
         return jsonify({'error': 'Faltan datos'}), 400
+    
+    # Configurar zona horaria de México Central
+    mexico_tz = pytz.timezone('America/Mexico_City')
+    hora_mexico = datetime.now(mexico_tz)
+    
     ticket = Ticket(descripcion=descripcion, usuario_id=usuario_id)
+    ticket.fecha_apertura = hora_mexico
     db.session.add(ticket)
     db.session.commit()
+    
+    print(f"DEBUG - Nuevo ticket creado: {ticket.id} por usuario {usuario_id} a las {hora_mexico}")
     return jsonify(ticket.to_dict()), 201
 
 @tickets_bp.route('/<int:ticket_id>/cerrar', methods=['POST'])

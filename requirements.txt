@@ -6,4 +6,5 @@ pandas
 gunicorn==23.0.0
 PyJWT
 werkzeug
+pytz==2023.3
 # Forzar redeploy Railway
