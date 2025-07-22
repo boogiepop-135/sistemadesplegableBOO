@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Paper, Grid, TextField, Select, MenuItem, FormControl, InputLabel, Typography, Chip, IconButton, Tooltip, Tabs, Tab } from '@mui/material';
+import { Box, Button, Paper, Grid, IconButton, Tooltip, Tabs, Tab } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { FaTrash, FaEdit, FaPlus, FaDownload, FaUpload, FaEye, FaWrench, FaCheck, FaTimes, FaPause, FaPlay, FaExclamationTriangle, FaFileAlt, FaUser, FaMapMarkerAlt, FaTag, FaCalendarAlt, FaSignature, FaTools, FaBell } from 'react-icons/fa';
+import { FaTrash, FaEdit, FaPlus, FaDownload, FaUpload, FaEye, FaWrench, FaCheck, FaTimes, FaPause, FaFileAlt, FaBell } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import { getToken } from '../App';
 import { API_URL } from '../config';
