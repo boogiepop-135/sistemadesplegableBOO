@@ -8,6 +8,12 @@ import * as XLSX from 'xlsx';
 import { getToken } from '../App';
 import { API_URL } from '../config';
 
+// Función helper para obtener el nombre de visualización de un usuario
+const getDisplayName = (usuario) => {
+  if (!usuario) return '';
+  return usuario.nombre_perfil || usuario.nombre || usuario;
+};
+
 // Paleta de colores global para gráficas
 const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
 
@@ -61,7 +67,8 @@ export function InventarioList({ admin, usuario }) {
       if (admin) {
         setInventario(inv);
       } else {
-        setInventario(inv.filter(e => e.usuario_nombre === usuario));
+        // Filtrar por nombre de usuario (para login) o nombre de perfil
+        setInventario(inv.filter(e => e.usuario_nombre === usuario || e.usuario_nombre_perfil === usuario));
       }
       setUbicaciones(ubi);
       setCategorias(cat);
@@ -316,7 +323,9 @@ export function InventarioList({ admin, usuario }) {
   };
   const getResponsable = (inv) => {
     if (!inv.usuario_nombre) return 'Sin responsable';
-    return inv.usuario_nombre;
+    // Buscar el usuario en la lista de usuarios para obtener el nombre de perfil
+    const usuario = usuarios.find(u => u.nombre === inv.usuario_nombre);
+    return getDisplayName(usuario) || inv.usuario_nombre;
   };
 
   // Generar datos dinámicos según campo seleccionado
@@ -1127,7 +1136,7 @@ export function TicketsList({ admin, usuario }) {
   };
 
   // Filtrar tickets según usuario
-  const ticketsFiltrados = admin ? tickets : tickets.filter(t => t.usuario_nombre === usuario);
+      const ticketsFiltrados = admin ? tickets : tickets.filter(t => t.usuario_nombre === usuario || t.usuario_nombre_perfil === usuario);
 
   return (
     <Box sx={{ 
@@ -1292,7 +1301,7 @@ export function TicketsList({ admin, usuario }) {
                         color: '#666',
                         marginBottom: 4
                       }}>
-                        📅 Apertura: {t.fecha_apertura} | 👤 Usuario: {t.usuario_nombre}
+                        📅 Apertura: {t.fecha_apertura} | 👤 Usuario: {t.usuario_nombre_perfil || t.usuario_nombre}
                       </div>
                       <div style={{ 
                         fontSize: '1em', 
@@ -1507,7 +1516,11 @@ export function AdminPanel() {
                     </div>
                   ) : (
                     <>
-                      <span><b>{u.nombre}</b> <span style={{ color: '#888', fontSize: '0.9em' }}>({u.rol})</span> <span style={{ color: '#1976d2', fontSize: '0.95em', marginLeft: 8 }}>{u.nombre_perfil ? `[${u.nombre_perfil}]` : ''}</span></span>
+                      <span>
+                        <b>{u.nombre_perfil || u.nombre}</b> 
+                        <span style={{ color: '#888', fontSize: '0.9em' }}>({u.rol})</span>
+                        {u.nombre_perfil && <span style={{ color: '#1976d2', fontSize: '0.8em', marginLeft: 8 }}>[{u.nombre}]</span>}
+                      </span>
                       <div style={{ display: 'flex', gap: 1 }}>
                         <Tooltip title="Editar usuario">
                           <IconButton 
@@ -1611,11 +1624,12 @@ export function AdminPanel() {
 
 export function DocumentosPanel() {
   const [documentos, setDocumentos] = useState([]);
-  const [archivo, setArchivo] = useState(null);
+  const [archivos, setArchivos] = useState([]);
   const [descripcion, setDescripcion] = useState('');
   const [ticketId, setTicketId] = useState('');
   const [inventarioId, setInventarioId] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const [subiendo, setSubiendo] = useState(false);
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
@@ -1635,48 +1649,63 @@ export function DocumentosPanel() {
       });
   }, []);
 
-  const subirDocumento = (e) => {
+  const subirDocumentos = async (e) => {
     e.preventDefault();
-    if (!archivo) return setMensaje('Selecciona un archivo');
-    const formData = new FormData();
-    formData.append('archivo', archivo);
-    formData.append('descripcion', descripcion);
-    if (ticketId) formData.append('ticket_id', ticketId);
-    if (inventarioId) formData.append('inventario_id', inventarioId);
+    if (archivos.length === 0) return setMensaje('Selecciona al menos un archivo');
     
-    console.log('Subiendo documento...', { descripcion, ticketId, inventarioId });
+    setSubiendo(true);
+    let exitosos = 0;
+    let errores = 0;
     
-    fetchWithAuth(`${API_URL}/documentos/subir`, {
-      method: 'POST',
-      body: formData
-    })
-      .then(res => {
-        console.log('Respuesta de subida:', res.status);
-        return res.json();
-      })
-      .then(data => {
-        console.log('Respuesta de subida:', data);
+    for (let i = 0; i < archivos.length; i++) {
+      const archivo = archivos[i];
+      const formData = new FormData();
+      formData.append('archivo', archivo);
+      formData.append('descripcion', descripcion || archivo.name);
+      if (ticketId) formData.append('ticket_id', ticketId);
+      if (inventarioId) formData.append('inventario_id', inventarioId);
+      
+      try {
+        const res = await fetchWithAuth(`${API_URL}/documentos/subir`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        
         if (data.success) {
-          // Recargar toda la lista de documentos para asegurar sincronización
-          fetchWithAuth(`${API_URL}/documentos/`)
-            .then(res => res.json())
-            .then(nuevosDocs => {
-              console.log('Documentos actualizados:', nuevosDocs);
-              setDocumentos(nuevosDocs);
-            });
-          setArchivo(null);
-          setDescripcion('');
-          setTicketId('');
-          setInventarioId('');
-          setMensaje('Documento subido correctamente');
+          exitosos++;
         } else {
-          setMensaje(data.error || 'Error al subir');
+          errores++;
+          console.error(`Error subiendo ${archivo.name}:`, data.error);
         }
-      })
-      .catch(err => {
-        console.error('Error subiendo documento:', err);
-        setMensaje('Error de conexión al subir documento');
-      });
+      } catch (err) {
+        errores++;
+        console.error(`Error subiendo ${archivo.name}:`, err);
+      }
+    }
+    
+    // Recargar documentos
+    try {
+      const res = await fetchWithAuth(`${API_URL}/documentos/`);
+      const nuevosDocs = await res.json();
+      setDocumentos(nuevosDocs);
+    } catch (err) {
+      console.error('Error recargando documentos:', err);
+    }
+    
+    setArchivos([]);
+    setDescripcion('');
+    setTicketId('');
+    setInventarioId('');
+    setSubiendo(false);
+    
+    if (exitosos > 0 && errores === 0) {
+      setMensaje(`${exitosos} documento(s) subido(s) correctamente`);
+    } else if (exitosos > 0 && errores > 0) {
+      setMensaje(`${exitosos} subido(s) correctamente, ${errores} con error`);
+    } else {
+      setMensaje('Error al subir documentos');
+    }
   };
 
   const eliminarDocumento = (id) => {
@@ -1695,8 +1724,18 @@ export function DocumentosPanel() {
         <Grid item xs={12} md={4} lg={3} xl={2}>
           <Paper sx={{ p: 2, mb: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
             <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Subir Documento</h3>
-            <form onSubmit={subirDocumento}>
-              <input type="file" onChange={e => setArchivo(e.target.files[0])} style={{ marginBottom: 8, width: '100%' }} />
+            <form onSubmit={subirDocumentos}>
+              <input 
+                type="file" 
+                multiple 
+                onChange={e => setArchivos(Array.from(e.target.files))} 
+                style={{ marginBottom: 8, width: '100%' }} 
+              />
+              {archivos.length > 0 && (
+                <div style={{ marginBottom: 8, fontSize: '0.9em', color: '#666' }}>
+                  📁 {archivos.length} archivo(s) seleccionado(s)
+                </div>
+              )}
               <input
                 type="text"
                 placeholder="Descripción"
@@ -1718,8 +1757,29 @@ export function DocumentosPanel() {
                 onChange={e => setInventarioId(e.target.value)}
                 style={{ marginBottom: 8, padding: 10, borderRadius: '6px', border: '1px solid #a5d6a7', width: '100%' }}
               />
-              <Button type="submit" variant="contained" color="success" sx={{ minWidth: 120, fontWeight: 'bold', fontSize: '1em', width: '100%' }}>
-                <FaPlus style={{ marginRight: 6 }} /> Subir
+              <Button 
+                type="submit" 
+                variant="contained" 
+                color="success" 
+                disabled={subiendo}
+                sx={{ 
+                  minWidth: 120, 
+                  fontWeight: 'bold', 
+                  fontSize: '1em', 
+                  width: '100%',
+                  opacity: subiendo ? 0.7 : 1
+                }}
+              >
+                {subiendo ? (
+                  <>
+                    <span style={{ marginRight: 6 }}>⏳</span> Subiendo...
+                  </>
+                ) : (
+                  <>
+                    <FaPlus style={{ marginRight: 6 }} /> 
+                    Subir {archivos.length > 0 ? `(${archivos.length})` : ''}
+                  </>
+                )}
               </Button>
             </form>
             {mensaje && <div style={{ color: '#388e3c', marginTop: 10 }}>{mensaje}</div>}
@@ -2595,7 +2655,7 @@ export function PropuestasMejoraPanel({ admin, usuario }) {
                           {propuesta.descripcion && <div style={{ marginBottom: 4 }}>📝 {propuesta.descripcion}</div>}
                           <div>
                             👤 <strong>Responsable:</strong> {propuesta.persona_responsable}
-                            {propuesta.usuario_nombre && <span> | 👨‍💻 <strong>Creado por:</strong> {propuesta.usuario_nombre}</span>}
+                            {propuesta.usuario_nombre && <span> | 👨‍💻 <strong>Creado por:</strong> {propuesta.usuario_nombre_perfil || propuesta.usuario_nombre}</span>}
                           </div>
                           <div style={{ marginTop: 4 }}>
                             📅 <strong>Creado:</strong> {propuesta.fecha_creacion}
@@ -2786,11 +2846,11 @@ export function MantenimientosPanel({ admin }) {
     const eq = inventario.find(e => e.id === id);
     if (!eq) return '';
     const usu = usuarios.find(u => u.id === eq.usuario_id);
-    return usu ? usu.nombre : '';
+    return usu ? getDisplayName(usu) : '';
   };
   const getResponsable = (id) => {
     const usu = usuarios.find(u => u.id === id);
-    return usu ? usu.nombre : '';
+    return usu ? getDisplayName(usu) : '';
   };
 
   const handleCrear = (e) => {
@@ -2877,7 +2937,7 @@ export function MantenimientosPanel({ admin }) {
             <input type="date" value={nuevo.fecha} onChange={e => setNuevo({ ...nuevo, fecha: e.target.value })} style={{ flex: '1 1 140px', padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }} required />
             <select value={nuevo.usuario_id} onChange={e => setNuevo({ ...nuevo, usuario_id: e.target.value })} style={{ flex: '1 1 180px', padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }} required>
               <option value="">Responsable</option>
-              {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+              {usuarios.map(u => <option key={u.id} value={u.id}>{getDisplayName(u)}</option>)}
             </select>
             <input type="date" value={nuevo.fecha_termino} onChange={e => setNuevo({ ...nuevo, fecha_termino: e.target.value })} placeholder="Fecha de término" style={{ flex: '1 1 140px', padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }} />
             <input type="text" value={nuevo.firma} onChange={e => setNuevo({ ...nuevo, firma: e.target.value })} placeholder="Firma" style={{ flex: '1 1 140px', padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }} />
@@ -2983,6 +3043,9 @@ export function SoportePanel({ admin, usuario }) {
   const [editandoTema, setEditandoTema] = useState(null);
   const [editandoProcedimiento, setEditandoProcedimiento] = useState(null);
   const [mensaje, setMensaje] = useState('');
+  const [archivosSoporte, setArchivosSoporte] = useState([]);
+  const [subiendoArchivos, setSubiendoArchivos] = useState(false);
+  const [procedimientoSeleccionado, setProcedimientoSeleccionado] = useState(null);
 
   // Estados para formularios
   const [nuevoTema, setNuevoTema] = useState({
@@ -3002,6 +3065,7 @@ export function SoportePanel({ admin, usuario }) {
     tiempo_estimado: '',
     tema_id: ''
   });
+  const [archivosProcedimiento, setArchivosProcedimiento] = useState([]);
 
   useEffect(() => {
     cargarTemas();
@@ -3130,35 +3194,71 @@ export function SoportePanel({ admin, usuario }) {
       });
   };
 
-  const crearProcedimiento = () => {
+  const crearProcedimiento = async () => {
     if (!nuevoProcedimiento.titulo.trim() || !nuevoProcedimiento.tema_id) {
       setMensaje('El título y tema son requeridos');
       return;
     }
 
-    fetchWithAuth(`${API_URL}/soporte/procedimientos/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(nuevoProcedimiento)
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setProcedimientos(prev => [...prev, data]);
-          setNuevoProcedimiento({
-            titulo: '', descripcion: '', pasos: '', comandos: '', notas: '',
-            dificultad: 'Intermedio', tiempo_estimado: '', tema_id: ''
-          });
-          setModalProcedimiento(false);
-          setMensaje('Procedimiento creado exitosamente');
-        } else {
-          setMensaje(data.error || 'Error al crear procedimiento');
-        }
-      })
-      .catch(err => {
-        console.error('Error creando procedimiento:', err);
-        setMensaje('Error de conexión');
+    try {
+      // Primero crear el procedimiento
+      const res = await fetchWithAuth(`${API_URL}/soporte/procedimientos/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nuevoProcedimiento)
       });
+      const data = await res.json();
+      
+      if (data.success) {
+        const procedimientoCreado = data;
+        setProcedimientos(prev => [...prev, procedimientoCreado]);
+        
+        // Si hay archivos, subirlos
+        if (archivosProcedimiento.length > 0) {
+          let archivosSubidos = 0;
+          for (let i = 0; i < archivosProcedimiento.length; i++) {
+            const archivo = archivosProcedimiento[i];
+            const formData = new FormData();
+            formData.append('archivo', archivo);
+            formData.append('procedimiento_id', procedimientoCreado.id);
+            formData.append('descripcion', `Archivo de soporte para: ${procedimientoCreado.titulo}`);
+            
+            try {
+              const resArchivo = await fetchWithAuth(`${API_URL}/documentos/subir`, {
+                method: 'POST',
+                body: formData
+              });
+              const dataArchivo = await resArchivo.json();
+              if (dataArchivo.success) {
+                archivosSubidos++;
+              }
+            } catch (err) {
+              console.error(`Error subiendo archivo ${archivo.name}:`, err);
+            }
+          }
+          
+          if (archivosSubidos > 0) {
+            setMensaje(`Procedimiento creado exitosamente con ${archivosSubidos} archivo(s) PDF`);
+          } else {
+            setMensaje('Procedimiento creado exitosamente (error al subir archivos)');
+          }
+        } else {
+          setMensaje('Procedimiento creado exitosamente');
+        }
+        
+        setNuevoProcedimiento({
+          titulo: '', descripcion: '', pasos: '', comandos: '', notas: '',
+          dificultad: 'Intermedio', tiempo_estimado: '', tema_id: ''
+        });
+        setArchivosProcedimiento([]);
+        setModalProcedimiento(false);
+      } else {
+        setMensaje(data.error || 'Error al crear procedimiento');
+      }
+    } catch (err) {
+      console.error('Error creando procedimiento:', err);
+      setMensaje('Error de conexión');
+    }
   };
 
   const actualizarProcedimiento = () => {
@@ -3214,6 +3314,54 @@ export function SoportePanel({ admin, usuario }) {
       case 'Intermedio': return '#ff9800';
       case 'Avanzado': return '#f44336';
       default: return '#2196f3';
+    }
+  };
+
+  const subirArchivosSoporte = async (e) => {
+    e.preventDefault();
+    if (archivosSoporte.length === 0) return setMensaje('Selecciona al menos un archivo PDF');
+    if (!procedimientoSeleccionado) return setMensaje('Selecciona un procedimiento para asociar los archivos');
+    
+    setSubiendoArchivos(true);
+    let exitosos = 0;
+    let errores = 0;
+    
+    for (let i = 0; i < archivosSoporte.length; i++) {
+      const archivo = archivosSoporte[i];
+      const formData = new FormData();
+      formData.append('archivo', archivo);
+      formData.append('procedimiento_id', procedimientoSeleccionado.id);
+      formData.append('descripcion', `Archivo de soporte para: ${procedimientoSeleccionado.titulo}`);
+      
+      try {
+        const res = await fetchWithAuth(`${API_URL}/documentos/subir`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          exitosos++;
+        } else {
+          errores++;
+          console.error(`Error subiendo ${archivo.name}:`, data.error);
+        }
+      } catch (err) {
+        errores++;
+        console.error(`Error subiendo ${archivo.name}:`, err);
+      }
+    }
+    
+    setArchivosSoporte([]);
+    setProcedimientoSeleccionado(null);
+    setSubiendoArchivos(false);
+    
+    if (exitosos > 0 && errores === 0) {
+      setMensaje(`${exitosos} archivo(s) PDF subido(s) correctamente al procedimiento`);
+    } else if (exitosos > 0 && errores > 0) {
+      setMensaje(`${exitosos} subido(s) correctamente, ${errores} con error`);
+    } else {
+      setMensaje('Error al subir archivos PDF');
     }
   };
 
@@ -3435,6 +3583,80 @@ export function SoportePanel({ admin, usuario }) {
             border: '1px solid #e8f5e9',
             minHeight: 600
           }}>
+            
+            {/* Panel de subida de archivos PDF */}
+            <Paper sx={{ 
+              p: 2, 
+              mb: 3, 
+              background: 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)', 
+              borderRadius: 2, 
+              boxShadow: 1,
+              border: '1px solid #ffcc02'
+            }}>
+              <h4 style={{ color: '#f57c00', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                📎 Subir Archivos PDF de Soporte
+              </h4>
+              <form onSubmit={subirArchivosSoporte}>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <select
+                      value={procedimientoSeleccionado?.id || ''}
+                      onChange={e => {
+                        const proc = procedimientos.find(p => p.id == e.target.value);
+                        setProcedimientoSeleccionado(proc || null);
+                      }}
+                      style={{ 
+                        width: '100%', 
+                        padding: 8, 
+                        borderRadius: 4, 
+                        border: '1px solid #ffcc02',
+                        backgroundColor: '#fff'
+                      }}
+                      required
+                    >
+                      <option value="">Selecciona un procedimiento</option>
+                      {procedimientos.map(proc => (
+                        <option key={proc.id} value={proc.id}>
+                          {proc.titulo}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept=".pdf"
+                      onChange={e => setArchivosSoporte(Array.from(e.target.files))} 
+                      style={{ 
+                        width: '100%', 
+                        padding: 8, 
+                        borderRadius: 4, 
+                        border: '1px solid #ffcc02',
+                        backgroundColor: '#fff'
+                      }} 
+                    />
+                  </div>
+                </div>
+                {archivosSoporte.length > 0 && (
+                  <div style={{ marginBottom: 12, fontSize: '0.9em', color: '#f57c00' }}>
+                    📁 {archivosSoporte.length} archivo(s) PDF seleccionado(s)
+                  </div>
+                )}
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  disabled={subiendoArchivos || archivosSoporte.length === 0 || !procedimientoSeleccionado}
+                  sx={{ 
+                    background: 'linear-gradient(135deg, #f57c00 0%, #ef6c00 100%)',
+                    '&:hover': { background: 'linear-gradient(135deg, #ef6c00 0%, #e65100 100%)' },
+                    '&:disabled': { background: '#ccc' }
+                  }}
+                >
+                  {subiendoArchivos ? '⏳ Subiendo...' : '📎 Subir PDF(s)'}
+                </Button>
+              </form>
+            </Paper>
             {temaSeleccionado ? (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -3461,6 +3683,7 @@ export function SoportePanel({ admin, usuario }) {
                           titulo: '', descripcion: '', pasos: '', comandos: '', notas: '',
                           dificultad: 'Intermedio', tiempo_estimado: '', tema_id: temaSeleccionado.id
                         });
+                        setArchivosProcedimiento([]);
                         setModalProcedimiento(true);
                       }}
                       sx={{ 
@@ -3596,6 +3819,7 @@ export function SoportePanel({ admin, usuario }) {
                                 onClick={() => {
                                   setEditandoProcedimiento(proc);
                                   setNuevoProcedimiento({ ...proc });
+                                  setArchivosProcedimiento([]);
                                   setModalProcedimiento(true);
                                 }}
                               >
@@ -3770,11 +3994,39 @@ export function SoportePanel({ admin, usuario }) {
                   style={{ flex: 1, padding: 12, borderRadius: 4, border: '1px solid #ccc' }}
                 />
               </div>
+              
+              {/* Campo para archivos PDF */}
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', marginBottom: 8, color: '#2e7d32', fontWeight: 'bold' }}>
+                  📎 Archivos PDF de soporte (opcional)
+                </label>
+                <input 
+                  type="file" 
+                  multiple 
+                  accept=".pdf"
+                  onChange={e => setArchivosProcedimiento(Array.from(e.target.files))} 
+                  style={{ 
+                    width: '100%', 
+                    padding: 8, 
+                    borderRadius: 4, 
+                    border: '1px solid #ccc',
+                    backgroundColor: '#f9f9f9'
+                  }} 
+                />
+                {archivosProcedimiento.length > 0 && (
+                  <div style={{ marginTop: 8, fontSize: '0.9em', color: '#2e7d32' }}>
+                    📁 {archivosProcedimiento.length} archivo(s) PDF seleccionado(s)
+                  </div>
+                )}
+              </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <Button type="submit" variant="contained" color="primary">
                   {editandoProcedimiento ? 'Actualizar' : 'Crear'}
                 </Button>
-                <Button variant="outlined" color="error" onClick={() => setModalProcedimiento(false)}>
+                <Button variant="outlined" color="error" onClick={() => {
+                  setModalProcedimiento(false);
+                  setArchivosProcedimiento([]);
+                }}>
                   Cancelar
                 </Button>
               </div>

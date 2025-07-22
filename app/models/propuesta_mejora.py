@@ -35,5 +35,6 @@ class PropuestaMejora(db.Model):
             'fecha_implementacion': self.fecha_implementacion.strftime('%Y-%m-%d %H:%M:%S') if self.fecha_implementacion else None,
             'usuario_id': self.usuario_id,
             'usuario_nombre': self.usuario.nombre if self.usuario else None,
+            'usuario_nombre_perfil': self.usuario.nombre_perfil if self.usuario else None,
             'codigo_unico': self.codigo_unico
         } 

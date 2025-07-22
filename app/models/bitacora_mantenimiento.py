@@ -29,6 +29,8 @@ class BitacoraMantenimiento(db.Model):
             'descripcion': self.descripcion,
             'inventario_id': self.inventario_id,
             'usuario_id': self.usuario_id,
+            'usuario_nombre': self.usuario.nombre if self.usuario else None,
+            'usuario_nombre_perfil': self.usuario.nombre_perfil if self.usuario else None,
             'codigo_unico': self.codigo_unico,
             'tipo_mantenimiento': self.tipo_mantenimiento,
             'fecha_termino': self.fecha_termino.strftime('%Y-%m-%d %H:%M:%S') if self.fecha_termino else None,

@@ -39,4 +39,7 @@ class ProcedimientoSoporte(db.Model):
     
     # Relación con el usuario que lo creó
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
-    usuario = db.relationship('Usuario', backref='procedimientos_creados') 
+    usuario = db.relationship('Usuario', backref='procedimientos_creados')
+    
+    # Relación con documentos
+    documentos = db.relationship('Documento', back_populates='procedimiento') 

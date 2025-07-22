@@ -49,6 +49,7 @@ def login():
             payload = {
                 'usuario_id': usuario.id,
                 'nombre': usuario.nombre,
+                'nombre_perfil': usuario.nombre_perfil,
                 'rol': usuario.rol,
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=8)
             }
@@ -57,7 +58,13 @@ def login():
             # logging.debug(f'TOKEN TYPE: {type(token)}')
             if hasattr(token, 'decode'):
                 token = token.decode('utf-8')
-            return jsonify({'success': True, 'usuario': usuario.nombre, 'rol': usuario.rol, 'token': token})
+            return jsonify({
+                'success': True, 
+                'usuario': usuario.nombre, 
+                'nombre_perfil': usuario.nombre_perfil,
+                'rol': usuario.rol, 
+                'token': token
+            })
         return jsonify({'success': False, 'error': 'Credenciales incorrectas'}), 401
     except Exception as e:
         logging.error(traceback.format_exc())

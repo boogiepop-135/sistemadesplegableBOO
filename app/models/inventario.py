@@ -23,6 +23,7 @@ class Inventario(db.Model):
             'estado': self.estado,
             'usuario_id': self.usuario_id,
             'usuario_nombre': self.usuario.nombre if self.usuario else None,
+            'usuario_nombre_perfil': self.usuario.nombre_perfil if self.usuario else None,
             'codigo_unico': self.codigo_unico,
             'ubicacion_id': self.ubicacion_id,
             'ubicacion_nombre': self.ubicacion.nombre if self.ubicacion else None

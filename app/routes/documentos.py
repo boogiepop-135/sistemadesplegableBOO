@@ -88,8 +88,9 @@ def subir_documento():
         tipo_archivo = filename.rsplit('.', 1)[1].lower()
         ticket_id = request.form.get('ticket_id')
         inventario_id = request.form.get('inventario_id')
+        procedimiento_id = request.form.get('procedimiento_id')
         
-        print(f"DEBUG - Datos del documento: descripcion={descripcion}, tipo={tipo_archivo}, ticket_id={ticket_id}, inventario_id={inventario_id}")
+        print(f"DEBUG - Datos del documento: descripcion={descripcion}, tipo={tipo_archivo}, ticket_id={ticket_id}, inventario_id={inventario_id}, procedimiento_id={procedimiento_id}")
         
         doc = Documento(
             nombre_archivo=filename,
@@ -97,7 +98,8 @@ def subir_documento():
             tipo_archivo=tipo_archivo,
             ruta_archivo=ruta,
             ticket_id=ticket_id if ticket_id else None,
-            inventario_id=inventario_id if inventario_id else None
+            inventario_id=inventario_id if inventario_id else None,
+            procedimiento_id=procedimiento_id if procedimiento_id else None
         )
         
         try:

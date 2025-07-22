@@ -23,6 +23,7 @@ class Ticket(db.Model):
             'descripcion': self.descripcion,
             'usuario_id': self.usuario_id,
             'usuario_nombre': self.usuario.nombre if self.usuario else None,
+            'usuario_nombre_perfil': self.usuario.nombre_perfil if self.usuario else None,
             'fecha_apertura': self.fecha_apertura.strftime('%Y-%m-%d %H:%M:%S'),
             'fecha_cierre': self.fecha_cierre.strftime('%Y-%m-%d %H:%M:%S') if self.fecha_cierre else None,
             'estado': self.estado,

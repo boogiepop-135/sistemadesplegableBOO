@@ -49,7 +49,7 @@ function Login({ onLogin }) {
       });
       const data = await res.json();
       if (data.success) {
-        onLogin(data.usuario, data.rol);
+        onLogin(data.usuario, data.rol, data.nombre_perfil);
         localStorage.setItem('token', data.token); // Guardar el token JWT
       } else {
         setError(data.error || 'Credenciales incorrectas');
@@ -99,6 +99,7 @@ function Footer() {
 function App() {
   const [usuarioLogueado, setUsuarioLogueado] = useState(() => localStorage.getItem('usuarioLogueado'));
   const [rol, setRol] = useState(() => localStorage.getItem('rol'));
+  const [nombrePerfil, setNombrePerfil] = useState(() => localStorage.getItem('nombrePerfil'));
   const [panel, setPanel] = useState('inventario');
   const [showWelcome, setShowWelcome] = useState(() => {
     const flag = localStorage.getItem('showWelcome');
@@ -106,20 +107,24 @@ function App() {
   });
 
   // Guardar sesión en localStorage
-  const handleLogin = (usuario, rolUsuario) => {
+  const handleLogin = (usuario, rolUsuario, nombrePerfil) => {
     setUsuarioLogueado(usuario);
     setRol(rolUsuario);
+    setNombrePerfil(nombrePerfil);
     localStorage.setItem('usuarioLogueado', usuario);
     localStorage.setItem('rol', rolUsuario);
+    localStorage.setItem('nombrePerfil', nombrePerfil);
   };
 
   // Limpiar sesión
   const handleLogout = () => {
     setUsuarioLogueado(null);
     setRol(null);
+    setNombrePerfil(null);
     setPanel('inventario');
     localStorage.removeItem('usuarioLogueado');
     localStorage.removeItem('rol');
+    localStorage.removeItem('nombrePerfil');
     localStorage.removeItem('lastActivity');
   };
 
@@ -179,7 +184,7 @@ function App() {
         <div className="animate-fade-in" style={{ textAlign: 'center', margin: '40px 0' }}>
           {showWelcome && (
             <div style={{ marginBottom: 18, background: '#e8f5e9', borderRadius: 8, color: '#388e3c', fontWeight: 'bold', fontSize: '1.1em', boxShadow: '0 2px 8px #c8e6c9', padding: 16 }}>
-              ¡Bienvenido, {usuarioLogueado}! <span style={{fontSize: '0.9em', color: rol === 'admin' ? '#43a047' : '#1976d2', marginLeft: 10}}>[{rol === 'admin' ? 'ADMIN' : 'USUARIO'}]</span><br/>
+              ¡Bienvenido, {nombrePerfil || usuarioLogueado}! <span style={{fontSize: '0.9em', color: rol === 'admin' ? '#43a047' : '#1976d2', marginLeft: 10}}>[{rol === 'admin' ? 'ADMIN' : 'USUARIO'}]</span><br/>
               Has iniciado sesión correctamente.
             </div>
           )}

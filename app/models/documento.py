@@ -14,10 +14,12 @@ class Documento(db.Model):
     # Relaciones opcionales
     ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=True)
     inventario_id = db.Column(db.Integer, db.ForeignKey('inventario.id'), nullable=True)
+    procedimiento_id = db.Column(db.Integer, db.ForeignKey('procedimiento_soporte.id'), nullable=True)
 
     # Relaciones de back-population (opcional, pero recomendado)
     ticket = db.relationship('Ticket', back_populates='documentos')
     inventario = db.relationship('Inventario', back_populates='documentos')
+    procedimiento = db.relationship('ProcedimientoSoporte', back_populates='documentos')
 
     def to_dict(self):
         return {
@@ -29,5 +31,6 @@ class Documento(db.Model):
             'fecha_subida': self.fecha_subida.strftime('%Y-%m-%d %H:%M:%S'),
             'ticket_id': self.ticket_id,
             'inventario_id': self.inventario_id,
+            'procedimiento_id': self.procedimiento_id,
             'codigo_unico': self.codigo_unico
         }
