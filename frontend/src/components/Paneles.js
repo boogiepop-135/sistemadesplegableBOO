@@ -139,10 +139,10 @@ export function InventarioList({ admin, usuario }) {
       field: 'usuario_nombre',
       headerName: 'Usuario',
       flex: 1,
-      valueGetter: (params) => params.row.usuario_nombre_perfil || params.row.usuario_nombre || '',
+      valueGetter: (params) => (params.row?.usuario_nombre_perfil || params.row?.usuario_nombre || ''),
       renderCell: (params) => (
-        <span style={{ color: params.row.usuario_nombre_perfil ? '#1976d2' : '#333', fontWeight: params.row.usuario_nombre_perfil ? 'bold' : 'normal' }}>
-          {params.row.usuario_nombre_perfil || params.row.usuario_nombre || ''}
+        <span style={{ color: params.row?.usuario_nombre_perfil ? '#1976d2' : '#333', fontWeight: params.row?.usuario_nombre_perfil ? 'bold' : 'normal' }}>
+          {params.row?.usuario_nombre_perfil || params.row?.usuario_nombre || ''}
         </span>
       )
     },
