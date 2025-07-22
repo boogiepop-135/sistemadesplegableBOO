@@ -3,7 +3,7 @@ import { Box, Button, Paper, Grid, IconButton, Tooltip, Tabs, Tab } from '@mui/m
 import { DataGrid } from '@mui/x-data-grid';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { FaTrash, FaEdit, FaPlus, FaDownload, FaUpload, FaEye, FaWrench, FaCheck, FaTimes, FaPause, FaFileAlt, FaBell } from 'react-icons/fa';
+import { FaTrash, FaEdit, FaPlus, FaDownload, FaEye, FaWrench, FaCheck, FaTimes, FaPause, FaSearch, FaBook, FaTools } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import { getToken } from '../App';
 import { API_URL } from '../config';
@@ -36,6 +36,9 @@ export function InventarioList({ admin, usuario }) {
   const [categorias, setCategorias] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [error, setError] = useState('');
+  
+
+  
   // NUEVO: Estado para gráficos avanzados
   // const [graficoTipo, setGraficoTipo] = useState('barras'); // 'barras' o 'pastel'
   // const [campoAnalizar, setCampoAnalizar] = useState('tipo'); // 'tipo', 'estado', 'sucursal', 'responsable'
@@ -174,6 +177,16 @@ export function InventarioList({ admin, usuario }) {
     { field: 'tipo', headerName: 'Tipo', flex: 1 },
     { field: 'estado', headerName: 'Estado', flex: 1 },
     {
+      field: 'ubicacion_nombre',
+      headerName: 'Ubicación',
+      flex: 1,
+      valueGetter: (params) => {
+        if (!params || !params.row) return '';
+        const ubicacion = ubicaciones.find(u => u.id === params.row.ubicacion_id);
+        return ubicacion ? ubicacion.nombre : '';
+      }
+    },
+    {
       field: 'usuario_nombre',
       headerName: 'Usuario',
       flex: 1,
@@ -309,8 +322,7 @@ export function InventarioList({ admin, usuario }) {
   // Generar datos dinámicos según campo seleccionado
   //asdasd
   // NUEVO: Importar desde Excel con resumen de resultados
-  const [importResumen, setImportResumen] = useState([]);
-  const [mostrarResumen, setMostrarResumen] = useState(false);
+
   const handleImportExcel = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -320,16 +332,12 @@ export function InventarioList({ admin, usuario }) {
       const workbook = XLSX.read(data, { type: 'array' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-      let resultados = [];
       let procesados = 0;
-      setMostrarResumen(true);
       json.forEach((row, idx) => {
         // Validación de campos mínimos requeridos
         if (!row.equipo && !row.Equipo) {
-          resultados[idx] = { fila: idx + 2, estado: 'error', mensaje: 'Falta el campo "equipo"', datos: row };
           procesados++;
           if (procesados === json.length) {
-            setImportResumen([...resultados]);
             fetchWithAuth(`${API_URL}/inventario/`)
               .then(res => res.json())
               .then(inv => setInventario(inv));
@@ -337,10 +345,8 @@ export function InventarioList({ admin, usuario }) {
           return;
         }
         if (!row.tipo && !row.Tipo) {
-          resultados[idx] = { fila: idx + 2, estado: 'error', mensaje: 'Falta el campo "tipo"', datos: row };
           procesados++;
           if (procesados === json.length) {
-            setImportResumen([...resultados]);
             fetchWithAuth(`${API_URL}/inventario/`)
               .then(res => res.json())
               .then(inv => setInventario(inv));
@@ -367,13 +373,7 @@ export function InventarioList({ admin, usuario }) {
           .then(res => res.json())
           .then(data => {
             procesados++;
-            if (data.error) {
-              resultados[idx] = { fila: idx + 2, estado: 'error', mensaje: data.error, datos: datosEnviar };
-            } else {
-              resultados[idx] = { fila: idx + 2, estado: 'ok', mensaje: 'Importado correctamente', datos: datosEnviar };
-            }
             if (procesados === json.length) {
-              setImportResumen([...resultados]);
               fetchWithAuth(`${API_URL}/inventario/`)
                 .then(res => res.json())
                 .then(inv => setInventario(inv));
@@ -381,9 +381,7 @@ export function InventarioList({ admin, usuario }) {
           })
           .catch(err => {
             procesados++;
-            resultados[idx] = { fila: idx + 2, estado: 'error', mensaje: err.message, datos: datosEnviar };
             if (procesados === json.length) {
-              setImportResumen([...resultados]);
               fetchWithAuth(`${API_URL}/inventario/`)
                 .then(res => res.json())
                 .then(inv => setInventario(inv));
@@ -620,6 +618,8 @@ export function InventarioList({ admin, usuario }) {
                 </Paper>
               )}
 
+
+
               {/* Filtros */}
               <Paper sx={{ 
                 p: 3, 
@@ -796,149 +796,6 @@ export function InventarioList({ admin, usuario }) {
                 </Button>
               </Paper>
             </Box>
-          </Grid>
-
-          {/* Panel derecho - DataGrid */}
-          <Grid item xs={12} lg={8} xl={9}>
-            {admin && (
-              <Paper sx={{ mb: 2, p: 1.5, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
-                <h4 style={{ color: '#388e3c', marginBottom: 6, fontSize: '1em', textAlign: 'center' }}>➕ Agregar equipo</h4>
-                <input
-                  type="text"
-                  value={nuevoEquipo.nombre}
-                  onChange={e => setNuevoEquipo({ ...nuevoEquipo, nombre: e.target.value })}
-                  placeholder="Nombre del equipo"
-                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
-                />
-                <select
-                  value={nuevoEquipo.tipo}
-                  onChange={e => setNuevoEquipo({ ...nuevoEquipo, tipo: e.target.value })}
-                  style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
-                >
-                  <option value="">Tipo/Categoría</option>
-                  {categorias.map(c => (
-                    <option key={c.id} value={c.nombre}>{c.nombre}</option>
-                  ))}
-                </select>
-                <select
-                  value={nuevoEquipo.estado}
-                  onChange={e => setNuevoEquipo({ ...nuevoEquipo, estado: e.target.value })}
-                  style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
-                >
-                  <option value="">Estado</option>
-                  <option value="buen estado">Buen estado</option>
-                  <option value="marcas de uso">Marcas de uso</option>
-                  <option value="rayones">Rayones</option>
-                  <option value="daño serio">Daño serio</option>
-                  <option value="inservible">Inservible</option>
-                </select>
-                <select
-                  value={nuevoEquipo.ubicacion_id || ''}
-                  onChange={e => setNuevoEquipo({ ...nuevoEquipo, ubicacion_id: e.target.value })}
-                  style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
-                >
-                  <option value="">Ubicación</option>
-                  {ubicaciones.map(u => (
-                    <option key={u.id} value={u.id}>{u.nombre}</option>
-                  ))}
-                </select>
-                <select
-                  value={nuevoEquipo.usuario_id || ''}
-                  onChange={e => setNuevoEquipo({ ...nuevoEquipo, usuario_id: e.target.value })}
-                  style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
-                >
-                  <option value="">Usuario</option>
-                  {usuarios.map(u => (
-                    <option key={u.id} value={u.id}>{u.nombre}</option>
-                  ))}
-                </select>
-                <Button variant="contained" color="success" onClick={agregarEquipo} sx={{ minWidth: 100, fontWeight: 'bold', fontSize: '0.9em', width: '100%', marginBottom: 4, padding: '6px' }}>
-                  <FaPlus style={{ marginRight: 4 }} /> Agregar
-                </Button>
-                <Button variant="outlined" color="info" onClick={() => console.log('Estado actual:', nuevoEquipo)} sx={{ minWidth: 100, fontSize: '0.8em', width: '100%', padding: '4px' }}>
-                  Debug
-                </Button>
-                {/* Botones de Excel más compactos */}
-                <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
-                  <Tooltip title="Importar Excel">
-                    <Button 
-                      variant="contained" 
-                      color="info" 
-                      component="label"
-                      sx={{ flex: 1, fontSize: '0.8em', padding: '4px' }}
-                    >
-                      <FaUpload style={{ marginRight: 2 }} />
-                      Importar
-                      <input 
-                        type="file" 
-                        accept=".xlsx,.xls" 
-                        onChange={handleImportExcel} 
-                        style={{ display: 'none' }} 
-                      />
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title="Descargar plantilla">
-                    <Button 
-                      variant="contained" 
-                      color="warning" 
-                      onClick={() => {
-                        const ws = XLSX.utils.json_to_sheet([
-                          { equipo: 'Ejemplo', tipo: 'Computadora', estado: 'Disponible', ubicacion_id: '', usuario_id: '' }
-                        ]);
-                        const wb = XLSX.utils.book_new();
-                        XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
-                        XLSX.writeFile(wb, 'plantilla_inventario.xlsx');
-                      }}
-                      sx={{ flex: 1, fontSize: '0.8em', padding: '4px' }}
-                    >
-                      <FaFileAlt style={{ marginRight: 2 }} />
-                      Plantilla
-                    </Button>
-                  </Tooltip>
-                </div>
-                {/* NUEVO: Resumen de importación */}
-                {mostrarResumen && importResumen.length > 0 && (
-                  <Paper sx={{ mt: 2, p: 2, background: '#fffde7', borderRadius: 2, boxShadow: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <b style={{ color: '#388e3c' }}>Resumen de importación</b>
-                      <Button size="small" color="error" onClick={() => { setMostrarResumen(false); setImportResumen([]); }}>Cerrar</Button>
-                    </div>
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginTop: 8 }}>
-                      {importResumen.map((r, i) => (
-                        <li key={i} style={{ color: r.estado === 'ok' ? '#388e3c' : '#e74c3c', fontWeight: r.estado === 'ok' ? 'bold' : 'bold', marginBottom: 4 }}>
-                          Fila {r.fila}: {r.estado === 'ok' ? '✔' : '✗'} {r.mensaje}
-                        </li>
-                      ))}
-                    </ul>
-                  </Paper>
-                )}
-              </Paper>
-            )}
-            <Paper sx={{ p: 1.5, background: '#f8fff8', borderRadius: 2, boxShadow: 1 }}>
-              <h4 style={{ color: '#388e3c', marginBottom: 6, fontSize: '1em', textAlign: 'center' }}>🔍 Filtros</h4>
-              <select
-                value={filtro.tipo}
-                onChange={e => setFiltro(f => ({ ...f, tipo: e.target.value }))}
-                style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
-              >
-                <option value="">Tipo</option>
-                {[...new Set(inventario.map(e => e.tipo))].map(tipo => <option key={tipo} value={tipo}>{tipo}</option>)}
-              </select>
-              <select
-                value={filtro.estado}
-                onChange={e => setFiltro(f => ({ ...f, estado: e.target.value }))}
-                style={{ padding: '6px', borderRadius: '4px', border: '1px solid #a5d6a7', marginBottom: 6, width: '100%', fontSize: '0.9em' }}
-              >
-                <option value="">Estado</option>
-                {[...new Set(inventario.map(e => e.estado))].map(estado => <option key={estado} value={estado}>{estado}</option>)}
-              </select>
-              <Tooltip title="Exportar inventario a Excel">
-                <Button variant="contained" color="success" onClick={exportarExcel} sx={{ minWidth: 100, width: '100%', fontSize: '0.9em', padding: '6px' }}>
-                  <FaDownload style={{ marginRight: 4 }} />
-                  Exportar Excel
-                </Button>
-              </Tooltip>
-            </Paper>
           </Grid>
 
           {/* Panel derecho - DataGrid */}
@@ -1123,6 +980,8 @@ export function InventarioList({ admin, usuario }) {
           </div>
         </div>
       )}
+
+
     </Box>
   );
 }
@@ -1515,131 +1374,7 @@ export function TicketsList({ admin, usuario }) {
   );
 }
 
-export function AvisosYDias({ admin }) {
-  const [avisos, setAvisos] = useState([]);
-  const [nuevoAviso, setNuevoAviso] = useState('');
-  const [mensaje, setMensaje] = useState('');
-  const [activeTab, setActiveTab] = useState(0);
 
-  useEffect(() => {
-    cargarAvisos();
-  }, []);
-
-  const cargarAvisos = () => {
-    fetchWithAuth(`${API_URL}/avisos/`)
-      .then(res => res.json())
-      .then(data => setAvisos(data))
-      .catch(err => {
-        console.error('Error cargando avisos:', err);
-        setMensaje('Error al cargar avisos');
-      });
-  };
-
-  const fijarAviso = () => {
-    if (!nuevoAviso.trim()) {
-      setMensaje('Por favor escribe un aviso');
-      return;
-    }
-
-    fetchWithAuth(`${API_URL}/avisos/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mensaje: nuevoAviso })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setNuevoAviso('');
-          setMensaje('Aviso fijado exitosamente');
-          cargarAvisos();
-        } else {
-          setMensaje(data.error || 'Error al fijar aviso');
-        }
-      })
-      .catch(err => {
-        console.error('Error fijando aviso:', err);
-        setMensaje('Error de conexión');
-      });
-  };
-
-  const eliminarAviso = (id) => {
-    fetchWithAuth(`${API_URL}/avisos/${id}`, { method: 'DELETE' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setMensaje('Aviso eliminado exitosamente');
-          cargarAvisos();
-        } else {
-          setMensaje(data.error || 'Error al eliminar');
-        }
-      })
-      .catch(err => {
-        console.error('Error eliminando aviso:', err);
-        setMensaje('Error de conexión');
-      });
-  };
-
-  return (
-    <Box sx={{ width: '100vw', maxWidth: '100vw', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, p: 2, minHeight: '80vh', overflowX: 'auto' }}>
-      <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Tab label="📢 Avisos" />
-        <Tab label="📅 Días de Labores" />
-      </Tabs>
-
-      {activeTab === 0 && (
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 2, background: '#fff3e0', borderRadius: 2, boxShadow: 1 }}>
-              <h3 style={{ color: '#e65100', marginBottom: 16 }}>📢 Fijar Aviso</h3>
-              <textarea
-                placeholder="Escribe tu aviso aquí..."
-                value={nuevoAviso}
-                onChange={e => setNuevoAviso(e.target.value)}
-                style={{ width: '100%', padding: 12, borderRadius: 4, border: '1px solid #ffcc02', marginBottom: 12, minHeight: 100, resize: 'vertical' }}
-              />
-              <Button variant="contained" color="warning" onClick={fijarAviso} sx={{ width: '100%' }}>
-                Fijar Aviso
-              </Button>
-              {mensaje && <div style={{ color: '#e65100', marginTop: 8 }}>{mensaje}</div>}
-            </Paper>
-          </Grid>
-          <Grid item xs={12} md={8}>
-            <Paper sx={{ p: 2, background: '#fff', borderRadius: 2, boxShadow: 2 }}>
-              <h3 style={{ color: '#e65100', marginBottom: 16 }}>📢 Avisos Fijados</h3>
-              <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-                {avisos.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: '#666', padding: 20 }}>
-                    No hay avisos fijados
-                  </div>
-                ) : (
-                  avisos.map(aviso => (
-                    <div key={aviso.id} style={{ padding: 12, borderBottom: '1px solid #eee', background: '#fff3e0', marginBottom: 8, borderRadius: 4 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ flex: 1 }}>
-                          <p style={{ margin: 0, color: '#e65100', fontWeight: 'bold' }}>{aviso.mensaje}</p>
-                          <small style={{ color: '#666' }}>Fijado el: {aviso.fecha}</small>
-                        </div>
-                        {admin && (
-                          <IconButton size="small" color="error" onClick={() => eliminarAviso(aviso.id)}>
-                            <FaTrash />
-                          </IconButton>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </Paper>
-          </Grid>
-        </Grid>
-      )}
-
-      {activeTab === 1 && (
-        <DiaLabores />
-      )}
-    </Box>
-  );
-}
 
 export function AdminPanel() {
   // Usuarios
@@ -2305,28 +2040,7 @@ export function BitacorasPanel() {
   );
 }
 
-export function DiaLabores() {
-  const [mensaje, setMensaje] = useState('');
 
-  // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
-  useEffect(() => {
-    fetchWithAuth(`${API_URL}/avisos`)
-      .then(res => res.json())
-      .then(data => {
-        setMensaje(data.mensaje);
-      });
-  }, []);
-
-  return (
-    <Box sx={{ width: '100vw', minHeight: '60vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <Paper sx={{ p: 2, background: 'linear-gradient(135deg, #e8f5e9 80%, #c8e6c9 100%)', borderRadius: 3, boxShadow: 2, minHeight: 80, maxWidth: 340, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <FaBell style={{ color: '#43a047', fontSize: '1.7em', marginBottom: 6 }} />
-        <h3 style={{ color: '#388e3c', marginBottom: 4, textAlign: 'center', fontSize: '1.08em' }}>Aviso Importante</h3>
-        <p style={{ margin: 0, fontSize: '1em', color: '#2e7d32', textAlign: 'center', fontWeight: 500, wordBreak: 'break-word' }}>{mensaje || 'No hay avisos por el momento.'}</p>
-      </Paper>
-    </Box>
-  );
-}
 
 export function TableroFlujoTrabajo() {
   const [tickets, setTickets] = useState([]);
@@ -3250,6 +2964,848 @@ export function MantenimientosPanel({ admin }) {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+
+    </Box>
+  );
+}
+
+export function SoportePanel({ admin, usuario }) {
+  const [temas, setTemas] = useState([]);
+  const [procedimientos, setProcedimientos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [temaSeleccionado, setTemaSeleccionado] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
+  const [resultadosBusqueda, setResultadosBusqueda] = useState([]);
+  const [modalTema, setModalTema] = useState(false);
+  const [modalProcedimiento, setModalProcedimiento] = useState(false);
+  const [editandoTema, setEditandoTema] = useState(null);
+  const [editandoProcedimiento, setEditandoProcedimiento] = useState(null);
+  const [mensaje, setMensaje] = useState('');
+
+  // Estados para formularios
+  const [nuevoTema, setNuevoTema] = useState({
+    nombre: '',
+    descripcion: '',
+    categoria: 'General',
+    color: '#2196f3'
+  });
+
+  const [nuevoProcedimiento, setNuevoProcedimiento] = useState({
+    titulo: '',
+    descripcion: '',
+    pasos: '',
+    comandos: '',
+    notas: '',
+    dificultad: 'Intermedio',
+    tiempo_estimado: '',
+    tema_id: ''
+  });
+
+  useEffect(() => {
+    cargarTemas();
+    cargarCategorias();
+  }, []);
+
+  useEffect(() => {
+    if (temaSeleccionado) {
+      cargarProcedimientos(temaSeleccionado.id);
+    } else {
+      setProcedimientos([]);
+    }
+  }, [temaSeleccionado]);
+
+  const cargarTemas = () => {
+    fetchWithAuth(`${API_URL}/soporte/temas/`)
+      .then(res => res.json())
+      .then(data => setTemas(data))
+      .catch(err => {
+        console.error('Error cargando temas:', err);
+        setMensaje('Error al cargar temas');
+      });
+  };
+
+  const cargarProcedimientos = (temaId) => {
+    fetchWithAuth(`${API_URL}/soporte/procedimientos/?tema_id=${temaId}`)
+      .then(res => res.json())
+      .then(data => setProcedimientos(data))
+      .catch(err => {
+        console.error('Error cargando procedimientos:', err);
+        setMensaje('Error al cargar procedimientos');
+      });
+  };
+
+  const cargarCategorias = () => {
+    fetchWithAuth(`${API_URL}/soporte/categorias/`)
+      .then(res => res.json())
+      .then(data => setCategorias(data))
+      .catch(err => {
+        console.error('Error cargando categorías:', err);
+      });
+  };
+
+  const buscarSoporte = () => {
+    if (!busqueda.trim()) {
+      setResultadosBusqueda([]);
+      return;
+    }
+
+    fetchWithAuth(`${API_URL}/soporte/buscar/?q=${encodeURIComponent(busqueda)}`)
+      .then(res => res.json())
+      .then(data => setResultadosBusqueda(data))
+      .catch(err => {
+        console.error('Error en búsqueda:', err);
+        setMensaje('Error en la búsqueda');
+      });
+  };
+
+  const crearTema = () => {
+    if (!nuevoTema.nombre.trim()) {
+      setMensaje('El nombre del tema es requerido');
+      return;
+    }
+
+    fetchWithAuth(`${API_URL}/soporte/temas/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nuevoTema)
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setTemas(prev => [...prev, data]);
+          setNuevoTema({ nombre: '', descripcion: '', categoria: 'General', color: '#2196f3' });
+          setModalTema(false);
+          setMensaje('Tema creado exitosamente');
+        } else {
+          setMensaje(data.error || 'Error al crear tema');
+        }
+      })
+      .catch(err => {
+        console.error('Error creando tema:', err);
+        setMensaje('Error de conexión');
+      });
+  };
+
+  const actualizarTema = () => {
+    if (!editandoTema.nombre.trim()) {
+      setMensaje('El nombre del tema es requerido');
+      return;
+    }
+
+    fetchWithAuth(`${API_URL}/soporte/temas/${editandoTema.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editandoTema)
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setTemas(prev => prev.map(t => t.id === editandoTema.id ? { ...t, ...data } : t));
+          setEditandoTema(null);
+          setModalTema(false);
+          setMensaje('Tema actualizado exitosamente');
+        } else {
+          setMensaje(data.error || 'Error al actualizar tema');
+        }
+      })
+      .catch(err => {
+        console.error('Error actualizando tema:', err);
+        setMensaje('Error de conexión');
+      });
+  };
+
+  const eliminarTema = (id) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este tema?')) return;
+
+    fetchWithAuth(`${API_URL}/soporte/temas/${id}`, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setTemas(prev => prev.filter(t => t.id !== id));
+          if (temaSeleccionado && temaSeleccionado.id === id) {
+            setTemaSeleccionado(null);
+          }
+          setMensaje('Tema eliminado exitosamente');
+        } else {
+          setMensaje(data.error || 'Error al eliminar tema');
+        }
+      })
+      .catch(err => {
+        console.error('Error eliminando tema:', err);
+        setMensaje('Error de conexión');
+      });
+  };
+
+  const crearProcedimiento = () => {
+    if (!nuevoProcedimiento.titulo.trim() || !nuevoProcedimiento.tema_id) {
+      setMensaje('El título y tema son requeridos');
+      return;
+    }
+
+    fetchWithAuth(`${API_URL}/soporte/procedimientos/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nuevoProcedimiento)
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setProcedimientos(prev => [...prev, data]);
+          setNuevoProcedimiento({
+            titulo: '', descripcion: '', pasos: '', comandos: '', notas: '',
+            dificultad: 'Intermedio', tiempo_estimado: '', tema_id: ''
+          });
+          setModalProcedimiento(false);
+          setMensaje('Procedimiento creado exitosamente');
+        } else {
+          setMensaje(data.error || 'Error al crear procedimiento');
+        }
+      })
+      .catch(err => {
+        console.error('Error creando procedimiento:', err);
+        setMensaje('Error de conexión');
+      });
+  };
+
+  const actualizarProcedimiento = () => {
+    if (!editandoProcedimiento.titulo.trim()) {
+      setMensaje('El título del procedimiento es requerido');
+      return;
+    }
+
+    fetchWithAuth(`${API_URL}/soporte/procedimientos/${editandoProcedimiento.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editandoProcedimiento)
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setProcedimientos(prev => prev.map(p => p.id === editandoProcedimiento.id ? { ...p, ...data } : p));
+          setEditandoProcedimiento(null);
+          setModalProcedimiento(false);
+          setMensaje('Procedimiento actualizado exitosamente');
+        } else {
+          setMensaje(data.error || 'Error al actualizar procedimiento');
+        }
+      })
+      .catch(err => {
+        console.error('Error actualizando procedimiento:', err);
+        setMensaje('Error de conexión');
+      });
+  };
+
+  const eliminarProcedimiento = (id) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este procedimiento?')) return;
+
+    fetchWithAuth(`${API_URL}/soporte/procedimientos/${id}`, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setProcedimientos(prev => prev.filter(p => p.id !== id));
+          setMensaje('Procedimiento eliminado exitosamente');
+        } else {
+          setMensaje(data.error || 'Error al eliminar procedimiento');
+        }
+      })
+      .catch(err => {
+        console.error('Error eliminando procedimiento:', err);
+        setMensaje('Error de conexión');
+      });
+  };
+
+  const getDificultadColor = (dificultad) => {
+    switch (dificultad) {
+      case 'Fácil': return '#4caf50';
+      case 'Intermedio': return '#ff9800';
+      case 'Avanzado': return '#f44336';
+      default: return '#2196f3';
+    }
+  };
+
+  return (
+    <Box sx={{ 
+      width: '100%', 
+      maxWidth: '100vw', 
+      bgcolor: 'background.paper', 
+      borderRadius: 2, 
+      boxShadow: 2, 
+      p: 3, 
+      minHeight: '80vh', 
+      overflowX: 'auto' 
+    }}>
+      <Grid container spacing={3}>
+        {/* Barra de búsqueda */}
+        <Grid item xs={12}>
+          <Paper sx={{ 
+            p: 2, 
+            background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)', 
+            borderRadius: 2, 
+            boxShadow: 1 
+          }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <FaSearch style={{ color: '#1976d2', fontSize: '1.2em' }} />
+              <input
+                type="text"
+                placeholder="🔍 Buscar temas y procedimientos..."
+                value={busqueda}
+                onChange={e => setBusqueda(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && buscarSoporte()}
+                style={{ 
+                  flex: 1, 
+                  padding: '12px 16px', 
+                  borderRadius: '8px', 
+                  border: '2px solid #90caf9', 
+                  fontSize: '1em',
+                  backgroundColor: '#fff'
+                }}
+              />
+              <Button 
+                variant="contained" 
+                color="primary" 
+                onClick={buscarSoporte}
+                sx={{ 
+                  background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                  '&:hover': { background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)' }
+                }}
+              >
+                Buscar
+              </Button>
+            </div>
+            
+            {/* Resultados de búsqueda */}
+            {resultadosBusqueda.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <h4 style={{ color: '#1976d2', marginBottom: 12 }}>Resultados de búsqueda:</h4>
+                <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+                  {resultadosBusqueda.map((resultado, idx) => (
+                    <Paper key={idx} sx={{ 
+                      p: 2, 
+                      mb: 1, 
+                      background: resultado.tipo === 'tema' ? '#fff3e0' : '#f3e5f5',
+                      border: '1px solid #ffcc02',
+                      cursor: 'pointer'
+                    }} onClick={() => {
+                      if (resultado.tipo === 'tema') {
+                        setTemaSeleccionado(resultado);
+                      }
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {resultado.tipo === 'tema' ? <FaBook style={{ color: '#ff9800' }} /> : <FaTools style={{ color: '#9c27b0' }} />}
+                        <div style={{ flex: 1 }}>
+                          <strong>{resultado.titulo}</strong>
+                          <div style={{ fontSize: '0.9em', color: '#666' }}>
+                            {resultado.tipo === 'tema' ? resultado.categoria : `Tema: ${resultado.tema_nombre}`}
+                          </div>
+                          <div style={{ fontSize: '0.8em', color: '#888' }}>
+                            {resultado.descripcion?.substring(0, 100)}...
+                          </div>
+                        </div>
+                      </div>
+                    </Paper>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Paper>
+        </Grid>
+
+        {/* Panel izquierdo - Temas */}
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ 
+            p: 3, 
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8fff8 100%)', 
+            borderRadius: 3, 
+            boxShadow: 2,
+            border: '1px solid #e8f5e9',
+            height: 'fit-content'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ 
+                color: '#2e7d32', 
+                fontSize: '1.3em', 
+                fontWeight: 'bold',
+                textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+              }}>
+                📚 Temas de Soporte
+              </h3>
+              {admin && (
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  onClick={() => {
+                    setEditandoTema(null);
+                    setNuevoTema({ nombre: '', descripcion: '', categoria: 'General', color: '#2196f3' });
+                    setModalTema(true);
+                  }}
+                  sx={{ 
+                    background: 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)',
+                    '&:hover': { background: 'linear-gradient(135deg, #45a049 0%, #3d8b40 100%)' }
+                  }}
+                >
+                  ➕ Nuevo Tema
+                </Button>
+              )}
+            </div>
+
+            <div style={{ maxHeight: 500, overflowY: 'auto' }}>
+              {temas.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#666', padding: 20 }}>
+                  No hay temas de soporte
+                </div>
+              ) : (
+                temas.map(tema => (
+                  <Paper key={tema.id} sx={{ 
+                    p: 2, 
+                    mb: 2, 
+                    background: temaSeleccionado?.id === tema.id ? '#e8f5e9' : '#fff',
+                    border: `2px solid ${temaSeleccionado?.id === tema.id ? '#4caf50' : '#e0e0e0'}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    '&:hover': { 
+                      background: temaSeleccionado?.id === tema.id ? '#e8f5e9' : '#f5f5f5',
+                      borderColor: '#4caf50'
+                    }
+                  }} onClick={() => setTemaSeleccionado(tema)}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <div style={{ 
+                            width: 12, 
+                            height: 12, 
+                            borderRadius: '50%', 
+                            backgroundColor: tema.color,
+                            border: '2px solid #fff',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          }} />
+                          <h4 style={{ 
+                            margin: 0, 
+                            color: '#2e7d32', 
+                            fontWeight: 'bold',
+                            fontSize: '1.1em'
+                          }}>
+                            {tema.nombre}
+                          </h4>
+                        </div>
+                        <div style={{ fontSize: '0.9em', color: '#666', marginBottom: 4 }}>
+                          📂 {tema.categoria}
+                        </div>
+                        <div style={{ fontSize: '0.8em', color: '#888' }}>
+                          {tema.descripcion?.substring(0, 80)}...
+                        </div>
+                        <div style={{ fontSize: '0.8em', color: '#4caf50', marginTop: 4 }}>
+                          📋 {tema.procedimientos_count} procedimientos
+                        </div>
+                      </div>
+                      {admin && (
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <IconButton 
+                            size="small" 
+                            color="primary" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditandoTema(tema);
+                              setNuevoTema({ ...tema });
+                              setModalTema(true);
+                            }}
+                          >
+                            <FaEdit />
+                          </IconButton>
+                          <IconButton 
+                            size="small" 
+                            color="error" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              eliminarTema(tema.id);
+                            }}
+                          >
+                            <FaTrash />
+                          </IconButton>
+                        </div>
+                      )}
+                    </div>
+                  </Paper>
+                ))
+              )}
+            </div>
+          </Paper>
+        </Grid>
+
+        {/* Panel derecho - Procedimientos */}
+        <Grid item xs={12} md={8}>
+          <Paper sx={{ 
+            p: 3, 
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8fff8 100%)', 
+            borderRadius: 3, 
+            boxShadow: 2,
+            border: '1px solid #e8f5e9',
+            minHeight: 600
+          }}>
+            {temaSeleccionado ? (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <div>
+                    <h3 style={{ 
+                      color: '#2e7d32', 
+                      fontSize: '1.4em', 
+                      fontWeight: 'bold',
+                      marginBottom: 4
+                    }}>
+                      {temaSeleccionado.nombre}
+                    </h3>
+                    <div style={{ fontSize: '0.9em', color: '#666' }}>
+                      {temaSeleccionado.descripcion}
+                    </div>
+                  </div>
+                  {admin && (
+                    <Button 
+                      variant="contained" 
+                      color="primary" 
+                      onClick={() => {
+                        setEditandoProcedimiento(null);
+                        setNuevoProcedimiento({
+                          titulo: '', descripcion: '', pasos: '', comandos: '', notas: '',
+                          dificultad: 'Intermedio', tiempo_estimado: '', tema_id: temaSeleccionado.id
+                        });
+                        setModalProcedimiento(true);
+                      }}
+                      sx={{ 
+                        background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
+                        '&:hover': { background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)' }
+                      }}
+                    >
+                      ➕ Nuevo Procedimiento
+                    </Button>
+                  )}
+                </div>
+
+                <div style={{ maxHeight: 500, overflowY: 'auto' }}>
+                  {procedimientos.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#666', padding: 40 }}>
+                      <FaTools style={{ fontSize: '3em', color: '#ccc', marginBottom: 16 }} />
+                      <div>No hay procedimientos para este tema</div>
+                      <div style={{ fontSize: '0.9em', color: '#999' }}>
+                        {admin ? 'Crea el primer procedimiento usando el botón de arriba' : 'Contacta al administrador para agregar procedimientos'}
+                      </div>
+                    </div>
+                  ) : (
+                    procedimientos.map(proc => (
+                      <Paper key={proc.id} sx={{ 
+                        p: 3, 
+                        mb: 3, 
+                        background: '#fff',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: 2,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                          <div style={{ flex: 1 }}>
+                            <h4 style={{ 
+                              margin: 0, 
+                              color: '#2e7d32', 
+                              fontWeight: 'bold',
+                              fontSize: '1.2em',
+                              marginBottom: 8
+                            }}>
+                              {proc.titulo}
+                            </h4>
+                            <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
+                              <span style={{ 
+                                padding: '4px 8px', 
+                                borderRadius: '12px', 
+                                backgroundColor: getDificultadColor(proc.dificultad),
+                                color: '#fff',
+                                fontSize: '0.8em',
+                                fontWeight: 'bold'
+                              }}>
+                                {proc.dificultad}
+                              </span>
+                              {proc.tiempo_estimado && (
+                                <span style={{ 
+                                  padding: '4px 8px', 
+                                  borderRadius: '12px', 
+                                  backgroundColor: '#e3f2fd',
+                                  color: '#1976d2',
+                                  fontSize: '0.8em'
+                                }}>
+                                  ⏱️ {proc.tiempo_estimado}
+                                </span>
+                              )}
+                            </div>
+                            {proc.descripcion && (
+                              <div style={{ 
+                                fontSize: '0.9em', 
+                                color: '#666', 
+                                marginBottom: 12,
+                                lineHeight: '1.4'
+                              }}>
+                                {proc.descripcion}
+                              </div>
+                            )}
+                            {proc.pasos && (
+                              <div style={{ marginBottom: 12 }}>
+                                <h5 style={{ color: '#2e7d32', marginBottom: 8 }}>📋 Pasos:</h5>
+                                <div style={{ 
+                                  fontSize: '0.9em', 
+                                  color: '#555',
+                                  whiteSpace: 'pre-line',
+                                  lineHeight: '1.5'
+                                }}>
+                                  {proc.pasos}
+                                </div>
+                              </div>
+                            )}
+                            {proc.comandos && (
+                              <div style={{ marginBottom: 12 }}>
+                                <h5 style={{ color: '#2e7d32', marginBottom: 8 }}>💻 Comandos:</h5>
+                                <div style={{ 
+                                  fontSize: '0.9em', 
+                                  color: '#555',
+                                  backgroundColor: '#f5f5f5',
+                                  padding: 12,
+                                  borderRadius: 4,
+                                  fontFamily: 'monospace',
+                                  whiteSpace: 'pre-line'
+                                }}>
+                                  {proc.comandos}
+                                </div>
+                              </div>
+                            )}
+                            {proc.notas && (
+                              <div style={{ marginBottom: 12 }}>
+                                <h5 style={{ color: '#2e7d32', marginBottom: 8 }}>📝 Notas:</h5>
+                                <div style={{ 
+                                  fontSize: '0.9em', 
+                                  color: '#555',
+                                  fontStyle: 'italic',
+                                  lineHeight: '1.4'
+                                }}>
+                                  {proc.notas}
+                                </div>
+                              </div>
+                            )}
+                            <div style={{ 
+                              fontSize: '0.8em', 
+                              color: '#888',
+                              borderTop: '1px solid #eee',
+                              paddingTop: 8
+                            }}>
+                              👤 Creado por: {proc.usuario_creador} | 
+                              📅 {new Date(proc.fecha_creacion).toLocaleDateString()}
+                            </div>
+                          </div>
+                          {admin && (
+                            <div style={{ display: 'flex', gap: 4 }}>
+                              <IconButton 
+                                size="small" 
+                                color="primary" 
+                                onClick={() => {
+                                  setEditandoProcedimiento(proc);
+                                  setNuevoProcedimiento({ ...proc });
+                                  setModalProcedimiento(true);
+                                }}
+                              >
+                                <FaEdit />
+                              </IconButton>
+                              <IconButton 
+                                size="small" 
+                                color="error" 
+                                onClick={() => eliminarProcedimiento(proc.id)}
+                              >
+                                <FaTrash />
+                              </IconButton>
+                            </div>
+                          )}
+                        </div>
+                      </Paper>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', color: '#666', padding: 40 }}>
+                <FaBook style={{ fontSize: '3em', color: '#ccc', marginBottom: 16 }} />
+                <div>Selecciona un tema para ver sus procedimientos</div>
+              </div>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Modal para crear/editar tema */}
+      {modalTema && (
+        <div style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          backgroundColor: 'rgba(0,0,0,0.5)', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          zIndex: 1000 
+        }}>
+          <div style={{ 
+            background: '#fff', 
+            padding: 24, 
+            borderRadius: 8, 
+            width: '90%', 
+            maxWidth: 500,
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}>
+            <h3 style={{ color: '#2e7d32', marginBottom: 16 }}>
+              {editandoTema ? '✏️ Editar Tema' : '➕ Nuevo Tema'}
+            </h3>
+            <form onSubmit={(e) => { e.preventDefault(); editandoTema ? actualizarTema() : crearTema(); }}>
+              <input
+                type="text"
+                placeholder="Nombre del tema"
+                value={nuevoTema.nombre}
+                onChange={e => setNuevoTema({ ...nuevoTema, nombre: e.target.value })}
+                style={{ width: '100%', marginBottom: 12, padding: 12, borderRadius: 4, border: '1px solid #ccc' }}
+                required
+              />
+              <textarea
+                placeholder="Descripción del tema"
+                value={nuevoTema.descripcion}
+                onChange={e => setNuevoTema({ ...nuevoTema, descripcion: e.target.value })}
+                style={{ width: '100%', marginBottom: 12, padding: 12, borderRadius: 4, border: '1px solid #ccc', minHeight: 80 }}
+              />
+              <input
+                type="text"
+                placeholder="Categoría (ej: Base de Datos, Herramientas)"
+                value={nuevoTema.categoria}
+                onChange={e => setNuevoTema({ ...nuevoTema, categoria: e.target.value })}
+                style={{ width: '100%', marginBottom: 12, padding: 12, borderRadius: 4, border: '1px solid #ccc' }}
+              />
+              <input
+                type="color"
+                value={nuevoTema.color}
+                onChange={e => setNuevoTema({ ...nuevoTema, color: e.target.value })}
+                style={{ width: '100%', marginBottom: 16, padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button type="submit" variant="contained" color="primary">
+                  {editandoTema ? 'Actualizar' : 'Crear'}
+                </Button>
+                <Button variant="outlined" color="error" onClick={() => setModalTema(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para crear/editar procedimiento */}
+      {modalProcedimiento && (
+        <div style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          backgroundColor: 'rgba(0,0,0,0.5)', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          zIndex: 1000 
+        }}>
+          <div style={{ 
+            background: '#fff', 
+            padding: 24, 
+            borderRadius: 8, 
+            width: '90%', 
+            maxWidth: 600,
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}>
+            <h3 style={{ color: '#2e7d32', marginBottom: 16 }}>
+              {editandoProcedimiento ? '✏️ Editar Procedimiento' : '➕ Nuevo Procedimiento'}
+            </h3>
+            <form onSubmit={(e) => { e.preventDefault(); editandoProcedimiento ? actualizarProcedimiento() : crearProcedimiento(); }}>
+              <input
+                type="text"
+                placeholder="Título del procedimiento"
+                value={nuevoProcedimiento.titulo}
+                onChange={e => setNuevoProcedimiento({ ...nuevoProcedimiento, titulo: e.target.value })}
+                style={{ width: '100%', marginBottom: 12, padding: 12, borderRadius: 4, border: '1px solid #ccc' }}
+                required
+              />
+              <textarea
+                placeholder="Descripción del procedimiento"
+                value={nuevoProcedimiento.descripcion}
+                onChange={e => setNuevoProcedimiento({ ...nuevoProcedimiento, descripcion: e.target.value })}
+                style={{ width: '100%', marginBottom: 12, padding: 12, borderRadius: 4, border: '1px solid #ccc', minHeight: 80 }}
+              />
+              <textarea
+                placeholder="Pasos detallados del procedimiento"
+                value={nuevoProcedimiento.pasos}
+                onChange={e => setNuevoProcedimiento({ ...nuevoProcedimiento, pasos: e.target.value })}
+                style={{ width: '100%', marginBottom: 12, padding: 12, borderRadius: 4, border: '1px solid #ccc', minHeight: 120 }}
+              />
+              <textarea
+                placeholder="Comandos específicos (si aplica)"
+                value={nuevoProcedimiento.comandos}
+                onChange={e => setNuevoProcedimiento({ ...nuevoProcedimiento, comandos: e.target.value })}
+                style={{ width: '100%', marginBottom: 12, padding: 12, borderRadius: 4, border: '1px solid #ccc', minHeight: 80 }}
+              />
+              <textarea
+                placeholder="Notas adicionales"
+                value={nuevoProcedimiento.notas}
+                onChange={e => setNuevoProcedimiento({ ...nuevoProcedimiento, notas: e.target.value })}
+                style={{ width: '100%', marginBottom: 12, padding: 12, borderRadius: 4, border: '1px solid #ccc', minHeight: 80 }}
+              />
+              <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                <select
+                  value={nuevoProcedimiento.dificultad}
+                  onChange={e => setNuevoProcedimiento({ ...nuevoProcedimiento, dificultad: e.target.value })}
+                  style={{ flex: 1, padding: 12, borderRadius: 4, border: '1px solid #ccc' }}
+                >
+                  <option value="Fácil">Fácil</option>
+                  <option value="Intermedio">Intermedio</option>
+                  <option value="Avanzado">Avanzado</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Tiempo estimado (ej: 5-10 min)"
+                  value={nuevoProcedimiento.tiempo_estimado}
+                  onChange={e => setNuevoProcedimiento({ ...nuevoProcedimiento, tiempo_estimado: e.target.value })}
+                  style={{ flex: 1, padding: 12, borderRadius: 4, border: '1px solid #ccc' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button type="submit" variant="contained" color="primary">
+                  {editandoProcedimiento ? 'Actualizar' : 'Crear'}
+                </Button>
+                <Button variant="outlined" color="error" onClick={() => setModalProcedimiento(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Mensaje de estado */}
+      {mensaje && (
+        <div style={{ 
+          position: 'fixed', 
+          top: 20, 
+          right: 20, 
+          padding: '12px 20px', 
+          backgroundColor: '#4caf50', 
+          color: '#fff', 
+          borderRadius: 4, 
+          zIndex: 1001,
+          animation: 'slideIn 0.3s ease'
+        }}>
+          {mensaje}
         </div>
       )}
     </Box>
