@@ -1142,14 +1142,23 @@ export function DocumentosPanel() {
   const [ticketId, setTicketId] = useState('');
   const [inventarioId, setInventarioId] = useState('');
   const [mensaje, setMensaje] = useState('');
-  // NUEVO: Estado para vista previa PDF
-  const [pdfPreview, setPdfPreview] = useState(null);
 
   // Cambia todas las URLs absolutas de fetch a rutas relativas para aprovechar el proxy
   useEffect(() => {
+    console.log('Cargando documentos...');
     fetchWithAuth(`${API_URL}/documentos/`)
-      .then(res => res.json())
-      .then(data => setDocumentos(data));
+      .then(res => {
+        console.log('Respuesta de documentos:', res.status);
+        return res.json();
+      })
+      .then(data => {
+        console.log('Documentos cargados:', data);
+        console.log('Número de documentos:', data.length);
+        setDocumentos(data);
+      })
+      .catch(err => {
+        console.error('Error cargando documentos:', err);
+      });
   }, []);
 
   const subirDocumento = (e) => {
@@ -1160,14 +1169,27 @@ export function DocumentosPanel() {
     formData.append('descripcion', descripcion);
     if (ticketId) formData.append('ticket_id', ticketId);
     if (inventarioId) formData.append('inventario_id', inventarioId);
+    
+    console.log('Subiendo documento...', { descripcion, ticketId, inventarioId });
+    
     fetchWithAuth(`${API_URL}/documentos/subir`, {
       method: 'POST',
       body: formData
     })
-      .then(res => res.json())
+      .then(res => {
+        console.log('Respuesta de subida:', res.status);
+        return res.json();
+      })
       .then(data => {
+        console.log('Respuesta de subida:', data);
         if (data.success) {
-          setDocumentos([...documentos, data.documento]);
+          // Recargar toda la lista de documentos para asegurar sincronización
+          fetchWithAuth(`${API_URL}/documentos/`)
+            .then(res => res.json())
+            .then(nuevosDocs => {
+              console.log('Documentos actualizados:', nuevosDocs);
+              setDocumentos(nuevosDocs);
+            });
           setArchivo(null);
           setDescripcion('');
           setTicketId('');
@@ -1176,6 +1198,10 @@ export function DocumentosPanel() {
         } else {
           setMensaje(data.error || 'Error al subir');
         }
+      })
+      .catch(err => {
+        console.error('Error subiendo documento:', err);
+        setMensaje('Error de conexión al subir documento');
       });
   };
 
@@ -1227,14 +1253,64 @@ export function DocumentosPanel() {
         </Grid>
         <Grid item xs={12} md={8} lg={9} xl={10}>
           <Paper sx={{ p: 2, background: '#fff', borderRadius: 2, boxShadow: 2, width: '100%', minWidth: 0 }}>
+            <div style={{ marginBottom: 16, padding: '8px 12px', background: '#e8f5e9', borderRadius: 6, border: '1px solid #a5d6a7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <strong style={{ color: '#388e3c' }}>Total de documentos: {documentos.length}</strong>
+                {documentos.length === 0 && <span style={{ color: '#666', marginLeft: 8 }}>No hay documentos subidos</span>}
+              </div>
+              <Button 
+                variant="outlined" 
+                size="small" 
+                onClick={() => {
+                  console.log('Refrescando documentos...');
+                  fetchWithAuth(`${API_URL}/documentos/`)
+                    .then(res => res.json())
+                    .then(data => {
+                      console.log('Documentos refrescados:', data);
+                      setDocumentos(data);
+                    })
+                    .catch(err => console.error('Error refrescando:', err));
+                }}
+                sx={{ fontSize: '0.8em' }}
+              >
+                🔄 Refrescar
+              </Button>
+            </div>
             <div style={{ maxHeight: 500, overflowY: 'auto' }}>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {documentos.map(doc => (
+                {documentos.map((doc, index) => (
                   <li key={doc.id} style={{ padding: '10px 0', borderBottom: '1px solid #e0e0e0' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <strong style={{ color: '#388e3c' }}>{doc.nombre_archivo}</strong><br />
-                        <span style={{ fontSize: '0.9em', color: '#888' }}>Subido: {doc.fecha_subida} | Descripción: {doc.descripcion}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span style={{ 
+                            background: '#e3f2fd', 
+                            color: '#1976d2', 
+                            padding: '2px 6px', 
+                            borderRadius: 4, 
+                            fontSize: '0.8em', 
+                            fontWeight: 'bold' 
+                          }}>
+                            #{index + 1}
+                          </span>
+                          <strong style={{ color: '#388e3c' }}>{doc.nombre_archivo}</strong>
+                          <span style={{ 
+                            background: '#fff3e0', 
+                            color: '#f57c00', 
+                            padding: '2px 6px', 
+                            borderRadius: 4, 
+                            fontSize: '0.8em', 
+                            textTransform: 'uppercase' 
+                          }}>
+                            {doc.tipo_archivo || 'N/A'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.9em', color: '#666', lineHeight: 1.4 }}>
+                          <span>📅 Subido: {doc.fecha_subida}</span>
+                          {doc.descripcion && <span> | 📝 {doc.descripcion}</span>}
+                          {doc.ticket_id && <span> | 🎫 Ticket: {doc.ticket_id}</span>}
+                          {doc.inventario_id && <span> | 📦 Inventario: {doc.inventario_id}</span>}
+                        </div>
                       </div>
                       <div style={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                         {doc.nombre_archivo.toLowerCase().endsWith('.pdf') && (
@@ -1242,7 +1318,10 @@ export function DocumentosPanel() {
                             <IconButton
                               size="small"
                               color="info"
-                              onClick={() => setPdfPreview(`${API_URL}/documentos/${doc.id}/descargar`)}
+                              onClick={() => {
+                                const url = `${API_URL}/documentos/${doc.id}/descargar`;
+                                window.open(url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                              }}
                               sx={{ 
                                 backgroundColor: '#e3f2fd', 
                                 '&:hover': { backgroundColor: '#bbdefb' },
@@ -1293,16 +1372,7 @@ export function DocumentosPanel() {
           </Paper>
         </Grid>
       </Grid>
-      {/* MODAL VISTA PREVIA PDF */}
-      {pdfPreview && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', padding: 16, borderRadius: 12, minWidth: 320, maxWidth: 900, maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <h3 style={{ color: '#388e3c', marginBottom: 8 }}>Vista previa PDF</h3>
-            <iframe src={pdfPreview} style={{ width: 700, height: 500, border: '1px solid #a5d6a7', borderRadius: 8 }} title="Vista previa PDF" />
-            <Button variant="contained" color="error" onClick={() => setPdfPreview(null)} sx={{ mt: 2 }}>Cerrar</Button>
-          </div>
-        </div>
-      )}
+
     </Box>
   );
 }
