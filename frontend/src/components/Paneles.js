@@ -3602,7 +3602,7 @@ export function SoportePanel({ admin, usuario }) {
                     <select
                       value={procedimientoSeleccionado?.id || ''}
                       onChange={e => {
-                        const proc = procedimientos.find(p => p.id == e.target.value);
+                        const proc = procedimientos.find(p => p.id === parseInt(e.target.value));
                         setProcedimientoSeleccionado(proc || null);
                       }}
                       style={{ 
