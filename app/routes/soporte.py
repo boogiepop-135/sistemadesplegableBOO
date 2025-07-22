@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app import db
 from app.models.soporte import TemaSoporte, ProcedimientoSoporte
 from app.models.usuario import Usuario
-from app.utils.auth import token_required
+from app.routes.usuarios import token_required
 from datetime import datetime
 import uuid
 
