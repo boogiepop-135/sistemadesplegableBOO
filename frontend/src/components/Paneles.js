@@ -139,10 +139,10 @@ export function InventarioList({ admin, usuario }) {
       field: 'usuario_nombre',
       headerName: 'Usuario',
       flex: 1,
-      valueGetter: (params) => (params.row?.usuario_nombre_perfil || params.row?.usuario_nombre || ''),
+      valueGetter: (params) => (!params || !params.row ? '' : (params.row.usuario_nombre_perfil || params.row.usuario_nombre || '')),
       renderCell: (params) => (
-        <span style={{ color: params.row?.usuario_nombre_perfil ? '#1976d2' : '#333', fontWeight: params.row?.usuario_nombre_perfil ? 'bold' : 'normal' }}>
-          {params.row?.usuario_nombre_perfil || params.row?.usuario_nombre || ''}
+        <span style={{ color: params && params.row && params.row.usuario_nombre_perfil ? '#1976d2' : '#333', fontWeight: params && params.row && params.row.usuario_nombre_perfil ? 'bold' : 'normal' }}>
+          {params && params.row ? (params.row.usuario_nombre_perfil || params.row.usuario_nombre || '') : ''}
         </span>
       )
     },
@@ -246,6 +246,29 @@ export function InventarioList({ admin, usuario }) {
       let procesados = 0;
       setMostrarResumen(true);
       json.forEach((row, idx) => {
+        // Validación de campos mínimos requeridos
+        if (!row.equipo && !row.Equipo) {
+          resultados[idx] = { fila: idx + 2, estado: 'error', mensaje: 'Falta el campo "equipo"', datos: row };
+          procesados++;
+          if (procesados === json.length) {
+            setImportResumen([...resultados]);
+            fetchWithAuth(`${API_URL}/inventario/`)
+              .then(res => res.json())
+              .then(inv => setInventario(inv));
+          }
+          return;
+        }
+        if (!row.tipo && !row.Tipo) {
+          resultados[idx] = { fila: idx + 2, estado: 'error', mensaje: 'Falta el campo "tipo"', datos: row };
+          procesados++;
+          if (procesados === json.length) {
+            setImportResumen([...resultados]);
+            fetchWithAuth(`${API_URL}/inventario/`)
+              .then(res => res.json())
+              .then(inv => setInventario(inv));
+          }
+          return;
+        }
         const datosEnviar = {
           equipo: row.equipo || row.Equipo || '',
           tipo: row.tipo || row.Tipo || '',
