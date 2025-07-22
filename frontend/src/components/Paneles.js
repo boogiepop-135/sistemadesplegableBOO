@@ -131,6 +131,44 @@ export function InventarioList({ admin, usuario }) {
   };
 
   // Columnas para DataGrid
+  // Estado para modal de mantenimiento
+  const [modalMantenimiento, setModalMantenimiento] = useState(false);
+  const [mantenimientoData, setMantenimientoData] = useState({
+    inventario_id: '',
+    tipo_mantenimiento: '',
+    fecha: '',
+    usuario_id: '',
+    fecha_termino: '',
+    firma: '',
+    descripcion: ''
+  });
+
+  const handleAbrirMantenimiento = (row) => {
+    setMantenimientoData({
+      inventario_id: row.id,
+      tipo_mantenimiento: '',
+      fecha: '',
+      usuario_id: '',
+      fecha_termino: '',
+      firma: '',
+      descripcion: ''
+    });
+    setModalMantenimiento(true);
+  };
+
+  const handleGuardarMantenimiento = (e) => {
+    e.preventDefault();
+    fetchWithAuth(`${API_URL}/bitacoras/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mantenimientoData)
+    })
+      .then(res => res.json())
+      .then(() => {
+        setModalMantenimiento(false);
+      });
+  };
+
   const columns = [
     { field: 'equipo', headerName: 'Equipo', flex: 1 },
     { field: 'tipo', headerName: 'Tipo', flex: 1 },
@@ -153,8 +191,9 @@ export function InventarioList({ admin, usuario }) {
       flex: 1,
       renderCell: (params) => (
         <>
-          <Button size="small" color="primary" onClick={() => handleEditar(params.row)}><FaEdit /></Button>
-          <Button size="small" color="error" onClick={() => handleEliminar(params.row.id)}><FaTrash /></Button>
+          <Button size="small" color="primary" onClick={() => handleEditar(params.row)}>Editar</Button>
+          <Button size="small" color="warning" onClick={() => handleAbrirMantenimiento(params.row)}>Mantenimiento</Button>
+          <Button size="small" color="error" onClick={() => handleEliminar(params.row.id)}>Borrar</Button>
         </>
       )
     }
@@ -550,6 +589,33 @@ export function InventarioList({ admin, usuario }) {
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <Button variant="contained" color="success" type="submit">Guardar</Button>
                 <Button variant="outlined" color="error" onClick={() => setModalAbierto(false)}>Cancelar</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* MODAL DE MANTENIMIENTO */}
+      {modalMantenimiento && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320, maxWidth: 500 }}>
+            <h3>Registrar Mantenimiento</h3>
+            <form onSubmit={handleGuardarMantenimiento}>
+              <select value={mantenimientoData.inventario_id} disabled style={{ width: '100%', marginBottom: 8 }} required>
+                <option value="">Seleccionar Equipo</option>
+                {inventario.map(eq => <option key={eq.id} value={eq.id}>{eq.equipo}</option>)}
+              </select>
+              <input type="text" value={mantenimientoData.tipo_mantenimiento} onChange={e => setMantenimientoData({ ...mantenimientoData, tipo_mantenimiento: e.target.value })} placeholder="Tipo de mantenimiento" style={{ width: '100%', marginBottom: 8 }} required />
+              <input type="date" value={mantenimientoData.fecha} onChange={e => setMantenimientoData({ ...mantenimientoData, fecha: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required />
+              <select value={mantenimientoData.usuario_id} onChange={e => setMantenimientoData({ ...mantenimientoData, usuario_id: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required>
+                <option value="">Responsable</option>
+                {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+              </select>
+              <input type="date" value={mantenimientoData.fecha_termino} onChange={e => setMantenimientoData({ ...mantenimientoData, fecha_termino: e.target.value })} placeholder="Fecha de término" style={{ width: '100%', marginBottom: 8 }} />
+              <input type="text" value={mantenimientoData.firma} onChange={e => setMantenimientoData({ ...mantenimientoData, firma: e.target.value })} placeholder="Firma" style={{ width: '100%', marginBottom: 8 }} />
+              <input type="text" value={mantenimientoData.descripcion} onChange={e => setMantenimientoData({ ...mantenimientoData, descripcion: e.target.value })} placeholder="Descripción (opcional)" style={{ width: '100%', marginBottom: 8 }} />
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <Button variant="contained" color="success" type="submit">Guardar</Button>
+                <Button variant="outlined" color="error" onClick={() => setModalMantenimiento(false)}>Cancelar</Button>
               </div>
             </form>
           </div>
@@ -1793,47 +1859,33 @@ export function MantenimientosPanel({ admin }) {
           </div>
         </div>
       )}
-      {/* Panel de control de gráficos */}
-      <Paper sx={{ p: 2, mb: 2, background: '#f8fff8', borderRadius: 2, boxShadow: 1, minWidth: 320, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>Analizar por:</span>
-        <select value={campoAnalizar} onChange={e => setCampoAnalizar(e.target.value)} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7', marginRight: 12 }}>
-          <option value="tipo_mantenimiento">Tipo de mantenimiento</option>
-          <option value="sucursal">Sucursal</option>
-          <option value="responsable">Responsable</option>
-          <option value="mes">Mes</option>
-        </select>
-        <span style={{ fontWeight: 'bold', color: '#388e3c', marginRight: 8 }}>Gráfico:</span>
-        <select value={graficoTipo} onChange={e => setGraficoTipo(e.target.value)} style={{ padding: 8, borderRadius: 6, border: '1px solid #a5d6a7' }}>
-          <option value="barras">Barras</option>
-          <option value="pastel">Pastel</option>
-        </select>
-      </Paper>
-      {/* Renderizado dinámico del gráfico */}
-      <ResponsiveContainer width={500} height={350}>
-        {graficoTipo === 'barras' ? (
-          <BarChart data={getDatosGrafico()} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-            <XAxis dataKey="name" tick={{ fontSize: 14 }} />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="value" fill="#43a047">
-              {getDatosGrafico().map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
-              ))}
-            </Bar>
-          </BarChart>
-        ) : (
-          <PieChart>
-            <Pie data={getDatosGrafico()} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} label>
-              {getDatosGrafico().map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={colores[index % colores.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        )}
-      </ResponsiveContainer>
+      {/* MODAL DE MANTENIMIENTO */}
+      {modalMantenimiento && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', padding: 32, borderRadius: 12, minWidth: 320, maxWidth: 500 }}>
+            <h3>Registrar Mantenimiento</h3>
+            <form onSubmit={handleGuardarMantenimiento}>
+              <select value={mantenimientoData.inventario_id} disabled style={{ width: '100%', marginBottom: 8 }} required>
+                <option value="">Seleccionar Equipo</option>
+                {inventario.map(eq => <option key={eq.id} value={eq.id}>{eq.equipo}</option>)}
+              </select>
+              <input type="text" value={mantenimientoData.tipo_mantenimiento} onChange={e => setMantenimientoData({ ...mantenimientoData, tipo_mantenimiento: e.target.value })} placeholder="Tipo de mantenimiento" style={{ width: '100%', marginBottom: 8 }} required />
+              <input type="date" value={mantenimientoData.fecha} onChange={e => setMantenimientoData({ ...mantenimientoData, fecha: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required />
+              <select value={mantenimientoData.usuario_id} onChange={e => setMantenimientoData({ ...mantenimientoData, usuario_id: e.target.value })} style={{ width: '100%', marginBottom: 8 }} required>
+                <option value="">Responsable</option>
+                {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
+              </select>
+              <input type="date" value={mantenimientoData.fecha_termino} onChange={e => setMantenimientoData({ ...mantenimientoData, fecha_termino: e.target.value })} placeholder="Fecha de término" style={{ width: '100%', marginBottom: 8 }} />
+              <input type="text" value={mantenimientoData.firma} onChange={e => setMantenimientoData({ ...mantenimientoData, firma: e.target.value })} placeholder="Firma" style={{ width: '100%', marginBottom: 8 }} />
+              <input type="text" value={mantenimientoData.descripcion} onChange={e => setMantenimientoData({ ...mantenimientoData, descripcion: e.target.value })} placeholder="Descripción (opcional)" style={{ width: '100%', marginBottom: 8 }} />
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <Button variant="contained" color="success" type="submit">Guardar</Button>
+                <Button variant="outlined" color="error" onClick={() => setModalMantenimiento(false)}>Cancelar</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </Box>
   );
 }
