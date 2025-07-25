@@ -3,7 +3,14 @@ from app.models.inventario import Inventario
 from app import db
 from flask_cors import CORS
 import io
-import pandas as pd
+
+# Importación segura de pandas
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    print("Warning: pandas no está disponible, la exportación a Excel estará deshabilitada")
 
 inventario_bp = Blueprint('inventario', __name__)
 # CORS configurado globalmente en main.py
@@ -82,6 +89,9 @@ def asignar_equipo(equipo_id):
 
 @inventario_bp.route('/exportar', methods=['GET'])
 def exportar_inventario():
+    if not PANDAS_AVAILABLE:
+        return jsonify({'error': 'La exportación a Excel no está disponible'}), 503
+    
     # Filtros opcionales por query params
     tipo = request.args.get('tipo')
     estado = request.args.get('estado')
@@ -98,9 +108,14 @@ def exportar_inventario():
         query = query.filter_by(usuario_id=usuario_id)
     inventario = query.all()
     data = [e.to_dict() for e in inventario]
-    df = pd.DataFrame(data)
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Inventario')
-    output.seek(0)
-    return send_file(output, download_name=f'inventario_{pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")}.xlsx', as_attachment=True)
+    
+    try:
+        df = pd.DataFrame(data)
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Inventario')
+        output.seek(0)
+        return send_file(output, download_name=f'inventario_{pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")}.xlsx', as_attachment=True)
+    except Exception as e:
+        print(f"Error exportando inventario: {str(e)}")
+        return jsonify({'error': 'Error al exportar el inventario'}), 500
