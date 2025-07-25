@@ -1,3 +1,4 @@
+import os
 from app import db
 from flask import Flask, request, jsonify
 from app.routes.usuarios import usuarios_bp
@@ -12,13 +13,21 @@ from app.routes.categorias import categorias_bp
 from app.routes.propuestas import propuestas_bp
 from app.routes.soporte import soporte_bp
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'supersecreto'  # Usa una clave fuerte en producción
 
-# Configuración CORS simplificada para desarrollo
+# Configuración de seguridad mejorada
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'cambiar_esta_clave_en_produccion')
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', app.config['SECRET_KEY'])
+
+# Configuración CORS más segura
+allowed_origins = os.getenv('ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
 CORS(app, 
-     origins=["*"],  # Permitir todos los orígenes temporalmente
+     origins=allowed_origins,
      supports_credentials=True,
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      allow_headers=["Content-Type", "Authorization"])
@@ -28,14 +37,21 @@ CORS(app,
 def handle_preflight():
     if request.method == "OPTIONS":
         response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
+        origin = request.headers.get('Origin')
+        if origin in allowed_origins:
+            response.headers.add('Access-Control-Allow-Origin', origin)
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
         response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
         response.headers.add('Access-Control-Allow-Credentials', 'true')
         return response, 200
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventario.db'
+# Configuración de base de datos
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///inventario.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Configuración de archivos
+app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', 16777216))  # 16MB
+app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'instance/uploads')
 
 db.init_app(app)
 
@@ -66,4 +82,5 @@ def ensure_tables():
 ensure_tables()
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    debug_mode = os.getenv('FLASK_ENV') == 'development'
+    app.run(debug=debug_mode, host='0.0.0.0')
