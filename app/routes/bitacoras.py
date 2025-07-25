@@ -2,12 +2,19 @@ from flask import Blueprint, request, jsonify, send_file
 from app.models.bitacora_mantenimiento import BitacoraMantenimiento
 from app import db
 from flask_cors import CORS
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
 import io
 import os
 from datetime import datetime
+
+# Importación segura de reportlab
+try:
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.utils import ImageReader
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
+    print("Warning: reportlab no está disponible, la generación de PDF estará deshabilitada")
 
 bitacoras_bp = Blueprint('bitacoras', __name__)
 # CORS configurado globalmente en main.py
@@ -76,51 +83,67 @@ def eliminar_bitacora(bitacora_id):
 
 @bitacoras_bp.route('/<int:bitacora_id>/pdf', methods=['GET'])
 def descargar_pdf_bitacora(bitacora_id):
+    if not REPORTLAB_AVAILABLE:
+        return jsonify({'error': 'La generación de PDF no está disponible'}), 503
+    
     bitacora = BitacoraMantenimiento.query.get(bitacora_id)
     if not bitacora:
         return jsonify({'error': 'Bitácora no encontrada'}), 404
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-    # Logo
-    logo_path = os.path.join(os.getcwd(), 'instance', 'uploads', 'logo_informe.png')
-    if os.path.exists(logo_path):
-        c.drawImage(ImageReader(logo_path), 40, height-90, width=90, height=60, mask='auto')
-    # Encabezado
-    c.setFont('Helvetica-Bold', 14)
-    c.drawString(150, height-50, 'San Cosme - Departamento de Sistemas')
-    c.setFont('Helvetica', 10)
-    c.drawString(150, height-65, f'Fecha: {bitacora.fecha}')
-    c.drawString(150, height-80, f'Código único: {bitacora.codigo_unico}')
-    c.drawString(400, height-65, f'ID: {bitacora.id}')
-    c.drawString(400, height-80, f'Equipo: {bitacora.inventario_id}')
-    # Título
-    c.setFont('Helvetica-Bold', 18)
-    c.drawCentredString(width/2, height-120, 'INFORME TÉCNICO')
-    # Descripción
-    c.setFont('Helvetica', 12)
-    c.drawString(40, height-150, f'Descripción: {bitacora.descripcion}')
-    # Tickets asociados
-    c.setFont('Helvetica-Bold', 12)
-    c.drawString(40, height-180, 'Tickets asociados:')
-    c.setFont('Helvetica', 11)
-    y = height-200
-    for t in bitacora.tickets:
-        c.drawString(60, y, f"[{t.codigo_unico[:8]}] {t.descripcion}")
-        y -= 16
-    # Pie de página: departamento, nombre y formulario de firma/cargo
-    c.setFont('Helvetica', 11)
-    c.drawString(40, 80, 'Departamento de IT')
-    c.drawString(40, 65, 'Levi Eduardo Villarreal Argueta')
-    # Formulario de cargo y nombre a la derecha
-    c.rect(width-220, 60, 180, 40)
-    c.drawString(width-215, 85, 'Cargo:')
-    c.line(width-170, 83, width-50, 83)
-    c.drawString(width-215, 70, 'Nombre:')
-    c.line(width-170, 68, width-50, 68)
-    c.save()
-    buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name=f'bitacora_{bitacora.id}.pdf', mimetype='application/pdf')
+    
+    try:
+        buffer = io.BytesIO()
+        c = canvas.Canvas(buffer, pagesize=letter)
+        width, height = letter
+        # Logo
+        logo_path = os.path.join(os.getcwd(), 'instance', 'uploads', 'logo_informe.png')
+        if os.path.exists(logo_path):
+            c.drawImage(ImageReader(logo_path), 40, height-90, width=90, height=60, mask='auto')
+        # Encabezado
+        c.setFont('Helvetica-Bold', 14)
+        c.drawString(150, height-50, 'San Cosme - Departamento de Sistemas')
+        c.setFont('Helvetica', 10)
+        c.drawString(150, height-65, f'Fecha: {bitacora.fecha}')
+        c.drawString(150, height-80, f'Código único: {bitacora.codigo_unico}')
+        c.drawString(400, height-65, f'ID: {bitacora.id}')
+        c.drawString(400, height-80, f'Equipo: {bitacora.inventario_id}')
+        # Título
+        c.setFont('Helvetica-Bold', 18)
+        c.drawCentredString(width/2, height-120, 'INFORME TÉCNICO')
+        # Descripción
+        c.setFont('Helvetica-Bold', 12)
+        c.drawString(40, height-150, 'Descripción:')
+        c.setFont('Helvetica', 10)
+        # Dividir descripción en líneas
+        descripcion = bitacora.descripcion
+        y_pos = height-170
+        for i in range(0, len(descripcion), 80):
+            linea = descripcion[i:i+80]
+            c.drawString(40, y_pos, linea)
+            y_pos -= 15
+            if y_pos < 100:  # Si se acaba el espacio, crear nueva página
+                c.showPage()
+                c.setFont('Helvetica', 10)
+                y_pos = height-50
+        # Información adicional
+        c.setFont('Helvetica-Bold', 12)
+        c.drawString(40, y_pos-30, 'Información adicional:')
+        c.setFont('Helvetica', 10)
+        c.drawString(40, y_pos-50, f'Tipo de mantenimiento: {bitacora.tipo_mantenimiento or "No especificado"}')
+        c.drawString(40, y_pos-70, f'Usuario: {bitacora.usuario_id or "No especificado"}')
+        if bitacora.fecha_termino:
+            c.drawString(40, y_pos-90, f'Fecha de término: {bitacora.fecha_termino.strftime("%Y-%m-%d")}')
+        # Firma
+        if bitacora.firma:
+            c.setFont('Helvetica-Bold', 12)
+            c.drawString(40, y_pos-120, 'Firma:')
+            c.setFont('Helvetica', 10)
+            c.drawString(40, y_pos-140, bitacora.firma)
+        c.save()
+        buffer.seek(0)
+        return send_file(buffer, download_name=f'bitacora_{bitacora_id}.pdf', as_attachment=True)
+    except Exception as e:
+        print(f"Error generando PDF: {str(e)}")
+        return jsonify({'error': 'Error al generar el PDF'}), 500
 
 @bitacoras_bp.route('/<int:bitacora_id>', methods=['PUT'])
 def actualizar_bitacora(bitacora_id):
