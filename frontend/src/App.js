@@ -49,7 +49,14 @@ function Login({ onLogin }) {
       });
       const data = await res.json();
       if (data.success) {
-        onLogin(data.usuario, data.rol, data.nombre_perfil);
+        // Guardar todos los datos del usuario incluyendo el ID
+        const userData = {
+          id: data.usuario_id || data.id,
+          nombre: data.usuario,
+          rol: data.rol,
+          nombre_perfil: data.nombre_perfil
+        };
+        onLogin(userData);
         localStorage.setItem('token', data.token); // Guardar el token JWT
       } else {
         setError(data.error || 'Credenciales incorrectas');
@@ -97,7 +104,10 @@ function Footer() {
 }
 
 function App() {
-  const [usuarioLogueado, setUsuarioLogueado] = useState(() => localStorage.getItem('usuarioLogueado'));
+  const [usuarioLogueado, setUsuarioLogueado] = useState(() => {
+    const stored = localStorage.getItem('usuarioLogueado');
+    return stored ? JSON.parse(stored) : null;
+  });
   const [rol, setRol] = useState(() => localStorage.getItem('rol'));
   const [nombrePerfil, setNombrePerfil] = useState(() => localStorage.getItem('nombrePerfil'));
   const [panel, setPanel] = useState('inventario');
@@ -107,13 +117,13 @@ function App() {
   });
 
   // Guardar sesión en localStorage
-  const handleLogin = (usuario, rolUsuario, nombrePerfil) => {
-    setUsuarioLogueado(usuario);
-    setRol(rolUsuario);
-    setNombrePerfil(nombrePerfil);
-    localStorage.setItem('usuarioLogueado', usuario);
-    localStorage.setItem('rol', rolUsuario);
-    localStorage.setItem('nombrePerfil', nombrePerfil);
+  const handleLogin = (userData) => {
+    setUsuarioLogueado(userData);
+    setRol(userData.rol);
+    setNombrePerfil(userData.nombre_perfil);
+    localStorage.setItem('usuarioLogueado', JSON.stringify(userData));
+    localStorage.setItem('rol', userData.rol);
+    localStorage.setItem('nombrePerfil', userData.nombre_perfil);
   };
 
   // Limpiar sesión
@@ -176,15 +186,15 @@ function App() {
       {showWelcome && <h1>IT-SanCosme</h1>}
       <Navbar onLogout={handleLogout} onSelect={setPanel} selected={panel} isAdmin={rol === 'admin'} rol={rol} />
       {!usuarioLogueado ? (
-        <Login onLogin={(usuario, rolUsuario) => {
-          handleLogin(usuario, rolUsuario);
+        <Login onLogin={(userData) => {
+          handleLogin(userData);
           localStorage.setItem('showWelcome', 'true');
         }} />
       ) : (
         <div className="animate-fade-in" style={{ textAlign: 'center', margin: '40px 0' }}>
           {showWelcome && (
             <div style={{ marginBottom: 18, background: '#e8f5e9', borderRadius: 8, color: '#388e3c', fontWeight: 'bold', fontSize: '1.1em', boxShadow: '0 2px 8px #c8e6c9', padding: 16 }}>
-              ¡Bienvenido, {nombrePerfil || usuarioLogueado}! <span style={{fontSize: '0.9em', color: rol === 'admin' ? '#43a047' : '#1976d2', marginLeft: 10}}>[{rol === 'admin' ? 'ADMIN' : 'USUARIO'}]</span><br/>
+              ¡Bienvenido, {nombrePerfil || usuarioLogueado.nombre}! <span style={{fontSize: '0.9em', color: rol === 'admin' ? '#43a047' : '#1976d2', marginLeft: 10}}>[{rol === 'admin' ? 'ADMIN' : 'USUARIO'}]</span><br/>
               Has iniciado sesión correctamente.
             </div>
           )}

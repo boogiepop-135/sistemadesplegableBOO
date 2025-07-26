@@ -61,6 +61,7 @@ def login():
             return jsonify({
                 'success': True, 
                 'usuario': usuario.nombre, 
+                'usuario_id': usuario.id,  # Agregar el ID del usuario
                 'nombre_perfil': usuario.nombre_perfil,
                 'rol': usuario.rol, 
                 'token': token
