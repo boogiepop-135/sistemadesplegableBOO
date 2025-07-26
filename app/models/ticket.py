@@ -53,28 +53,60 @@ class Ticket(db.Model):
             return True
         return False
 
+    def _ensure_timezone(self, dt):
+        """Asegura que una fecha tenga zona horaria"""
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            # Si no tiene zona horaria, asumir que es hora local de México
+            mexico_tz = pytz.timezone('America/Mexico_City')
+            return mexico_tz.localize(dt)
+        return dt
+
     def get_duracion(self):
         """Calcula la duración del ticket en horas"""
-        if not self.fecha_apertura:
+        try:
+            if not self.fecha_apertura:
+                return 0
+            
+            # Asegurar que ambas fechas tengan zona horaria
+            fecha_apertura = self._ensure_timezone(self.fecha_apertura)
+            fecha_fin = self._ensure_timezone(self.fecha_cierre) if self.fecha_cierre else datetime.now(pytz.timezone('America/Mexico_City'))
+            
+            duracion = fecha_fin - fecha_apertura
+            return round(duracion.total_seconds() / 3600, 2)  # Horas con 2 decimales
+        except Exception as e:
+            print(f"Error calculando duración del ticket {self.id}: {str(e)}")
             return 0
-        
-        fecha_fin = self.fecha_cierre if self.fecha_cierre else datetime.now(pytz.timezone('America/Mexico_City'))
-        duracion = fecha_fin - self.fecha_apertura
-        return round(duracion.total_seconds() / 3600, 2)  # Horas con 2 decimales
 
     def to_dict(self):
-        return {
-            'id': self.id,
-            'descripcion': self.descripcion,
-            'usuario_id': self.usuario_id,
-            'usuario_nombre': self.usuario.nombre if self.usuario else None,
-            'usuario_nombre_perfil': self.usuario.nombre_perfil if self.usuario else None,
-            'fecha_apertura': self.fecha_apertura.strftime('%Y-%m-%d %H:%M:%S') if self.fecha_apertura else None,
-            'fecha_cierre': self.fecha_cierre.strftime('%Y-%m-%d %H:%M:%S') if self.fecha_cierre else None,
-            'estado': self.estado,
-            'codigo_unico': self.codigo_unico,
-            'duracion_horas': self.get_duracion()
-        }
+        try:
+            return {
+                'id': self.id,
+                'descripcion': self.descripcion,
+                'usuario_id': self.usuario_id,
+                'usuario_nombre': self.usuario.nombre if self.usuario else None,
+                'usuario_nombre_perfil': self.usuario.nombre_perfil if self.usuario else None,
+                'fecha_apertura': self.fecha_apertura.strftime('%Y-%m-%d %H:%M:%S') if self.fecha_apertura else None,
+                'fecha_cierre': self.fecha_cierre.strftime('%Y-%m-%d %H:%M:%S') if self.fecha_cierre else None,
+                'estado': self.estado,
+                'codigo_unico': self.codigo_unico,
+                'duracion_horas': self.get_duracion()
+            }
+        except Exception as e:
+            print(f"Error en to_dict del ticket {self.id}: {str(e)}")
+            return {
+                'id': self.id,
+                'descripcion': self.descripcion,
+                'usuario_id': self.usuario_id,
+                'usuario_nombre': self.usuario.nombre if self.usuario else None,
+                'usuario_nombre_perfil': self.usuario.nombre_perfil if self.usuario else None,
+                'fecha_apertura': str(self.fecha_apertura) if self.fecha_apertura else None,
+                'fecha_cierre': str(self.fecha_cierre) if self.fecha_cierre else None,
+                'estado': self.estado,
+                'codigo_unico': self.codigo_unico,
+                'duracion_horas': 0
+            }
 
     def __repr__(self):
         return f'<Ticket {self.id}: {self.descripcion[:50]}... - {self.estado}>'
