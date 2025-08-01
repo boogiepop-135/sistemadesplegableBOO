@@ -29,7 +29,6 @@ export function InventarioList({ admin, usuario }) {
   const [filtro, setFiltro] = useState({ tipo: '', estado: '' });
   const [ubicaciones, setUbicaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
-  const [categorias, setCategorias] = useState([]);
   const [nuevoEquipo, setNuevoEquipo] = useState({
     equipo: '',
     tipo: '',
@@ -44,9 +43,8 @@ export function InventarioList({ admin, usuario }) {
     Promise.all([
       fetchWithAuth(`${API_URL}/inventario/`).then(res => res.json()),
       fetchWithAuth(`${API_URL}/ubicaciones/`).then(res => res.json()),
-      fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()),
-      fetchWithAuth(`${API_URL}/categorias/`).then(res => res.json())
-    ]).then(([inv, ubi, usu, cat]) => {
+      fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json())
+    ]).then(([inv, ubi, usu]) => {
       if (admin) {
         setInventario(inv);
       } else {
@@ -54,7 +52,6 @@ export function InventarioList({ admin, usuario }) {
       }
       setUbicaciones(ubi);
       setUsuarios(usu);
-      setCategorias(cat);
     }).catch(err => {
       setError('Error de red o CORS al cargar datos.');
     });
