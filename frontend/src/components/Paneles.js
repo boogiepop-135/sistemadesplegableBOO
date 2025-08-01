@@ -161,31 +161,7 @@ export function InventarioList({ admin, usuario }) {
         </section>
       )}
 
-      <nav className="inventario-tabs">
-        <button 
-          className={`tab-btn ${tab === 0 ? 'active' : ''}`}
-          onClick={() => setTab(0)}
-        >
-          Lista de Equipos
-        </button>
-        <button 
-          className={`tab-btn ${tab === 1 ? 'active' : ''}`}
-          onClick={() => setTab(1)}
-        >
-          Gráficos
-        </button>
-        {admin && (
-          <button 
-            className={`tab-btn ${tab === 2 ? 'active' : ''}`}
-            onClick={() => setTab(2)}
-          >
-            Agregar Equipo
-          </button>
-        )}
-      </nav>
-
-      {tab === 0 && (
-        <section className="inventario-list">
+      <section className="inventario-list">
           <aside className="filtros">
             <select 
               value={filtro.tipo} 
@@ -234,92 +210,6 @@ export function InventarioList({ admin, usuario }) {
             ))}
           </section>
         </section>
-      )}
-
-      {tab === 1 && (
-        <section className="graficos-section">
-          <header className="graficos-header">
-            <h3>📊 Análisis de Inventario</h3>
-          </header>
-          
-          <section className="graficos-grid">
-            <article className="grafica-card">
-              <header className="grafica-header">
-                <h4>Distribución por Tipo</h4>
-              </header>
-              <section className="grafica-content">
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={getDatosGraficoCustom('tipo')}>
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="value" fill="#667eea" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </section>
-            </article>
-          </section>
-        </section>
-      )}
-
-      {tab === 2 && admin && (
-        <section className="agregar-equipo">
-          <header className="form-header">
-            <h3>➕ Agregar Nuevo Equipo</h3>
-          </header>
-          <form onSubmit={(e) => { e.preventDefault(); agregarEquipo(); }} className="equipo-form">
-            <section className="form-grid">
-              <fieldset className="form-field">
-                <label htmlFor="nombre">Nombre del Equipo *</label>
-                <input
-                  id="nombre"
-                  type="text"
-                  value={nuevoEquipo.nombre}
-                  onChange={(e) => setNuevoEquipo({...nuevoEquipo, nombre: e.target.value})}
-                  required
-                  className="form-input"
-                />
-              </fieldset>
-              
-              <fieldset className="form-field">
-                <label htmlFor="tipo">Tipo *</label>
-                <select
-                  id="tipo"
-                  value={nuevoEquipo.tipo}
-                  onChange={(e) => setNuevoEquipo({...nuevoEquipo, tipo: e.target.value})}
-                  required
-                  className="form-select"
-                >
-                  <option value="">Seleccionar tipo</option>
-                  {categorias.map(cat => (
-                    <option key={cat.id} value={cat.nombre}>{cat.nombre}</option>
-                  ))}
-                </select>
-              </fieldset>
-              
-              <fieldset className="form-field">
-                <label htmlFor="estado">Estado *</label>
-                <select
-                  id="estado"
-                  value={nuevoEquipo.estado}
-                  onChange={(e) => setNuevoEquipo({...nuevoEquipo, estado: e.target.value})}
-                  required
-                  className="form-select"
-                >
-                  <option value="Disponible">Disponible</option>
-                  <option value="En Uso">En Uso</option>
-                  <option value="En Mantenimiento">En Mantenimiento</option>
-                  <option value="Fuera de Servicio">Fuera de Servicio</option>
-                </select>
-              </fieldset>
-            </section>
-            
-            <button type="submit" className="submit-btn">
-              <FaPlus /> Agregar Equipo
-            </button>
-          </form>
-        </section>
-      )}
     </article>
   );
 }
