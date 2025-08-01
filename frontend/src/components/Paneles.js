@@ -26,10 +26,8 @@ function fetchWithAuth(url, options = {}) {
 
 export function InventarioList({ admin, usuario }) {
   const [inventario, setInventario] = useState([]);
-  const [nuevoEquipo, setNuevoEquipo] = useState({ nombre: '', tipo: '', estado: 'Disponible', ubicacion_id: '', usuario_id: '' });
   const [filtro, setFiltro] = useState({ tipo: '', estado: '' });
   const [ubicaciones, setUbicaciones] = useState([]);
-  const [categorias, setCategorias] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [error, setError] = useState('');
 
@@ -38,50 +36,21 @@ export function InventarioList({ admin, usuario }) {
     Promise.all([
       fetchWithAuth(`${API_URL}/inventario/`).then(res => res.json()),
       fetchWithAuth(`${API_URL}/ubicaciones/`).then(res => res.json()),
-      fetchWithAuth(`${API_URL}/categorias/`).then(res => res.json()),
       fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json())
-    ]).then(([inv, ubi, cat, usu]) => {
+    ]).then(([inv, ubi, usu]) => {
       if (admin) {
         setInventario(inv);
       } else {
         setInventario(inv.filter(e => e.usuario_nombre === usuario || e.usuario_nombre_perfil === usuario));
       }
       setUbicaciones(ubi);
-      setCategorias(cat);
       setUsuarios(usu);
     }).catch(err => {
       setError('Error de red o CORS al cargar datos.');
     });
   }, [admin, usuario]);
 
-  const agregarEquipo = () => {
-    if (!nuevoEquipo.nombre || !nuevoEquipo.tipo || !nuevoEquipo.estado) {
-      alert('Por favor completa todos los campos requeridos');
-      return;
-    }
-    
-    const datosEnviar = {
-      equipo: nuevoEquipo.nombre,
-      tipo: nuevoEquipo.tipo,
-      estado: nuevoEquipo.estado,
-      ubicacion_id: nuevoEquipo.ubicacion_id || null,
-      usuario_id: nuevoEquipo.usuario_id || null
-    };
-    
-    fetchWithAuth(`${API_URL}/inventario/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(datosEnviar)
-    })
-    .then(res => res.json())
-    .then(data => {
-      setInventario([...inventario, data]);
-      setNuevoEquipo({ nombre: '', tipo: '', estado: 'Disponible', ubicacion_id: '', usuario_id: '' });
-    })
-    .catch(err => {
-      alert('Error al agregar equipo: ' + err.message);
-    });
-  };
+
 
   const handleEliminar = (id) => {
     if (!window.confirm('¿Estás seguro de que quieres eliminar este equipo?')) return;
@@ -114,30 +83,7 @@ export function InventarioList({ admin, usuario }) {
     return user ? getDisplayName(user) : 'Sin asignar';
   };
 
-  const getDatosGraficoCustom = (campo) => {
-    const datos = {};
-    inventario.forEach(item => {
-      let valor = '';
-      switch (campo) {
-        case 'tipo':
-          valor = item.tipo;
-          break;
-        case 'estado':
-          valor = item.estado;
-          break;
-        case 'sucursal':
-          valor = getSucursal(item);
-          break;
-        case 'responsable':
-          valor = getResponsable(item);
-          break;
-        default:
-          valor = item[campo];
-      }
-      datos[valor] = (datos[valor] || 0) + 1;
-    });
-    return Object.entries(datos).map(([name, value]) => ({ name, value }));
-  };
+
 
   const inventarioFiltrado = inventario.filter(item => {
     return (!filtro.tipo || item.tipo === filtro.tipo) &&
