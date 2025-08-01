@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Paper, Grid, IconButton, Tooltip, Tabs, Tab } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { FaTrash, FaEdit, FaPlus, FaDownload, FaEye, FaWrench, FaCheck, FaTimes, FaPause, FaSearch, FaBook, FaTools } from 'react-icons/fa';
+import { FaTrash, FaPlus, FaDownload } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import { getToken } from '../App';
 import { API_URL } from '../config';
@@ -14,8 +10,7 @@ const getDisplayName = (usuario) => {
   return usuario.nombre_perfil || usuario.nombre || usuario;
 };
 
-// Paleta de colores global para gráficas
-const colores = ['#43a047', '#1976d2', '#fbc02d', '#e74c3c', '#8e24aa', '#00897b', '#f57c00', '#6d4c41', '#c62828', '#2e7d32'];
+
 
 // Helper para fetch con token
 function fetchWithAuth(url, options = {}) {
@@ -33,17 +28,10 @@ export function InventarioList({ admin, usuario }) {
   const [inventario, setInventario] = useState([]);
   const [nuevoEquipo, setNuevoEquipo] = useState({ nombre: '', tipo: '', estado: 'Disponible', ubicacion_id: '', usuario_id: '' });
   const [filtro, setFiltro] = useState({ tipo: '', estado: '' });
-  const [tab, setTab] = useState(0);
   const [ubicaciones, setUbicaciones] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [error, setError] = useState('');
-  const [numGraficas, setNumGraficas] = useState(1);
-  const [graficas, setGraficas] = useState([
-    { campo: 'tipo', tipo: 'barras' },
-    { campo: 'estado', tipo: 'pastel' },
-    { campo: 'sucursal', tipo: 'barras' }
-  ]);
 
   useEffect(() => {
     setError('');
