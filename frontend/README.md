@@ -1,70 +1,117 @@
-# Getting Started with Create React App
+# IT-SanCosme Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Sistema de gestión IT moderno y elegante para San Cosme Barra Saludable.
 
-## Available Scripts
+## 🎨 Nuevo Diseño
 
-In the project directory, you can run:
+### Características del nuevo diseño:
+- **Diseño moderno y minimalista** con gradientes y efectos de glassmorphism
+- **Tipografía Inter** para mejor legibilidad
+- **Paleta de colores moderna** (azul-púrpura)
+- **Efectos de hover y animaciones suaves**
+- **Responsive design** optimizado para móviles
+- **Scrollbar personalizada**
 
-### `npm start`
+### Componentes principales:
+- **Navbar moderno** con backdrop blur y navegación mejorada
+- **Login elegante** con efectos de glassmorphism
+- **Todo List** completamente funcional
+- **Paneles de contenido** con diseño consistente
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 📝 Todo List
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Funcionalidades:
+- ✅ **Agregar tareas** con formulario intuitivo
+- ✅ **Marcar como completadas** con checkbox interactivo
+- ✅ **Editar tareas** en línea (doble clic o botón editar)
+- ✅ **Eliminar tareas** con confirmación visual
+- ✅ **Persistencia local** (localStorage)
+- ✅ **Contador de progreso** (completadas/total)
+- ✅ **Diseño responsive** para todos los dispositivos
 
-### `npm test`
+### Uso:
+1. Navega a la sección "Tareas" en el menú
+2. Escribe una nueva tarea y presiona "Agregar"
+3. Marca las tareas como completadas haciendo clic en el checkbox
+4. Edita haciendo clic en el botón de editar o presionando Enter
+5. Elimina tareas con el botón de eliminar
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🚀 Instalación y Uso
 
-### `npm run build`
+### Requisitos:
+- Node.js 14+
+- npm o yarn
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Instalación:
+```bash
+cd frontend
+npm install
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Desarrollo:
+```bash
+npm start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Producción:
+```bash
+npm run build
+```
 
-### `npm run eject`
+## 🎯 Características del Sistema
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Módulos disponibles:
+- **Inventario** - Gestión de equipos y dispositivos
+- **Tickets** - Sistema de tickets de soporte
+- **Trabajos** - Gestión de tareas y proyectos
+- **Mantenimientos** - Bitácoras de mantenimiento
+- **Propuestas** - Propuestas de mejora
+- **Soporte** - Sistema de soporte técnico
+- **Tareas** - Todo list personal
+- **Usuarios** - Gestión de usuarios (solo admin)
+- **Documentos** - Gestión de documentos (solo admin)
+- **Bitácoras** - Registros del sistema (solo admin)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Roles de usuario:
+- **Admin**: Acceso completo a todos los módulos
+- **Usuario**: Acceso limitado a módulos básicos
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🎨 Tecnologías utilizadas
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- **React 18** - Framework principal
+- **React Icons** - Iconografía moderna
+- **CSS3** - Estilos modernos con glassmorphism
+- **LocalStorage** - Persistencia de datos
+- **Google Fonts** - Tipografía Inter
 
-## Learn More
+## 📱 Responsive Design
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+El sistema está completamente optimizado para:
+- 📱 Móviles (320px+)
+- 📱 Tablets (768px+)
+- 💻 Desktop (1024px+)
+- 🖥️ Pantallas grandes (1200px+)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🔧 Configuración
 
-### Code Splitting
+### Variables de entorno:
+```env
+REACT_APP_API_URL=https://sistemadesplegableboo-production.up.railway.app
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Personalización:
+- Colores principales en `src/App.css`
+- Configuración de API en `src/config.js`
+- Componentes en `src/components/`
 
-### Analyzing the Bundle Size
+## 🎉 Características destacadas
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- **UX moderna** con micro-interacciones
+- **Accesibilidad** mejorada
+- **Performance** optimizada
+- **Código limpio** y mantenible
+- **Documentación** completa
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Desarrollado con ❤️ por Boogiepop135 para San Cosme Barra Saludable

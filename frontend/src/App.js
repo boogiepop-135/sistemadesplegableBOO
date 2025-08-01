@@ -1,46 +1,82 @@
 import React, { useState, useEffect } from 'react';
-import { FaLeaf } from 'react-icons/fa';
+import { FaLeaf, FaTasks, FaSignOutAlt } from 'react-icons/fa';
 import './App.css';
 import { InventarioList, TicketsList, AdminPanel, DocumentosPanel, BitacorasPanel, TrabajosAdminPanel, MantenimientosPanel, PropuestasMejoraPanel, SoportePanel } from './components/Paneles';
+import TodoList from './components/TodoList';
 import { API_URL } from './config';
 
-function Navbar({ onLogout, onSelect, selected, isAdmin, rol }) {
+// Componente de navegación optimizado
+function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
+  const navItems = [
+    { id: 'trabajos', label: isAdmin ? 'Trabajos' : 'Trabajos (solo vista)', show: true },
+    { id: 'inventario', label: 'Inventario', show: true },
+    { id: 'mantenimientos', label: 'Mantenimientos', show: true },
+    { id: 'propuestas', label: 'Propuestas', show: true },
+    { id: 'soporte', label: 'Soporte', show: true },
+    { id: 'tickets', label: 'Tickets', show: true },
+    { id: 'todos', label: 'Tareas', show: true, icon: <FaTasks /> },
+    { id: 'usuarios', label: 'Usuarios', show: isAdmin },
+    { id: 'documentos', label: 'Documentos', show: isAdmin },
+    { id: 'bitacoras', label: 'Bitácoras', show: isAdmin }
+  ];
+
   return (
-    <nav>
-      <span style={{ marginRight: '20px', fontWeight: 'bold', fontSize: '1.3em', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <FaLeaf style={{ color: '#43a047', fontSize: '1.3em' }} /> IT-SanCosme
-      </span>
+    <header className="navbar">
+      <div className="navbar-brand">
+        <FaLeaf className="brand-icon" />
+        <span className="brand-text">IT-SanCosme</span>
+      </div>
 
-      {isAdmin && <a href="#trabajos" onClick={() => onSelect('trabajos')} style={{ color: selected === 'trabajos' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Trabajos</a>}
-      {!isAdmin && <a href="#trabajos" onClick={() => onSelect('trabajos')} style={{ color: selected === 'trabajos' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Trabajos (solo vista)</a>}
-      <a href="#inventario" onClick={() => onSelect('inventario')} style={{ color: selected === 'inventario' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Inventario</a>
-      <a href="#mantenimientos" onClick={() => onSelect('mantenimientos')} style={{ color: selected === 'mantenimientos' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Mantenimientos</a>
-      <a href="#propuestas" onClick={() => onSelect('propuestas')} style={{ color: selected === 'propuestas' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Propuestas</a>
-      <a href="#soporte" onClick={() => onSelect('soporte')} style={{ color: selected === 'soporte' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Soporte</a>
-      <a href="#tickets" onClick={() => onSelect('tickets')} style={{ color: selected === 'tickets' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Tickets</a>
-      {isAdmin && <a href="#usuarios" onClick={() => onSelect('usuarios')} style={{ color: selected === 'usuarios' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Usuarios</a>}
+      <nav className="navbar-nav">
+        {navItems.filter(item => item.show).map(item => (
+          <a 
+            key={item.id}
+            href={`#${item.id}`}
+            onClick={(e) => {
+              e.preventDefault();
+              onSelect(item.id);
+            }}
+            className={`nav-link ${selected === item.id ? 'active' : ''}`}
+          >
+            {item.icon && <span className="nav-icon">{item.icon}</span>}
+            {item.label}
+          </a>
+        ))}
+      </nav>
 
-      {isAdmin && <a href="#documentos" onClick={() => onSelect('documentos')} style={{ color: selected === 'documentos' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Documentos</a>}
-      {isAdmin && <a href="#bitacoras" onClick={() => onSelect('bitacoras')} style={{ color: selected === 'bitacoras' ? '#c8e6c9' : '#fff', marginRight: '15px' }}>Bitácoras</a>}
-      <span style={{marginLeft: 'auto', marginRight: 16, color: rol === 'admin' ? '#43a047' : '#1976d2', fontWeight: 'bold', fontSize: '1em', letterSpacing: 1}}>
-        {rol === 'admin' ? 'ADMIN' : 'USUARIO'}
-      </span>
-      <button onClick={onLogout} style={{ float: 'right', background: '#e74c3c', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', marginLeft: 'auto' }}>Cerrar sesión</button>
-    </nav>
+      <div className="navbar-user">
+        <span className="user-role">
+          {rol === 'admin' ? 'ADMIN' : 'USUARIO'}
+        </span>
+        <span className="user-name">
+          {nombrePerfil || 'Usuario'}
+        </span>
+        <button onClick={onLogout} title="Cerrar sesión" className="logout-button">
+          <FaSignOutAlt />
+        </button>
+      </div>
+    </header>
   );
 }
 
+// Componente de login optimizado
 function Login({ onLogin }) {
-  const [usuario, setUsuario] = useState('');
-  const [contrasena, setContrasena] = useState('');
+  const [formData, setFormData] = useState({ usuario: '', contrasena: '' });
   const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const { usuario, contrasena } = formData;
+    
     if (!usuario || !contrasena) {
       setError('Ingresa usuario y contraseña');
       return;
     }
+
     try {
       const res = await fetch(`${API_URL}/usuarios/login`, {
         method: 'POST',
@@ -48,8 +84,8 @@ function Login({ onLogin }) {
         body: JSON.stringify({ usuario, contrasena })
       });
       const data = await res.json();
+      
       if (data.success) {
-        // Guardar todos los datos del usuario incluyendo el ID
         const userData = {
           id: data.usuario_id || data.id,
           nombre: data.usuario,
@@ -57,7 +93,7 @@ function Login({ onLogin }) {
           nombre_perfil: data.nombre_perfil
         };
         onLogin(userData);
-        localStorage.setItem('token', data.token); // Guardar el token JWT
+        localStorage.setItem('token', data.token);
       } else {
         setError(data.error || 'Credenciales incorrectas');
       }
@@ -67,42 +103,78 @@ function Login({ onLogin }) {
   };
 
   return (
-    <div className="login-container animate-fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh' }}>
-      <h2 style={{ textAlign: 'center' }}>Iniciar sesión</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '350px', margin: '0 auto' }}>
+    <main className="login-container animate-fade-in">
+      <h2>Iniciar sesión</h2>
+      <form onSubmit={handleSubmit} className="login-form">
         <input
           type="text"
+          name="usuario"
           placeholder="Usuario"
-          value={usuario}
-          onChange={e => setUsuario(e.target.value)}
-          style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7' }}
+          value={formData.usuario}
+          onChange={handleChange}
         />
         <input
           type="password"
+          name="contrasena"
           placeholder="Contraseña"
-          value={contrasena}
-          onChange={e => setContrasena(e.target.value)}
-          style={{ padding: '10px', borderRadius: '6px', border: '1px solid #a5d6a7' }}
+          value={formData.contrasena}
+          onChange={handleChange}
         />
-        <button type="submit" style={{ background: '#43a047', color: '#fff', border: 'none', borderRadius: '6px', padding: '10px 0', fontWeight: 'bold', cursor: 'pointer' }}>
-          Entrar
-        </button>
-        {error && <span style={{ color: '#e74c3c', fontWeight: 'bold', textAlign: 'center' }}>{error}</span>}
+        <button type="submit">Entrar</button>
+        {error && <span className="error">{error}</span>}
       </form>
-    </div>
+    </main>
   );
 }
 
+// Componente de contenido principal optimizado
+function MainContent({ panel, rol, usuarioLogueado, showWelcome, nombrePerfil }) {
+  const panelComponents = {
+    trabajos: <TrabajosAdminPanel admin={rol === 'admin'} />,
+    inventario: <InventarioList admin={rol === 'admin'} usuario={usuarioLogueado} />,
+    tickets: <TicketsList admin={rol === 'admin'} usuario={usuarioLogueado} />,
+    todos: <TodoList />,
+    usuarios: <AdminPanel admin={rol === 'admin'} />,
+    documentos: <DocumentosPanel admin={rol === 'admin'} />,
+    bitacoras: <BitacorasPanel admin={rol === 'admin'} />,
+    mantenimientos: <MantenimientosPanel admin={rol === 'admin'} />,
+    propuestas: <PropuestasMejoraPanel admin={rol === 'admin'} usuario={usuarioLogueado} />,
+    soporte: <SoportePanel admin={rol === 'admin'} usuario={usuarioLogueado} />
+  };
+
+  return (
+    <main className="App animate-fade-in">
+      {showWelcome && (
+        <section className="welcome-message">
+          ¡Bienvenido, {nombrePerfil || usuarioLogueado.nombre}! 
+          <span className="role-indicator">
+            [{rol === 'admin' ? 'ADMIN' : 'USUARIO'}]
+          </span>
+          <br/>
+          Has iniciado sesión correctamente.
+        </section>
+      )}
+      
+      <section className="content-panel">
+        {panelComponents[panel]}
+      </section>
+    </main>
+  );
+}
+
+// Footer optimizado
 function Footer() {
   return (
-    <footer className="Footer" style={{ position: 'fixed', left: 0, bottom: 0, width: '100vw', background: 'rgba(56,142,60,0.95)', color: '#fff', fontSize: '0.85em', textAlign: 'center', padding: '6px 0', zIndex: 1000, boxShadow: '0 -2px 8px #c8e6c9' }}>
+    <footer className="Footer">
       <span>
-        Hecho con <span style={{color: '#e74c3c', fontWeight: 'bold'}}>♥</span> por Boogiepop135 | <a href="mailto:sistemas@sancosmeorg.com" style={{color: '#c8e6c9'}}>Contacto</a>
+        Hecho con <span className="heart">♥</span> por Boogiepop135 | 
+        <a href="mailto:sistemas@sancosmeorg.com">Contacto</a>
       </span>
     </footer>
   );
 }
 
+// Componente principal optimizado
 function App() {
   const [usuarioLogueado, setUsuarioLogueado] = useState(() => {
     const stored = localStorage.getItem('usuarioLogueado');
@@ -116,7 +188,6 @@ function App() {
     return flag !== 'false';
   });
 
-  // Guardar sesión en localStorage
   const handleLogin = (userData) => {
     setUsuarioLogueado(userData);
     setRol(userData.rol);
@@ -126,7 +197,6 @@ function App() {
     localStorage.setItem('nombrePerfil', userData.nombre_perfil);
   };
 
-  // Limpiar sesión
   const handleLogout = () => {
     setUsuarioLogueado(null);
     setRol(null);
@@ -138,27 +208,26 @@ function App() {
     localStorage.removeItem('lastActivity');
   };
 
-  // Actualizar actividad
+  // Efectos optimizados
   useEffect(() => {
     const updateActivity = () => {
       localStorage.setItem('lastActivity', Date.now());
     };
-    window.addEventListener('mousemove', updateActivity);
-    window.addEventListener('keydown', updateActivity);
+    
+    const events = ['mousemove', 'keydown'];
+    events.forEach(event => window.addEventListener(event, updateActivity));
+    
     return () => {
-      window.removeEventListener('mousemove', updateActivity);
-      window.removeEventListener('keydown', updateActivity);
+      events.forEach(event => window.removeEventListener(event, updateActivity));
     };
   }, []);
 
-  // Solicitar permisos de notificación al cargar la app
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
   }, []);
 
-  // Cerrar sesión tras 2 horas de inactividad
   useEffect(() => {
     const interval = setInterval(() => {
       const last = parseInt(localStorage.getItem('lastActivity') || Date.now(), 10);
@@ -166,7 +235,7 @@ function App() {
         handleLogout();
         alert('Sesión cerrada por inactividad.');
       }
-    }, 60000); // revisa cada minuto
+    }, 60000);
     return () => clearInterval(interval);
   }, [usuarioLogueado]);
 
@@ -182,39 +251,37 @@ function App() {
 
   return (
     <>
-      {/* Solo muestra el h1 la primera vez */}
       {showWelcome && <h1>IT-SanCosme</h1>}
-      <Navbar onLogout={handleLogout} onSelect={setPanel} selected={panel} isAdmin={rol === 'admin'} rol={rol} />
+      
+      <Navbar 
+        onLogout={handleLogout} 
+        onSelect={setPanel} 
+        selected={panel} 
+        isAdmin={rol === 'admin'} 
+        rol={rol}
+        nombrePerfil={nombrePerfil}
+      />
+      
       {!usuarioLogueado ? (
         <Login onLogin={(userData) => {
           handleLogin(userData);
           localStorage.setItem('showWelcome', 'true');
         }} />
       ) : (
-        <div className="animate-fade-in" style={{ textAlign: 'center', margin: '40px 0' }}>
-          {showWelcome && (
-            <div style={{ marginBottom: 18, background: '#e8f5e9', borderRadius: 8, color: '#388e3c', fontWeight: 'bold', fontSize: '1.1em', boxShadow: '0 2px 8px #c8e6c9', padding: 16 }}>
-              ¡Bienvenido, {nombrePerfil || usuarioLogueado.nombre}! <span style={{fontSize: '0.9em', color: rol === 'admin' ? '#43a047' : '#1976d2', marginLeft: 10}}>[{rol === 'admin' ? 'ADMIN' : 'USUARIO'}]</span><br/>
-              Has iniciado sesión correctamente.
-            </div>
-          )}
-          {panel === 'trabajos' && <TrabajosAdminPanel admin={rol === 'admin'} />}
-          {panel === 'inventario' && <InventarioList admin={rol === 'admin'} usuario={usuarioLogueado} />}
-          {panel === 'tickets' && <TicketsList admin={rol === 'admin'} usuario={usuarioLogueado} />}
-          {panel === 'usuarios' && <AdminPanel admin={rol === 'admin'} />}
-          {panel === 'documentos' && <DocumentosPanel admin={rol === 'admin'} />}
-          {panel === 'bitacoras' && <BitacorasPanel admin={rol === 'admin'} />}
-          {panel === 'mantenimientos' && <MantenimientosPanel admin={rol === 'admin'} />}
-          {panel === 'propuestas' && <PropuestasMejoraPanel admin={rol === 'admin'} usuario={usuarioLogueado} />}
-          {panel === 'soporte' && <SoportePanel admin={rol === 'admin'} usuario={usuarioLogueado} />}
-        </div>
+        <MainContent 
+          panel={panel}
+          rol={rol}
+          usuarioLogueado={usuarioLogueado}
+          showWelcome={showWelcome}
+          nombrePerfil={nombrePerfil}
+        />
       )}
+      
       <Footer />
     </>
   );
 }
 
-// Añadir helper para obtener el token
 export function getToken() {
   return localStorage.getItem('token');
 }
