@@ -29,6 +29,14 @@ export function InventarioList({ admin, usuario }) {
   const [filtro, setFiltro] = useState({ tipo: '', estado: '' });
   const [ubicaciones, setUbicaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [nuevoEquipo, setNuevoEquipo] = useState({
+    equipo: '',
+    tipo: '',
+    estado: 'Activo',
+    ubicacion_id: '',
+    usuario_id: ''
+  });
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -36,8 +44,9 @@ export function InventarioList({ admin, usuario }) {
     Promise.all([
       fetchWithAuth(`${API_URL}/inventario/`).then(res => res.json()),
       fetchWithAuth(`${API_URL}/ubicaciones/`).then(res => res.json()),
-      fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json())
-    ]).then(([inv, ubi, usu]) => {
+      fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()),
+      fetchWithAuth(`${API_URL}/categorias/`).then(res => res.json())
+    ]).then(([inv, ubi, usu, cat]) => {
       if (admin) {
         setInventario(inv);
       } else {
@@ -45,6 +54,7 @@ export function InventarioList({ admin, usuario }) {
       }
       setUbicaciones(ubi);
       setUsuarios(usu);
+      setCategorias(cat);
     }).catch(err => {
       setError('Error de red o CORS al cargar datos.');
     });
@@ -71,6 +81,37 @@ export function InventarioList({ admin, usuario }) {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Inventario");
     XLSX.writeFile(wb, "inventario.xlsx");
+  };
+
+  const agregarEquipo = () => {
+    if (!nuevoEquipo.equipo || !nuevoEquipo.tipo) {
+      alert('Por favor completa el nombre del equipo y tipo');
+      return;
+    }
+
+    fetchWithAuth(`${API_URL}/inventario/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nuevoEquipo)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert('Error: ' + data.error);
+      } else {
+        setInventario([...inventario, data]);
+        setNuevoEquipo({
+          equipo: '',
+          tipo: '',
+          estado: 'Activo',
+          ubicacion_id: '',
+          usuario_id: ''
+        });
+      }
+    })
+    .catch(err => {
+      alert('Error al agregar equipo: ' + err.message);
+    });
   };
 
   const getSucursal = (inv) => {
@@ -130,6 +171,77 @@ export function InventarioList({ admin, usuario }) {
               ))}
             </select>
           </aside>
+
+          {admin && (
+            <section className="agregar-equipo-section">
+              <h3>➕ Agregar Nuevo Equipo</h3>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Equipo:</label>
+                  <input
+                    type="text"
+                    value={nuevoEquipo.equipo}
+                    onChange={(e) => setNuevoEquipo({...nuevoEquipo, equipo: e.target.value})}
+                    placeholder="Nombre del equipo"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Tipo:</label>
+                  <input
+                    type="text"
+                    value={nuevoEquipo.tipo}
+                    onChange={(e) => setNuevoEquipo({...nuevoEquipo, tipo: e.target.value})}
+                    placeholder="Tipo de equipo"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Estado:</label>
+                  <select
+                    value={nuevoEquipo.estado}
+                    onChange={(e) => setNuevoEquipo({...nuevoEquipo, estado: e.target.value})}
+                  >
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                    <option value="En Mantenimiento">En Mantenimiento</option>
+                    <option value="Fuera de Servicio">Fuera de Servicio</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Ubicación:</label>
+                  <select
+                    value={nuevoEquipo.ubicacion_id}
+                    onChange={(e) => setNuevoEquipo({...nuevoEquipo, ubicacion_id: e.target.value})}
+                  >
+                    <option value="">Seleccionar ubicación</option>
+                    {ubicaciones.map(ubicacion => (
+                      <option key={ubicacion.id} value={ubicacion.id}>
+                        {ubicacion.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Responsable:</label>
+                  <select
+                    value={nuevoEquipo.usuario_id}
+                    onChange={(e) => setNuevoEquipo({...nuevoEquipo, usuario_id: e.target.value})}
+                  >
+                    <option value="">Seleccionar responsable</option>
+                    {usuarios.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {getDisplayName(user)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <button onClick={agregarEquipo} className="btn-primary">
+                    <FaPlus /> Agregar Equipo
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
 
           <section className="equipos-grid">
             {inventarioFiltrado.map(item => (
@@ -444,25 +556,38 @@ export function TicketsList({ admin, usuario }) {
 
 export function AdminPanel() {
   const [usuarios, setUsuarios] = useState([]);
+  const [ubicaciones, setUbicaciones] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: '',
     nombre_perfil: '',
     contrasena: '',
     rol: 'usuario'
   });
+  const [nuevoUbicacion, setNuevoUbicacion] = useState({
+    nombre: '',
+    descripcion: ''
+  });
+  const [nuevoCategoria, setNuevoCategoria] = useState({
+    nombre: '',
+    descripcion: ''
+  });
   const [filtro, setFiltro] = useState({ rol: '', estado: '' });
   const [error, setError] = useState('');
 
   useEffect(() => {
     setError('');
-    fetchWithAuth(`${API_URL}/usuarios`)
-      .then(res => res.json())
-      .then(data => {
-        setUsuarios(data);
-      })
-      .catch(err => {
-        setError('Error al cargar usuarios: ' + err.message);
-      });
+    Promise.all([
+      fetchWithAuth(`${API_URL}/usuarios`).then(res => res.json()),
+      fetchWithAuth(`${API_URL}/ubicaciones/`).then(res => res.json()),
+      fetchWithAuth(`${API_URL}/categorias/`).then(res => res.json())
+    ]).then(([usu, ubi, cat]) => {
+      setUsuarios(usu);
+      setUbicaciones(ubi);
+      setCategorias(cat);
+    }).catch(err => {
+      setError('Error al cargar datos: ' + err.message);
+    });
   }, []);
 
   const crearUsuario = () => {
@@ -510,6 +635,56 @@ export function AdminPanel() {
     })
     .catch(err => {
       alert('Error al eliminar usuario: ' + err.message);
+    });
+  };
+
+  const crearUbicacion = () => {
+    if (!nuevoUbicacion.nombre) {
+      alert('Por favor completa el nombre de la ubicación');
+      return;
+    }
+
+    fetchWithAuth(`${API_URL}/ubicaciones/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nuevoUbicacion)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert('Error: ' + data.error);
+      } else {
+        setUbicaciones([...ubicaciones, data]);
+        setNuevoUbicacion({ nombre: '', descripcion: '' });
+      }
+    })
+    .catch(err => {
+      alert('Error al crear ubicación: ' + err.message);
+    });
+  };
+
+  const crearCategoria = () => {
+    if (!nuevoCategoria.nombre) {
+      alert('Por favor completa el nombre de la categoría');
+      return;
+    }
+
+    fetchWithAuth(`${API_URL}/categorias/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nuevoCategoria)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert('Error: ' + data.error);
+      } else {
+        setCategorias([...categorias, data]);
+        setNuevoCategoria({ nombre: '', descripcion: '' });
+      }
+    })
+    .catch(err => {
+      alert('Error al crear categoría: ' + err.message);
     });
   };
 
@@ -587,6 +762,66 @@ export function AdminPanel() {
           </div>
         </div>
 
+        {/* Formulario para crear ubicación */}
+        <div className="form-section">
+          <h3>📍 Crear Nueva Ubicación</h3>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Nombre:</label>
+              <input
+                type="text"
+                value={nuevoUbicacion.nombre}
+                onChange={(e) => setNuevoUbicacion({...nuevoUbicacion, nombre: e.target.value})}
+                placeholder="Nombre de la ubicación"
+              />
+            </div>
+            <div className="form-group">
+              <label>Descripción:</label>
+              <input
+                type="text"
+                value={nuevoUbicacion.descripcion}
+                onChange={(e) => setNuevoUbicacion({...nuevoUbicacion, descripcion: e.target.value})}
+                placeholder="Descripción de la ubicación"
+              />
+            </div>
+            <div className="form-group">
+              <button onClick={crearUbicacion} className="btn-primary">
+                <FaPlus /> Crear Ubicación
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Formulario para crear categoría */}
+        <div className="form-section">
+          <h3>🏷️ Crear Nueva Categoría</h3>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Nombre:</label>
+              <input
+                type="text"
+                value={nuevoCategoria.nombre}
+                onChange={(e) => setNuevoCategoria({...nuevoCategoria, nombre: e.target.value})}
+                placeholder="Nombre de la categoría"
+              />
+            </div>
+            <div className="form-group">
+              <label>Descripción:</label>
+              <input
+                type="text"
+                value={nuevoCategoria.descripcion}
+                onChange={(e) => setNuevoCategoria({...nuevoCategoria, descripcion: e.target.value})}
+                placeholder="Descripción de la categoría"
+              />
+            </div>
+            <div className="form-group">
+              <button onClick={crearCategoria} className="btn-primary">
+                <FaPlus /> Crear Categoría
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Filtros */}
         <div className="filters-section">
           <h3>🔍 Filtros</h3>
@@ -634,6 +869,42 @@ export function AdminPanel() {
                   >
                     <FaTrash />
                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Lista de ubicaciones */}
+        <div className="list-section">
+          <h3>📍 Ubicaciones ({ubicaciones.length})</h3>
+          <div className="cards-grid">
+            {ubicaciones.map(ubicacion => (
+              <div key={ubicacion.id} className="card">
+                <div className="card-header">
+                  <h4>{ubicacion.nombre}</h4>
+                </div>
+                <div className="card-body">
+                  <p><strong>Descripción:</strong> {ubicacion.descripcion || 'Sin descripción'}</p>
+                  <p><strong>ID:</strong> {ubicacion.id}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Lista de categorías */}
+        <div className="list-section">
+          <h3>🏷️ Categorías ({categorias.length})</h3>
+          <div className="cards-grid">
+            {categorias.map(categoria => (
+              <div key={categoria.id} className="card">
+                <div className="card-header">
+                  <h4>{categoria.nombre}</h4>
+                </div>
+                <div className="card-body">
+                  <p><strong>Descripción:</strong> {categoria.descripcion || 'Sin descripción'}</p>
+                  <p><strong>ID:</strong> {categoria.id}</p>
                 </div>
               </div>
             ))}
