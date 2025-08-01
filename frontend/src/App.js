@@ -1,24 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { FaLeaf, FaTasks, FaSignOutAlt } from 'react-icons/fa';
+import { FaLeaf, FaTasks, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
 import './App.css';
 import { InventarioList, TicketsList, AdminPanel, DocumentosPanel, BitacorasPanel, TrabajosAdminPanel, MantenimientosPanel, PropuestasMejoraPanel, SoportePanel } from './components/Paneles';
 import TodoList from './components/TodoList';
+import KanbanBoard from './components/KanbanBoard';
 import { API_URL } from './config';
 
-// Componente de navegación optimizado
+// Componente de navegación optimizado con hamburger menu
 function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const navItems = [
-    { id: 'trabajos', label: isAdmin ? 'Trabajos' : 'Trabajos (solo vista)', show: true },
-    { id: 'inventario', label: 'Inventario', show: true },
-    { id: 'mantenimientos', label: 'Mantenimientos', show: true },
-    { id: 'propuestas', label: 'Propuestas', show: true },
-    { id: 'soporte', label: 'Soporte', show: true },
-    { id: 'tickets', label: 'Tickets', show: true },
-    { id: 'todos', label: 'Tareas', show: true, icon: <FaTasks /> },
-    { id: 'usuarios', label: 'Usuarios', show: isAdmin },
-    { id: 'documentos', label: 'Documentos', show: isAdmin },
-    { id: 'bitacoras', label: 'Bitácoras', show: isAdmin }
+    { id: 'trabajos', label: isAdmin ? 'Trabajos' : 'Trabajos (solo vista)', show: true, mobile: true },
+    { id: 'inventario', label: 'Inventario', show: true, mobile: true },
+    { id: 'mantenimientos', label: 'Mantenimientos', show: true, mobile: true },
+    { id: 'propuestas', label: 'Propuestas', show: true, mobile: true },
+    { id: 'soporte', label: 'Soporte', show: true, mobile: true },
+    { id: 'tickets', label: 'Tickets', show: true, mobile: true },
+    { id: 'todos', label: 'Tareas', show: true, icon: <FaTasks />, mobile: true },
+    { id: 'kanban', label: 'Kanban', show: true, mobile: true },
+    { id: 'usuarios', label: 'Usuarios', show: isAdmin, mobile: false },
+    { id: 'documentos', label: 'Documentos', show: isAdmin, mobile: false },
+    { id: 'bitacoras', label: 'Bitácoras', show: isAdmin, mobile: false }
   ];
+
+  const desktopItems = navItems.filter(item => item.show);
+  const mobileItems = navItems.filter(item => item.show && item.mobile);
+
+  const handleNavClick = (itemId) => {
+    onSelect(itemId);
+    setIsMenuOpen(false);
+  };
 
   return (
     <header className="navbar">
@@ -27,8 +39,9 @@ function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
         <span className="brand-text">IT-SanCosme</span>
       </div>
 
-      <nav className="navbar-nav">
-        {navItems.filter(item => item.show).map(item => (
+      {/* Desktop Navigation */}
+      <nav className="navbar-nav desktop-nav">
+        {desktopItems.map(item => (
           <a 
             key={item.id}
             href={`#${item.id}`}
@@ -43,6 +56,36 @@ function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
           </a>
         ))}
       </nav>
+
+      {/* Mobile Hamburger Menu */}
+      <div className="mobile-menu-container">
+        <button 
+          className="hamburger-button"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {isMenuOpen ? <FaTimes /> : <FaBars />}
+        </button>
+
+        {isMenuOpen && (
+          <nav className="mobile-nav">
+            {mobileItems.map(item => (
+              <a 
+                key={item.id}
+                href={`#${item.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick(item.id);
+                }}
+                className={`mobile-nav-link ${selected === item.id ? 'active' : ''}`}
+              >
+                {item.icon && <span className="nav-icon">{item.icon}</span>}
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        )}
+      </div>
 
       <div className="navbar-user">
         <span className="user-role">
@@ -134,6 +177,7 @@ function MainContent({ panel, rol, usuarioLogueado, showWelcome, nombrePerfil })
     inventario: <InventarioList admin={rol === 'admin'} usuario={usuarioLogueado} />,
     tickets: <TicketsList admin={rol === 'admin'} usuario={usuarioLogueado} />,
     todos: <TodoList />,
+    kanban: <KanbanBoard />,
     usuarios: <AdminPanel admin={rol === 'admin'} />,
     documentos: <DocumentosPanel admin={rol === 'admin'} />,
     bitacoras: <BitacorasPanel admin={rol === 'admin'} />,

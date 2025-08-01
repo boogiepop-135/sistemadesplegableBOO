@@ -26,6 +26,235 @@ body {
   width: 100%;
 }
 
+/* Kanban Board Styles */
+.kanban-container {
+  padding: 2rem;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.kanban-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: white;
+}
+
+.kanban-header h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.kanban-header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.kanban-board {
+  display: flex;
+  gap: 1.5rem;
+  min-height: 70vh;
+  padding: 1rem 0;
+}
+
+.kanban-column {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  min-width: 300px;
+  max-width: 350px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+}
+
+.column-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #667eea;
+  margin: 0;
+}
+
+.task-count {
+  background: #667eea;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.column-content {
+  flex: 1;
+  min-height: 200px;
+  margin-bottom: 1rem;
+}
+
+.kanban-task {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.1);
+  cursor: grab;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.kanban-task:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.kanban-task:active {
+  cursor: grabbing;
+}
+
+.task-content {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #333;
+  margin-bottom: 0.75rem;
+  word-wrap: break-word;
+}
+
+.task-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.task-actions button {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.task-actions button:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.task-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.task-edit input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.edit-actions button {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-actions button:first-child {
+  color: #43a047;
+}
+
+.edit-actions button:last-child {
+  color: #f44336;
+}
+
+.edit-actions button:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.add-task-section {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.add-task-section input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.add-task-section input:focus {
+  border-color: #667eea;
+}
+
+.add-task-section button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-task-section button:hover {
+  background: #5a6fd8;
+  transform: scale(1.05);
+}
+
+/* Responsive Kanban */
+@media (max-width: 768px) {
+  .kanban-board {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .kanban-column {
+    min-width: auto;
+    max-width: none;
+  }
+  
+  .kanban-container {
+    padding: 1rem;
+  }
+  
+  .kanban-header h2 {
+    font-size: 2rem;
+  }
+}
+
 /* Navbar profesional */
 .navbar {
   display: flex;
@@ -78,6 +307,79 @@ body {
 
 .navbar-nav::-webkit-scrollbar {
   display: none;
+}
+
+/* Mobile Menu Styles */
+.mobile-menu-container {
+  display: none;
+  position: relative;
+}
+
+.hamburger-button {
+  background: none;
+  border: none;
+  color: #667eea;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hamburger-button:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.mobile-nav {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1rem;
+  min-width: 200px;
+  z-index: 1001;
+  animation: slideDown 0.3s ease;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: #555;
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.mobile-nav-link:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.mobile-nav-link.active {
+  background: #667eea;
+  color: white;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .nav-link {
@@ -974,10 +1276,12 @@ body {
     font-size: 1.1rem;
   }
   
-  .navbar-nav {
-    gap: 0.3rem;
-    margin: 0 1rem;
-    max-width: calc(100vw - 250px);
+  .desktop-nav {
+    display: none;
+  }
+  
+  .mobile-menu-container {
+    display: block;
   }
   
   .nav-link {
@@ -1085,10 +1389,12 @@ body {
     font-size: 1rem;
   }
   
-  .navbar-nav {
-    gap: 0.2rem;
-    margin: 0 0.5rem;
-    max-width: calc(100vw - 200px);
+  .desktop-nav {
+    display: none;
+  }
+  
+  .mobile-menu-container {
+    display: block;
   }
   
   .nav-link {
