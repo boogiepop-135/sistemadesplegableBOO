@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaTrash, FaEdit, FaCheck, FaClock, FaCalendarAlt, FaUser } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaEdit, FaCheck, FaCalendarAlt, FaUser } from 'react-icons/fa';
 
 const KanbanBoard = () => {
   const [columns, setColumns] = useState(() => {
