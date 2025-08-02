@@ -58,29 +58,52 @@ function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
 
   return (
     <header className="navbar">
+      {/* Brand Section */}
       <div className="navbar-brand">
         <FaLeaf className="brand-icon" />
         <span className="brand-text">IT-SanCosme</span>
       </div>
 
-      {/* Desktop Navigation */}
+      {/* Desktop Navigation - Centered */}
       <nav className="navbar-nav desktop-nav">
-        {desktopItems.map(item => (
-          <a 
-            key={item.id}
-            href={`#${item.id}`}
-            onClick={(e) => {
-              e.preventDefault();
-              onSelect(item.id);
-            }}
-            className={`nav-link ${selected === item.id ? 'active' : ''}`}
-            title={item.label}
-          >
-            {item.icon && <span className="nav-icon">{item.icon}</span>}
-            {item.label}
-          </a>
-        ))}
+        <div className="nav-links-container">
+          {desktopItems.map(item => (
+            <a 
+              key={item.id}
+              href={`#${item.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                onSelect(item.id);
+              }}
+              className={`nav-link ${selected === item.id ? 'active' : ''}`}
+              title={item.label}
+            >
+              {item.icon && <span className="nav-icon">{item.icon}</span>}
+              <span className="nav-label">{item.label}</span>
+            </a>
+          ))}
+        </div>
       </nav>
+
+      {/* User Section */}
+      <div className="navbar-user">
+        <div className="user-info">
+          <span className="user-role" title={`Rol: ${rol === 'admin' ? 'Administrador' : 'Usuario'}`}>
+            {rol === 'admin' ? 'ADMIN' : 'USUARIO'}
+          </span>
+          <span className="user-name" title={nombrePerfil || 'Usuario'}>
+            {nombrePerfil || 'Usuario'}
+          </span>
+        </div>
+        <button 
+          onClick={onLogout} 
+          title="Cerrar sesión" 
+          className="logout-button"
+          aria-label="Cerrar sesión"
+        >
+          <FaSignOutAlt />
+        </button>
+      </div>
 
       {/* Mobile Hamburger Menu */}
       <div className="mobile-menu-container">
@@ -111,7 +134,7 @@ function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
                 title={item.label}
               >
                 {item.icon && <span className="nav-icon">{item.icon}</span>}
-                {item.label}
+                <span className="nav-label">{item.label}</span>
               </a>
             ))}
             <div className="mobile-nav-footer">
@@ -121,23 +144,6 @@ function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
             </div>
           </nav>
         )}
-      </div>
-
-      <div className="navbar-user">
-        <span className="user-role" title={`Rol: ${rol === 'admin' ? 'Administrador' : 'Usuario'}`}>
-          {rol === 'admin' ? 'ADMIN' : 'USUARIO'}
-        </span>
-        <span className="user-name" title={nombrePerfil || 'Usuario'}>
-          {nombrePerfil || 'Usuario'}
-        </span>
-        <button 
-          onClick={onLogout} 
-          title="Cerrar sesión" 
-          className="logout-button"
-          aria-label="Cerrar sesión"
-        >
-          <FaSignOutAlt />
-        </button>
       </div>
     </header>
   );
