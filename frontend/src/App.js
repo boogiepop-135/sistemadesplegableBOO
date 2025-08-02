@@ -6,22 +6,22 @@ import TodoList from './components/TodoList';
 import KanbanBoard from './components/KanbanBoard';
 import { API_URL } from './config';
 
-// Componente de navegación optimizado con hamburger menu
+// Componente de navegación optimizado con hamburger menu mejorado
 function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { id: 'trabajos', label: isAdmin ? 'Trabajos' : 'Trabajos (solo vista)', show: true, mobile: true },
-    { id: 'inventario', label: 'Inventario', show: true, mobile: true },
-    { id: 'mantenimientos', label: 'Mantenimientos', show: true, mobile: true },
-    { id: 'propuestas', label: 'Propuestas', show: true, mobile: true },
-    { id: 'soporte', label: 'Soporte', show: true, mobile: true },
-    { id: 'tickets', label: 'Tickets', show: true, mobile: true },
+    { id: 'trabajos', label: isAdmin ? 'Trabajos' : 'Trabajos (solo vista)', show: true, mobile: true, icon: '💼' },
+    { id: 'inventario', label: 'Inventario', show: true, mobile: true, icon: '📦' },
+    { id: 'mantenimientos', label: 'Mantenimientos', show: true, mobile: true, icon: '🔧' },
+    { id: 'propuestas', label: 'Propuestas', show: true, mobile: true, icon: '💡' },
+    { id: 'soporte', label: 'Soporte', show: true, mobile: true, icon: '🆘' },
+    { id: 'tickets', label: 'Tickets', show: true, mobile: true, icon: '🎫' },
     { id: 'todos', label: 'Tareas', show: true, icon: <FaTasks />, mobile: true },
-    { id: 'kanban', label: 'Kanban', show: true, mobile: true },
-    { id: 'usuarios', label: 'Usuarios', show: isAdmin, mobile: false },
-    { id: 'documentos', label: 'Documentos', show: isAdmin, mobile: false },
-    { id: 'bitacoras', label: 'Bitácoras', show: isAdmin, mobile: false }
+    { id: 'kanban', label: 'Kanban', show: true, mobile: true, icon: '📋' },
+    { id: 'usuarios', label: 'Usuarios', show: isAdmin, mobile: false, icon: '👥' },
+    { id: 'documentos', label: 'Documentos', show: isAdmin, mobile: false, icon: '📄' },
+    { id: 'bitacoras', label: 'Bitácoras', show: isAdmin, mobile: false, icon: '📝' }
   ];
 
   const desktopItems = navItems.filter(item => item.show);
@@ -31,6 +31,30 @@ function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
     onSelect(itemId);
     setIsMenuOpen(false);
   };
+
+  // Cerrar menú al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMenuOpen && !event.target.closest('.mobile-menu-container')) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen]);
+
+  // Cerrar menú con ESC
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape' && isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [isMenuOpen]);
 
   return (
     <header className="navbar">
@@ -50,6 +74,7 @@ function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
               onSelect(item.id);
             }}
             className={`nav-link ${selected === item.id ? 'active' : ''}`}
+            title={item.label}
           >
             {item.icon && <span className="nav-icon">{item.icon}</span>}
             {item.label}
@@ -62,13 +87,18 @@ function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
         <button 
           className="hamburger-button"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
+          aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={isMenuOpen}
         >
           {isMenuOpen ? <FaTimes /> : <FaBars />}
         </button>
 
         {isMenuOpen && (
-          <nav className="mobile-nav">
+          <nav className="mobile-nav" role="navigation" aria-label="Menú de navegación móvil">
+            <div className="mobile-nav-header">
+              <span className="mobile-nav-title">Menú</span>
+              <span className="mobile-nav-subtitle">IT-SanCosme</span>
+            </div>
             {mobileItems.map(item => (
               <a 
                 key={item.id}
@@ -78,23 +108,34 @@ function Navbar({ onLogout, onSelect, selected, isAdmin, rol, nombrePerfil }) {
                   handleNavClick(item.id);
                 }}
                 className={`mobile-nav-link ${selected === item.id ? 'active' : ''}`}
+                title={item.label}
               >
                 {item.icon && <span className="nav-icon">{item.icon}</span>}
                 {item.label}
               </a>
             ))}
+            <div className="mobile-nav-footer">
+              <span className="mobile-user-info">
+                {nombrePerfil || 'Usuario'} • {rol === 'admin' ? 'ADMIN' : 'USUARIO'}
+              </span>
+            </div>
           </nav>
         )}
       </div>
 
       <div className="navbar-user">
-        <span className="user-role">
+        <span className="user-role" title={`Rol: ${rol === 'admin' ? 'Administrador' : 'Usuario'}`}>
           {rol === 'admin' ? 'ADMIN' : 'USUARIO'}
         </span>
-        <span className="user-name">
+        <span className="user-name" title={nombrePerfil || 'Usuario'}>
           {nombrePerfil || 'Usuario'}
         </span>
-        <button onClick={onLogout} title="Cerrar sesión" className="logout-button">
+        <button 
+          onClick={onLogout} 
+          title="Cerrar sesión" 
+          className="logout-button"
+          aria-label="Cerrar sesión"
+        >
           <FaSignOutAlt />
         </button>
       </div>

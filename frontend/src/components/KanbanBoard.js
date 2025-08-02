@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaTrash, FaEdit, FaCheck } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaEdit, FaCheck, FaClock, FaCalendarAlt, FaUser } from 'react-icons/fa';
 
 const KanbanBoard = () => {
   const [columns, setColumns] = useState(() => {
@@ -8,16 +8,22 @@ const KanbanBoard = () => {
       todo: {
         id: 'todo',
         title: 'Por Hacer',
+        icon: '📋',
+        color: '#667eea',
         tasks: []
       },
       inProgress: {
         id: 'inProgress',
         title: 'En Progreso',
+        icon: '⚡',
+        color: '#f39c12',
         tasks: []
       },
       done: {
         id: 'done',
         title: 'Completado',
+        icon: '✅',
+        color: '#27ae60',
         tasks: []
       }
     };
@@ -26,6 +32,8 @@ const KanbanBoard = () => {
   const [newTask, setNewTask] = useState('');
   const [editingTask, setEditingTask] = useState(null);
   const [editText, setEditText] = useState('');
+  const [dragOverColumn, setDragOverColumn] = useState(null);
+  const [draggingTask, setDraggingTask] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('kanban-data', JSON.stringify(columns));
@@ -37,7 +45,9 @@ const KanbanBoard = () => {
     const task = {
       id: Date.now(),
       content: newTask.trim(),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      priority: 'medium',
+      assignee: 'Sin asignar'
     };
 
     setColumns(prev => ({
@@ -107,10 +117,24 @@ const KanbanBoard = () => {
 
   const handleDragStart = (e, taskId) => {
     e.dataTransfer.setData('taskId', taskId);
+    setDraggingTask(taskId);
+    e.target.style.opacity = '0.5';
   };
 
-  const handleDragOver = (e) => {
+  const handleDragEnd = (e) => {
+    setDraggingTask(null);
+    setDragOverColumn(null);
+    e.target.style.opacity = '1';
+  };
+
+  const handleDragOver = (e, columnId) => {
     e.preventDefault();
+    setDragOverColumn(columnId);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setDragOverColumn(null);
   };
 
   const handleDrop = (e, columnId) => {
@@ -122,25 +146,52 @@ const KanbanBoard = () => {
     if (fromColumn) {
       moveTask(taskId, fromColumn, columnId);
     }
+    setDragOverColumn(null);
+    setDraggingTask(null);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high': return '#e74c3c';
+      case 'medium': return '#f39c12';
+      case 'low': return '#27ae60';
+      default: return '#95a5a6';
+    }
   };
 
   return (
     <div className="kanban-container">
       <div className="kanban-header">
-        <h2>Tablero Kanban</h2>
-        <p>Organiza tus tareas arrastrándolas entre columnas</p>
+        <h2>📋 Tablero Kanban</h2>
+        <p>Organiza tus tareas arrastrándolas entre columnas • Sistema de gestión visual</p>
       </div>
 
       <div className="kanban-board">
         {Object.values(columns).map(column => (
           <div 
             key={column.id} 
-            className="kanban-column"
-            onDragOver={handleDragOver}
+            className={`kanban-column ${dragOverColumn === column.id ? 'drag-over' : ''}`}
+            onDragOver={(e) => handleDragOver(e, column.id)}
+            onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, column.id)}
+            style={{
+              '--column-color': column.color
+            }}
           >
             <div className="column-header">
-              <h3>{column.title}</h3>
+              <div className="column-title">
+                <span className="column-icon">{column.icon}</span>
+                <h3>{column.title}</h3>
+              </div>
               <span className="task-count">{column.tasks.length}</span>
             </div>
 
@@ -148,9 +199,10 @@ const KanbanBoard = () => {
               {column.tasks.map(task => (
                 <div
                   key={task.id}
-                  className="kanban-task"
+                  className={`kanban-task ${draggingTask === task.id ? 'dragging' : ''}`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, task.id)}
+                  onDragEnd={handleDragEnd}
                 >
                   {editingTask === task.id ? (
                     <div className="task-edit">
@@ -162,24 +214,39 @@ const KanbanBoard = () => {
                         autoFocus
                       />
                       <div className="edit-actions">
-                        <button onClick={() => saveEdit(column.id, task.id)}>
+                        <button onClick={() => saveEdit(column.id, task.id)} title="Guardar">
                           <FaCheck />
                         </button>
-                        <button onClick={cancelEdit}>
+                        <button onClick={cancelEdit} title="Cancelar">
                           <FaTrash />
                         </button>
                       </div>
                     </div>
                   ) : (
                     <>
+                      <div className="task-header">
+                        <div className="task-priority" style={{ backgroundColor: getPriorityColor(task.priority) }}>
+                          {task.priority === 'high' ? '🔥' : task.priority === 'medium' ? '⚡' : '💡'}
+                        </div>
+                        <div className="task-date">
+                          <FaCalendarAlt />
+                          <span>{formatDate(task.createdAt)}</span>
+                        </div>
+                      </div>
                       <div className="task-content">{task.content}</div>
-                      <div className="task-actions">
-                        <button onClick={() => startEdit(task)} title="Editar">
-                          <FaEdit />
-                        </button>
-                        <button onClick={() => deleteTask(column.id, task.id)} title="Eliminar">
-                          <FaTrash />
-                        </button>
+                      <div className="task-footer">
+                        <div className="task-assignee">
+                          <FaUser />
+                          <span>{task.assignee}</span>
+                        </div>
+                        <div className="task-actions">
+                          <button onClick={() => startEdit(task)} title="Editar tarea">
+                            <FaEdit />
+                          </button>
+                          <button onClick={() => deleteTask(column.id, task.id)} title="Eliminar tarea">
+                            <FaTrash />
+                          </button>
+                        </div>
                       </div>
                     </>
                   )}
@@ -190,12 +257,12 @@ const KanbanBoard = () => {
             <div className="add-task-section">
               <input
                 type="text"
-                placeholder="Agregar nueva tarea..."
+                placeholder={`Agregar tarea a ${column.title.toLowerCase()}...`}
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && addTask(column.id)}
               />
-              <button onClick={() => addTask(column.id)}>
+              <button onClick={() => addTask(column.id)} title={`Agregar tarea a ${column.title}`}>
                 <FaPlus />
               </button>
             </div>
